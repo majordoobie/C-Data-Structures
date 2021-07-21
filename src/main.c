@@ -2,11 +2,6 @@
 #include <bst.h>
 #include <stdlib.h>
 
-typedef struct external_t {
-    int value;
-    int other_value;
-
-} my_structure;
 
 bst_compare_t compare(my_structure * new_payload, my_structure * current_payload)
 {

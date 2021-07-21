@@ -3,10 +3,13 @@
 #include <bst.h>
 #include <check.h>
 #include <math.h>
+#include "test_functions.h"
 
-START_TEST(test_poly_term_create)
+START_TEST(bst_create_destroy)
 {
-    ck_assert_int_eq(10, 10);
+    printf("Hello, this is a test\n");
+    my_structure * p1 = create_payload(10, 30);
+//    print(p1);
 
 } END_TEST
 
@@ -19,7 +22,7 @@ Suite * test_poly_suite(void)
 
     tc_core = tcase_create("Core");
 
-    tcase_add_test(tc_core, test_poly_term_create);
+    tcase_add_test(tc_core, bst_create_destroy);
     suite_add_tcase(s, tc_core);
 
     return s;
