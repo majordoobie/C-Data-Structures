@@ -30,7 +30,7 @@ typedef enum
 } bst_traversal_t;
 
 typedef struct node node_t;
-typedef struct external_t node_payload_t;
+typedef struct bst_node_payload_t node_payload_t; // I Typedef their structure to something internal
 
 typedef struct bst
 {
@@ -39,10 +39,13 @@ typedef struct bst
     void (* free_payload)(node_payload_t *);
 } bst_t;
 
-bst_t * init_bst(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), void (* free_payload)(node_payload_t *));
-void destroy_bst(bst_t * bst, bst_status_t free_payload);
-bst_status_t insert_node(bst_t * bst, node_payload_t * payload, bst_status_t replace);
-void traversal_bst(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *));
+bst_t * bst_init(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), void (* free_payload)(node_payload_t *));
+void bst_destroy(bst_t * bst, bst_status_t free_payload);
+bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t replace);
+
+//TODO: All a null function or structure here
+void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *));
+void print_2d(bst_t * bst, void (* callback)(node_payload_t *));
 
 #endif //BST_H
 

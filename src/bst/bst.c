@@ -12,8 +12,36 @@ struct node {
 
 static void in_order_traversal_node(node_t * node, void (* function)(node_payload_t *));
 static void pre_order_traversal_node(node_t * node, void (* function)(node_payload_t *));
+static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *));
+
 static void free_node(bst_t * bst, node_t * node, bst_status_t free_payload);
 static void traversal_free(bst_t * bst, node_t * node, bst_status_t free_payload);
+static void print_2d_iter(node_t * node, int space, void (* callback)(node_payload_t *));
+
+void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
+{
+    print_2d_iter(bst->root, 0, callback);
+}
+static void print_2d_iter(node_t * node, int space, void(*callback)(node_payload_t*))
+{
+    if (NULL == node)
+    {
+        return;
+    }
+
+    space += 10;
+    print_2d_iter(node->right_child, space, callback);
+
+    printf("\n");
+    for (int i = 10; i < space; i++)
+    {
+        printf(" ");
+    }
+    callback(node->key);
+
+    print_2d_iter(node->left_child, space, callback);
+
+}
 
 /*!
  * @brief Initialize the tree structure to include the payload size of the node keys.
@@ -23,7 +51,7 @@ static void traversal_free(bst_t * bst, node_t * node, bst_status_t free_payload
  * @param compare[in] Pointer to a compare function that is performed on each node
  * @return Pointer to the BST structure with the bst->root set to NULL
  */
-bst_t * init_bst(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), void (* free_payload)(node_payload_t *))
+bst_t * bst_init(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), void (* free_payload)(node_payload_t *))
 {
     bst_t * bst = calloc(1, sizeof(* bst));
     bst->compare = compare;
@@ -37,7 +65,7 @@ bst_t * init_bst(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), 
  * @param bst[in] bst_t
  * @param free_payload[in] Status must include either BST_FREE_PAYLOAD_TRUE or FALSE
  */
-void destroy_bst(bst_t * bst, bst_status_t free_payload)
+void bst_destroy(bst_t * bst, bst_status_t free_payload)
 {
     traversal_free(bst, bst->root, free_payload);
     free(bst);
@@ -52,7 +80,7 @@ void destroy_bst(bst_t * bst, bst_status_t free_payload)
  * @param replace[in] Option to replace or ignore equivalent nodes
  * @return bst_status_t of the operation
  */
-bst_status_t insert_node(bst_t * bst, node_payload_t * payload, bst_status_t replace)
+bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t replace)
 {
     // create a new_node object
     node_t * new_node = calloc(1, sizeof(* new_node));
@@ -132,7 +160,7 @@ bst_status_t insert_node(bst_t * bst, node_payload_t * payload, bst_status_t rep
  * @param type[in] Type of traversal
  * @param callback[in] Pointer to external supplied function for node processing
  */
-void traversal_bst(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *))
+void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *))
 {
     switch (type)
     {
@@ -140,6 +168,7 @@ void traversal_bst(bst_t * bst, bst_traversal_t type, void (* callback)(node_pay
             in_order_traversal_node(bst->root, callback);
             break;
         case BST_POST_ORDER:
+            post_order_traversal_node(bst->root, callback);
             break;
         case BST_PRE_ORDER:
             pre_order_traversal_node(bst->root, callback);
@@ -179,6 +208,17 @@ static void pre_order_traversal_node(node_t * node, void (* function)(node_paylo
     function(node->key);
     pre_order_traversal_node(node->left_child, function);
     pre_order_traversal_node(node->right_child, function);
+}
+
+static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *))
+{
+    if (NULL == node)
+    {
+        return;
+    }
+    pre_order_traversal_node(node->left_child, function);
+    pre_order_traversal_node(node->right_child, function);
+    function(node->key);
 }
 
 /*!

@@ -1,4 +1,4 @@
-#include <test_functions.h>
+#include <bst_test_functions.h>
 
 bst_compare_t compare(my_structure * new_payload, my_structure * current_payload)
 {
@@ -18,13 +18,15 @@ bst_compare_t compare(my_structure * new_payload, my_structure * current_payload
 
 void print(my_structure * node_payload)
 {
-    printf("[%d | %d] ", node_payload->value, node_payload->other_value);
+//    printf("[%d | %d] ", node_payload->value, node_payload->other_value);
+    printf("%d", node_payload->value);
 }
 
 void free_payload(my_structure * node_payload)
 {
     free(node_payload);
 }
+
 
 my_structure * create_payload(int val1, int val2)
 {

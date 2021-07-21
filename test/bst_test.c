@@ -3,13 +3,30 @@
 #include <bst.h>
 #include <check.h>
 #include <math.h>
-#include <test_functions.h>
+#include <bst_test_functions.h>
+
 
 START_TEST(bst_create_destroy)
 {
-    printf("Hello, this is a test\n");
-    my_structure * p1 = create_payload(10, 30);
-//    print(p1);
+    my_structure * p1 = create_payload(30, 1);
+    my_structure * p2 = create_payload(10, 2);
+    my_structure * p3 = create_payload(28, 3);
+    my_structure * p4 = create_payload(50, 4);
+    my_structure * p5 = create_payload(29, 5);
+    my_structure * p6 = create_payload(55, 5);
+    my_structure * payloads[6] = {p1, p2, p3, p4, p5, p6};
+
+    bst_t * tree = bst_init(compare, free_payload);
+
+    for (int i = 0; i < 6; i++)
+    {
+        bst_insert(tree, payloads[i], BST_REPLACE_FALSE);
+    }
+
+//    bst_traversal(tree, BST_IN_ORDER, print);
+
+    print_2d(tree, print);
+    printf("\n->");
 
 } END_TEST
 

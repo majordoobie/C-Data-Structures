@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 
-typedef struct external_t {
+typedef struct bst_node_payload_t {
     int value;
     int other_value;
 
@@ -50,24 +50,24 @@ int main(void)
     data3->other_value = 99;
 
     // initialize the BST structure
-    bst_t * tree = init_bst(compare, free_my);
+    bst_t * tree = bst_init(compare, free_my);
     // insert the first node which will be the root node
-    insert_node(tree, data, BST_REPLACE_TRUE);
-    insert_node(tree, data2, BST_REPLACE_TRUE);
-    insert_node(tree, data3, BST_REPLACE_TRUE);
+    bst_insert(tree, data, BST_REPLACE_TRUE);
+    bst_insert(tree, data2, BST_REPLACE_TRUE);
+    bst_insert(tree, data3, BST_REPLACE_TRUE);
 
-    traversal_bst(tree, BST_IN_ORDER, print);
+    bst_traversal(tree, BST_IN_ORDER, print);
 
 
     my_structure * data4 = calloc(1, sizeof(* data));
     data4->value = 39;
     data4->other_value = 999999;
-    printf("\n====> %d\n", insert_node(tree, data4, BST_REPLACE_TRUE));
+    printf("\n====> %d\n", bst_insert(tree, data4, BST_REPLACE_TRUE));
 
     printf("\n");
-    traversal_bst(tree, BST_IN_ORDER, print);
+    bst_traversal(tree, BST_IN_ORDER, print);
     printf("\n");
-    traversal_bst(tree, BST_PRE_ORDER, print);
-    destroy_bst(tree, BST_FREE_PAYLOAD_TRUE);
+    bst_traversal(tree, BST_PRE_ORDER, print);
+    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
 }
 
