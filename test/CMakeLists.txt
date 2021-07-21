@@ -1,8 +1,10 @@
-include_directories(${TREE_EXAMPLE_SOURCE_DIR}/include ${TREE_EXAMPLE_SOURCE_DIR}/test)
-add_executable(test_bst_target test.c test_functions.c)
+include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/test)
 
-target_link_libraries(test_bst_target PUBLIC ${CHECK_LIB} bst_lib m rt pthread subunit)
+add_executable(test_bst_target test_functions.c test.c)
 
+target_link_libraries(test_bst_target PUBLIC bst_lib check m rt pthread subunit)
+
+#include_directories(${TREE_EXAMPLE_SOURCE_DIR}/include ${TREE_EXAMPLE_SOURCE_DIR}/test)
 #target_include_directories(
 #        test_bst_target
 #        "${TREE_EXAMPLE_SOURCE_DIR}/include"

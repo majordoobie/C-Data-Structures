@@ -26,3 +26,11 @@ void free_payload(my_structure * node_payload)
     free(node_payload);
 }
 
+my_structure * create_payload(int val1, int val2)
+{
+    my_structure * data = calloc(1, sizeof(* data));
+    data->value = val1;
+    data->other_value = val2;
+    return data;
+}
+

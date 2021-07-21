@@ -3,7 +3,7 @@
 #include <bst.h>
 #include <check.h>
 #include <math.h>
-#include "test_functions.h"
+#include <test_functions.h>
 
 START_TEST(bst_create_destroy)
 {
