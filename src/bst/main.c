@@ -3,6 +3,12 @@
 #include <stdlib.h>
 
 
+typedef struct external_t {
+    int value;
+    int other_value;
+
+} my_structure;
+
 bst_compare_t compare(my_structure * new_payload, my_structure * current_payload)
 {
     if (new_payload->value < current_payload->value)
@@ -56,7 +62,7 @@ int main(void)
     my_structure * data4 = calloc(1, sizeof(* data));
     data4->value = 39;
     data4->other_value = 999999;
-    printf("\n=> %d\n", insert_node(tree, data4, BST_REPLACE_TRUE));
+    printf("\n====> %d\n", insert_node(tree, data4, BST_REPLACE_TRUE));
 
     printf("\n");
     traversal_bst(tree, BST_IN_ORDER, print);
