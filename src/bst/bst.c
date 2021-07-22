@@ -195,8 +195,8 @@ static void post_order_traversal_node(node_t * node, void (* function)(node_payl
     {
         return;
     }
-    pre_order_traversal_node(node->left_child, function, void_ptr);
-    pre_order_traversal_node(node->right_child, function, void_ptr);
+    post_order_traversal_node(node->left_child, function, void_ptr);
+    post_order_traversal_node(node->right_child, function, void_ptr);
     function(node->key, void_ptr);
 }
 

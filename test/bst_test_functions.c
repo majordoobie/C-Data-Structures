@@ -21,13 +21,12 @@ void print(my_structure * node_payload)
     printf("%d", node_payload->value);
 }
 
+// Save nodes into a list
 void save_nodes(my_structure * node_payload, void * ptr)
 {
     iter_struct_t * iter = (iter_struct_t *) ptr;
-    printf("Current iter count: %d\n", iter->count);
     iter->my_struct_list[iter->count] = node_payload;
     iter->count++;
-    printf("---%d--", node_payload->value);
 }
 
 void free_payload(my_structure * node_payload)
