@@ -18,8 +18,16 @@ bst_compare_t compare(my_structure * new_payload, my_structure * current_payload
 
 void print(my_structure * node_payload)
 {
-//    printf("[%d | %d] ", node_payload->value, node_payload->other_value);
     printf("%d", node_payload->value);
+}
+
+void save_nodes(my_structure * node_payload, void * ptr)
+{
+    iter_struct_t * iter = (iter_struct_t *) ptr;
+    printf("Current iter count: %d\n", iter->count);
+    iter->my_struct_list[iter->count] = node_payload;
+    iter->count++;
+    printf("---%d--", node_payload->value);
 }
 
 void free_payload(my_structure * node_payload)

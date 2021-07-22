@@ -44,7 +44,7 @@ void bst_destroy(bst_t * bst, bst_status_t free_payload);
 bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t replace);
 
 //TODO: All a null function or structure here
-void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *));
+void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *, void *), void * void_ptr);
 void print_2d(bst_t * bst, void (* callback)(node_payload_t *));
 
 #endif //BST_H

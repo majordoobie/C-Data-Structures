@@ -10,37 +10,16 @@ struct node {
     node_payload_t * key;
 };
 
-static void in_order_traversal_node(node_t * node, void (* function)(node_payload_t *));
-static void pre_order_traversal_node(node_t * node, void (* function)(node_payload_t *));
-static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *));
-
 static void free_node(bst_t * bst, node_t * node, bst_status_t free_payload);
 static void traversal_free(bst_t * bst, node_t * node, bst_status_t free_payload);
 static void print_2d_iter(node_t * node, int space, void (* callback)(node_payload_t *));
+static void in_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
+static void pre_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
+static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
 
 void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
 {
     print_2d_iter(bst->root, 0, callback);
-}
-static void print_2d_iter(node_t * node, int space, void(*callback)(node_payload_t*))
-{
-    if (NULL == node)
-    {
-        return;
-    }
-
-    space += 10;
-    print_2d_iter(node->right_child, space, callback);
-
-    printf("\n");
-    for (int i = 10; i < space; i++)
-    {
-        printf(" ");
-    }
-    callback(node->key);
-
-    print_2d_iter(node->left_child, space, callback);
-
 }
 
 /*!
@@ -160,18 +139,18 @@ bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t repl
  * @param type[in] Type of traversal
  * @param callback[in] Pointer to external supplied function for node processing
  */
-void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *))
+void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *, void *), void * void_ptr)
 {
     switch (type)
     {
         case BST_IN_ORDER:
-            in_order_traversal_node(bst->root, callback);
+            in_order_traversal_node(bst->root, callback, void_ptr);
             break;
         case BST_POST_ORDER:
-            post_order_traversal_node(bst->root, callback);
+            post_order_traversal_node(bst->root, callback, void_ptr);
             break;
         case BST_PRE_ORDER:
-            pre_order_traversal_node(bst->root, callback);
+            pre_order_traversal_node(bst->root, callback, void_ptr);
             break;
         default:
             break;
@@ -183,15 +162,15 @@ void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_pay
  * @param node[in] The current node being inspected
  * @param function[in] External function to call on each node
  */
-static void in_order_traversal_node(node_t * node, void (* function)(node_payload_t *))
+static void in_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr)
 {
     if (NULL == node)
     {
         return;
     }
-    in_order_traversal_node(node->left_child, function);
-    function(node->key);
-    in_order_traversal_node(node->right_child, function);
+    in_order_traversal_node(node->left_child, function, void_ptr);
+    function(node->key, void_ptr);
+    in_order_traversal_node(node->right_child, function, void_ptr);
 }
 
 /*!
@@ -199,26 +178,26 @@ static void in_order_traversal_node(node_t * node, void (* function)(node_payloa
  * @param node[in] The current node being inspected
  * @param function[in] External function to call on each node
  */
-static void pre_order_traversal_node(node_t * node, void (* function)(node_payload_t *))
+static void pre_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr)
 {
     if (NULL == node)
     {
         return;
     }
-    function(node->key);
-    pre_order_traversal_node(node->left_child, function);
-    pre_order_traversal_node(node->right_child, function);
+    function(node->key, void_ptr);
+    pre_order_traversal_node(node->left_child, function, void_ptr);
+    pre_order_traversal_node(node->right_child, function, void_ptr);
 }
 
-static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *))
+static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr)
 {
     if (NULL == node)
     {
         return;
     }
-    pre_order_traversal_node(node->left_child, function);
-    pre_order_traversal_node(node->right_child, function);
-    function(node->key);
+    pre_order_traversal_node(node->left_child, function, void_ptr);
+    pre_order_traversal_node(node->right_child, function, void_ptr);
+    function(node->key, void_ptr);
 }
 
 /*!
@@ -260,4 +239,30 @@ static void free_node(bst_t * bst, node_t * node, bst_status_t free_payload)
     {
         fprintf(stderr, "Invalid bst_status_t option chosen. Please read the documentation.");
     }
+}
+/*!
+ * @brief Function to recursively printout the nodes in a manner that you can visually see
+ * in the terminal
+ * @param node[in] node_t
+ * @param space[in] Value of how many spaces to print
+ * @param callback[in] A callback function to print out the data
+ */
+static void print_2d_iter(node_t * node, int space, void(*callback)(node_payload_t*))
+{
+    if (NULL == node)
+    {
+        return;
+    }
+
+    space += 10;
+    print_2d_iter(node->right_child, space, callback);
+
+    printf("\n");
+    for (int i = 10; i < space; i++)
+    {
+        printf(" ");
+    }
+    callback(node->key);
+
+    print_2d_iter(node->left_child, space, callback);
 }

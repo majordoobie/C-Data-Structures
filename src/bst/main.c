@@ -25,7 +25,7 @@ bst_compare_t compare(my_structure * new_payload, my_structure * current_payload
     }
 }
 
-void print(my_structure * node_payload)
+void print(my_structure * node_payload, void * ptr)
 {
     printf("[%d | %d] ", node_payload->value, node_payload->other_value);
 }
@@ -56,7 +56,7 @@ int main(void)
     bst_insert(tree, data2, BST_REPLACE_TRUE);
     bst_insert(tree, data3, BST_REPLACE_TRUE);
 
-    bst_traversal(tree, BST_IN_ORDER, print);
+    bst_traversal(tree, BST_IN_ORDER, print, NULL);
 
 
     my_structure * data4 = calloc(1, sizeof(* data));
@@ -65,9 +65,9 @@ int main(void)
     printf("\n====> %d\n", bst_insert(tree, data4, BST_REPLACE_TRUE));
 
     printf("\n");
-    bst_traversal(tree, BST_IN_ORDER, print);
+    bst_traversal(tree, BST_IN_ORDER, print, NULL);
     printf("\n");
-    bst_traversal(tree, BST_PRE_ORDER, print);
+    bst_traversal(tree, BST_PRE_ORDER, print, NULL);
     bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
 }
 

@@ -23,10 +23,19 @@ START_TEST(bst_create_destroy)
         bst_insert(tree, payloads[i], BST_REPLACE_FALSE);
     }
 
-//    bst_traversal(tree, BST_IN_ORDER, print);
+    iter_struct_t * iter_obj = calloc(1, sizeof(* iter_obj));
+    iter_obj->my_struct_list = calloc(10, sizeof(my_structure));
+
+    bst_traversal(tree, BST_IN_ORDER, save_nodes, iter_obj);
 
     print_2d(tree, print);
     printf("\n->");
+    printf("Iter count is: %d\n", iter_obj->count);
+
+    for (int i = 0; i < iter_obj->count; i++)
+    {
+        printf("Value of iter is: %d\n", iter_obj->my_struct_list[i]->value);
+    }
 
 } END_TEST
 
