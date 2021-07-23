@@ -1,30 +1,22 @@
-CC=cc
-CFLAGS+=-Wall -Wextra -Wpedantic -Waggregate-return -Wwrite-strings -Wvla -Wfloat-equal -I./include -I./test
-SRC=src
-OBJ=bin
+DIRS=src/bst test/bst_test
+BUILD_DIRS=$(DIRS:%=build-%)
+CLEAN_DIRS=$(DIRS:%=clean-%)
+DEBUG_DIRS=$(DIRS:%=debug-%)
+PROFILE_DIRS=$(DIRS:%=profile-%)
 
-# Create a list of all files in src/ with .c extension
-SRCS=$(wildcard $(SRC)/*.c)
-# Create a list using pattern sub by replacing .c files to .o in the SRCS variable
-OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
+all: $(BUILD_DIRS)
 
-# outputs
-BIN=bin/ws
+$(BUILD_DIRS):
+	$(MAKE) -C $(@:build-%=%)
 
-all: make_env $(BIN)
+clean: $(CLEAN_DIRS)
+$(CLEAN_DIRS):
+	$(MAKE) -C $(@:clean-%=%) clean
 
-debug: CFLAGS += -g
-debug: clean
-debug: $(BIN)
+debug: $(DEBUG_DIRS)
+$(DEBUG_DIRS):
+	$(MAKE) -C $(@:debug-%=%) debug
 
-make_env:
-	@mkdir -p bin/
-
-$(BIN): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $@
-
-$(OBJ)/%.o: $(SRC)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-clean:
-	rm -r bin/*.o
+profile: $(PROFILE_DIRS)
+$(PROFILE_DIRS):
+	$(MAKE) -C $(@:profile-%=%) profile

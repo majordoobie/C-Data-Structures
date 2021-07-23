@@ -77,11 +77,6 @@ Suite * test_poly_suite(void)
 
 int main(void)
 {
-    setlocale(LC_CTYPE,"UTF-8");
-    // lets try this
-    wchar_t frac = 0x00BC; // one quarter
-    wprintf(L"%lc\n", frac);
-
     int number_failed;
     Suite *s;
     SRunner *sr;
