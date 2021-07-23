@@ -162,10 +162,157 @@ START_TEST(traversal_order_test){
     bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
     free(iter_obj->my_struct_list);
     free(iter_obj);
+}END_TEST
 
+START_TEST(rotation_test_5_nodes){
+    // tree creation
+    bst_t * tree = bst_init(compare, free_payload);
+
+    // external structure to stuff into the tree
+    bst_insert(tree, create_payload(20, 1), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(15, 2), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(14, 3), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(13, 4), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(19, 5), BST_REPLACE_FALSE);
+
+
+    int values_pre_order_before_rotation[6] = {20, 15, 14, 13, 19};
+    int values_pre_order_after_rotation[6] = {20, 14, 13, 15, 19};
+
+    iter_struct_t * iter_obj = calloc(1, sizeof(* iter_obj));
+    iter_obj->my_struct_list = calloc(10, sizeof(my_structure));
+
+
+    // Compare each node to the order value we expected
+    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+    for (int i = 0; i < iter_obj->count; i++)
+    {
+        ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_pre_order_before_rotation[i]);
+    }
+
+    print_2d(tree, print);
+    printf("\n\n");
+
+    // create
+    my_structure * target = create_payload(14, 0);
+    rotate(tree, target, BST_ROTATE_RIGHT);
+
+        print_2d(tree, print);
+        printf("\n\n");
+
+    iter_obj->count = 0;
+    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+    for (int i = 0; i < iter_obj->count; i++)
+    {
+        ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_pre_order_after_rotation[i]);
+    }
+
+    rotate(tree, target, BST_ROTATE_LEFT);
+//    iter_obj->count = 0;
+//    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+//    for (int i = 0; i < iter_obj->count; i++)
+//    {
+//        ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_pre_order_before_rotation[i]);
+//    }
+
+    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
+    free(iter_obj->my_struct_list);
+    free(iter_obj);
+    free(target);
 
 }END_TEST
 
+START_TEST(right_rotation_test_3_nodes) {
+    // tree creation
+    bst_t * tree = bst_init(compare, free_payload);
+
+    // external structure to stuff into the tree
+    bst_insert(tree, create_payload(20, 1), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(15, 2), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(14, 3), BST_REPLACE_FALSE);
+
+
+    int values_pre_order_before_rotation[6] = {20, 15, 14};
+    int values_pre_order_after_rotation[6] = {20, 14, 15};
+
+    iter_struct_t * iter_obj = calloc(1, sizeof(* iter_obj));
+    iter_obj->my_struct_list = calloc(10, sizeof(my_structure));
+
+
+    // Compare each node to the order value we expected
+    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+    for (int i = 0; i < 3; i++)
+    {
+        ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_pre_order_before_rotation[i]);
+    }
+
+    // create
+    my_structure * target = create_payload(14, 0);
+    rotate(tree, target, BST_ROTATE_RIGHT);
+
+    iter_obj->count = 0;
+    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+    for (int i = 0; i < 3; i++)
+    {
+        ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_pre_order_after_rotation[i]);
+    }
+
+    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
+    free(iter_obj->my_struct_list);
+    free(iter_obj);
+    free(target);
+
+}END_TEST
+
+START_TEST(right_rotation_test_3_nodes_top){
+    // tree creation
+    bst_t * tree = bst_init(compare, free_payload);
+
+    // external structure to stuff into the tree
+    bst_insert(tree, create_payload(20, 1), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(15, 2), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(14, 3), BST_REPLACE_FALSE);
+
+
+    int values_pre_order_before_rotation[3] = {20, 15, 14};
+    int values_pre_order_after_rotation[3] = {15, 14, 20};
+
+    iter_struct_t * iter_obj = calloc(1, sizeof(* iter_obj));
+    iter_obj->my_struct_list = calloc(10, sizeof(my_structure));
+
+
+    // Compare each node to the order value we expected
+    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+    for (int i = 0; i < iter_obj->count; i++)
+    {
+        ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_pre_order_before_rotation[i]);
+    }
+
+    // create
+    my_structure * target = create_payload(15, 0);
+    rotate(tree, target, BST_ROTATE_RIGHT);
+
+    iter_obj->count = 0;
+    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+    for (int i = 0; i < iter_obj->count; i++)
+    {
+        ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_pre_order_after_rotation[i]);
+    }
+
+    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
+    free(iter_obj->my_struct_list);
+    free(iter_obj);
+    free(target);
+
+}END_TEST
+
+
+static TFun rotation_tests[] = {
+    rotation_test_5_nodes,
+    right_rotation_test_3_nodes,
+    right_rotation_test_3_nodes_top,
+    NULL
+};
 
 static TFun traversal_bst_test[] = {
     traversal_order_test,
@@ -195,6 +342,12 @@ Suite * bst_test_suite(void)
     test_cases = tcase_create("Traversal Test Functions");
     add_tests(test_cases, test_list);
     suite_add_tcase(bst_suite, test_cases);
+
+    test_list = rotation_tests;
+    test_cases = tcase_create("Rotation Test Functions");
+    add_tests(test_cases, test_list);
+    suite_add_tcase(bst_suite, test_cases);
+
 
 
     return bst_suite;

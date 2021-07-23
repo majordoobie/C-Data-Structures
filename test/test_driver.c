@@ -15,7 +15,7 @@ int main(int argc, char ** argv)
     srunner_add_suite(sr, bst_test_suite());
 
     // run the test suites
-    srunner_run_all(sr, CK_NORMAL);
+    srunner_run_all(sr, CK_VERBOSE);
 
     // report the test failed status
     int tests_failed = srunner_ntests_failed(sr);

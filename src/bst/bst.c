@@ -16,9 +16,12 @@ static void print_2d_iter(node_t * node, int space, void (* callback)(node_paylo
 static void in_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
 static void pre_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
 static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
-static void right_rotation(node_t * node);
-static node_payload_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload);
+static void right_rotation(bst_t * bst, node_t * node);
+static void left_rotation(bst_t *bst, node_t *node);
+static node_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload);
 
+void
+left_rotation(bst_t *bst, node_t *node);
 void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
 {
     print_2d_iter(bst->root, 0, callback);
@@ -152,9 +155,44 @@ bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t repl
  */
 node_payload_t * bst_get_node(bst_t * bst, node_payload_t * payload)
 {
-    return search_node(bst, bst->root, payload);
+    node_t * node = search_node(bst, bst->root, payload);
+    return node->key;
+}
+
+/*!
+ * @brief This public function serves as a "test" for proper rotation. Rotations are normally
+ * executed automatically by the tree inserts
+ * @param bst[in] bst_t
+ * @param payload[in] node_payload_t
+ * @param side[in] BST_ROTATE_LEFT BST_ROTATE_RIGHT
+ * @return bst_status_t indicating if rotation was a success
+ */
+bst_status_t rotate(bst_t * bst, node_payload_t * payload, bst_status_t side)
+{
+    node_t * node = search_node(bst, bst->root, payload);
+
+    if (NULL == node)
+    {
+        return BST_SEARCH_FAILURE;
+    }
+
+    if (BST_ROTATE_RIGHT == side)
+    {
+        right_rotation(bst, node);
+    }
+    else if (BST_ROTATE_LEFT == side)
+    {
+        left_rotation(bst, node);
+    }
+    else
+    {
+        return BST_ROTATE_FAILURE;
+    }
+
+    return BST_ROTATION_SUCCESS;
 
 }
+
 
 /*!
  * @brief Function that calls the internal traversal function and calls the callback
@@ -291,8 +329,13 @@ static void print_2d_iter(node_t * node, int space, void(*callback)(node_payload
     print_2d_iter(node->left_child, space, callback);
 }
 
-static void right_rotation(node_t * node)
+static void right_rotation(bst_t * bst, node_t * node)
 {
+    if ((NULL == node) || (bst->root == node))
+    {
+        return;
+    }
+
     // set the constants
     node_t * old_parent = node->parent;
     node_t * old_p_parent = old_parent->parent;
@@ -307,11 +350,60 @@ static void right_rotation(node_t * node)
     old_parent->left_child = old_right;
 
     // update old_right
-    old_right->parent = old_parent;
+    if (NULL != old_right)
+    {
+        old_right->parent = old_parent;
+    }
 
-    // update old_p_parent
-    old_p_parent->left_child = node;
+    // update old_p_parent if it exists, it only doesn't when root is the old_p_p
+    if (NULL != old_p_parent)
+    {
+        old_p_parent->left_child = node;
+    }
+    else
+    {
+        // if old_p_p IS NULL then we need to set the new root
+        bst->root = node;
+    }
 
+}
+
+static void left_rotation(bst_t * bst, node_t * node)
+{
+    if ((NULL == node) || (bst->root == node))
+    {
+        return;
+    }
+
+    // set the constants
+    node_t * old_parent = node->parent;
+    node_t * old_p_parent = old_parent->parent;
+    node_t * old_left = node->left_child;
+
+    // start node rotation
+    node->parent = old_p_parent;
+    node->left_child = old_parent;
+
+    // update the old_parent
+    old_parent->parent = node;
+    old_parent->right_child = old_left;
+
+    // update old_left
+    if (NULL != old_left)
+    {
+        old_left->parent = old_parent;
+    }
+
+    // update old_p_parent if it exists, it only doesn't when root is the old_p_p
+    if (NULL != old_p_parent)
+    {
+        old_p_parent->right_child = node;
+    }
+    else
+    {
+        // if old_p_p IS NULL then we need to set the new root
+        bst->root = node;
+    }
 }
 
 /*!
@@ -320,9 +412,9 @@ static void right_rotation(node_t * node)
  * @param bst[in] bst_t
  * @param node[in] node_t
  * @param target_payload[in] node_payload_t
- * @return Pointer to the node payload if found, otherwise return NULL
+ * @return Returns the node that has been found, otherwise it returns a NULL
  */
-static node_payload_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload)
+static node_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload)
 {
     // if the current node is NULL, then just return it
     if (NULL == node)
@@ -336,7 +428,7 @@ static node_payload_t * search_node(bst_t * bst, node_t * node, node_payload_t *
     // check the result, and either recurse or return
     if (BST_EQ == result)
     {
-        return node->key;
+        return node;
     }
     else if (BST_LT == result)
     {
