@@ -16,6 +16,7 @@ static void print_2d_iter(node_t * node, int space, void (* callback)(node_paylo
 static void in_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
 static void pre_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
 static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
+static void right_rotation(node_t * node);
 
 void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
 {
@@ -265,4 +266,26 @@ static void print_2d_iter(node_t * node, int space, void(*callback)(node_payload
     callback(node->key);
 
     print_2d_iter(node->left_child, space, callback);
+}
+static void right_rotation(node_t * node)
+{
+    // set the constants
+    node_t * old_parent = node->parent;
+    node_t * old_p_parent = old_parent->parent;
+    node_t * old_right = node->right_child;
+
+    // start node rotation
+    node->parent = old_p_parent;
+    node->right_child = old_parent;
+
+    // update the old_parent
+    old_parent->parent = node;
+    old_parent->left_child = old_right;
+
+    // update old_right
+    old_right->parent = old_parent;
+
+    // update old_p_parent
+    old_p_parent->left_child = node;
+
 }

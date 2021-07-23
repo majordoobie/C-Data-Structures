@@ -1,5 +1,5 @@
 CC=cc
-CFLAGS+=-Wall -Wextra -Wpedantic -Waggregate-return -Wwrite-strings -Wvla -Wfloat-equal -I./include
+CFLAGS+=-Wall -Wextra -Wpedantic -Waggregate-return -Wwrite-strings -Wvla -Wfloat-equal -I./include -I./test
 SRC=src
 OBJ=bin
 

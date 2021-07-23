@@ -1,9 +1,11 @@
+#include <wchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <bst.h>
 #include <check.h>
 #include <math.h>
 #include <bst_test_functions.h>
+#include <locale.h>
 
 
 START_TEST(bst_create_destroy)
@@ -75,6 +77,11 @@ Suite * test_poly_suite(void)
 
 int main(void)
 {
+    setlocale(LC_CTYPE,"UTF-8");
+    // lets try this
+    wchar_t frac = 0x00BC; // one quarter
+    wprintf(L"%lc\n", frac);
+
     int number_failed;
     Suite *s;
     SRunner *sr;
