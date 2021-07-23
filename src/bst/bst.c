@@ -64,6 +64,11 @@ void bst_destroy(bst_t * bst, bst_status_t free_payload)
  */
 bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t replace)
 {
+    if (NULL == payload)
+    {
+        return BST_INSERT_FAILURE;
+    }
+
     // create a new_node object
     node_t * new_node = calloc(1, sizeof(* new_node));
     new_node->key = payload;
