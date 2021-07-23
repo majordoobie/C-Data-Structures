@@ -19,7 +19,7 @@ typedef enum
 {
     BST_LT,
     BST_GT,
-    BST_EQ
+    BST_EQ,
 } bst_compare_t;
 
 typedef enum
@@ -42,6 +42,7 @@ typedef struct bst
 bst_t * bst_init(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), void (* free_payload)(node_payload_t *));
 void bst_destroy(bst_t * bst, bst_status_t free_payload);
 bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t replace);
+node_payload_t * bst_get_node(bst_t * bst, node_payload_t * payload);
 
 //TODO: All a null function or structure here
 void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *, void *), void * void_ptr);

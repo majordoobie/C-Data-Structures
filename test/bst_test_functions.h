@@ -1,5 +1,6 @@
 #ifndef BST_TEST_FUNCTIONS_H
 #define BST_TEST_FUNCTIONS_H
+#include <check.h>
 #include <stdio.h>
 #include <bst.h>
 #include <stdlib.h>

@@ -17,6 +17,7 @@ static void in_order_traversal_node(node_t * node, void (* function)(node_payloa
 static void pre_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
 static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
 static void right_rotation(node_t * node);
+static node_payload_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload);
 
 void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
 {
@@ -40,7 +41,7 @@ bst_t * bst_init(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), 
 }
 
 /*!
- * @brief Public interface for destroying the three. A private function is called in its
+ * @brief Public interface for destroying the tree. A private function is called in its
  * stead
  * @param bst[in] bst_t
  * @param free_payload[in] Status must include either BST_FREE_PAYLOAD_TRUE or FALSE
@@ -49,6 +50,7 @@ void bst_destroy(bst_t * bst, bst_status_t free_payload)
 {
     traversal_free(bst, bst->root, free_payload);
     free(bst);
+    bst = NULL;
 }
 
 
@@ -83,7 +85,7 @@ bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t repl
     while (NULL != node)
     {
         parent_node = node;
-        result = bst->compare(new_node->key, node->key);
+        result = bst->compare(node->key, new_node->key);
 
         switch (result)
         {
@@ -96,9 +98,10 @@ bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t repl
             case BST_EQ:
                 if (BST_REPLACE_TRUE == replace)
                 {
-                    bst->free_payload(node->key);
-                    node->key = new_node->key;
+                    // we no longer need this node
                     free(new_node);
+                    bst->free_payload(node->key);
+                    node->key = payload;
                     return BST_INSERT_SUCCESS;
                 }
                 else if (BST_REPLACE_FALSE == replace)
@@ -120,7 +123,7 @@ bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t repl
 
     // clean up after iteration
     new_node->parent = parent_node;
-    result = bst->compare(new_node->key, parent_node->key);
+    result = bst->compare(parent_node->key, new_node->key);
     if (BST_LT == result)
     {
         parent_node->left_child = new_node;
@@ -131,6 +134,21 @@ bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t repl
     }
 
     return BST_INSERT_SUCCESS;
+}
+
+/*!
+ * @brief Public function to find a given payload by utilizing the registered compare
+ * callback function. For this reason, primitives can not be used as a search term. A
+ * whole node_payload_t has to be created for the purpose of finding the right node.
+ * @param bst[in] bst_t
+ * @param payload[in] node_payload_t this is a "temp" payload to utilize the key for the
+ * compare function
+ * @return Returns the pointer to the note_payload_t if found, otherwise a NULL is returned
+ */
+node_payload_t * bst_get_node(bst_t * bst, node_payload_t * payload)
+{
+    return search_node(bst, bst->root, payload);
+
 }
 
 /*!
@@ -267,6 +285,7 @@ static void print_2d_iter(node_t * node, int space, void(*callback)(node_payload
 
     print_2d_iter(node->left_child, space, callback);
 }
+
 static void right_rotation(node_t * node)
 {
     // set the constants
@@ -288,4 +307,38 @@ static void right_rotation(node_t * node)
     // update old_p_parent
     old_p_parent->left_child = node;
 
+}
+
+/*!
+ * @brief Private function used in conjunction with bst_get_node. Read description there
+ * for more information.
+ * @param bst[in] bst_t
+ * @param node[in] node_t
+ * @param target_payload[in] node_payload_t
+ * @return Pointer to the node payload if found, otherwise return NULL
+ */
+static node_payload_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload)
+{
+    // if the current node is NULL, then just return it
+    if (NULL == node)
+    {
+        return NULL;
+    }
+
+    // compare the current node to the target payload
+    bst_compare_t result = bst->compare(node->key, target_payload);
+
+    // check the result, and either recurse or return
+    if (BST_EQ == result)
+    {
+        return node->key;
+    }
+    else if (BST_LT == result)
+    {
+        return search_node(bst, node->left_child, target_payload);
+    }
+    else
+    {
+        return search_node(bst, node->right_child, target_payload);
+    }
 }
