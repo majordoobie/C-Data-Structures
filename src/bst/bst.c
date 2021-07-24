@@ -326,6 +326,10 @@ bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_status_t repl
 node_payload_t * bst_get_node(bst_t * bst, node_payload_t * payload)
 {
     node_t * node = search_node(bst, bst->root, payload);
+    if (NULL == node)
+    {
+        return NULL;
+    }
     return node->key;
 }
 
