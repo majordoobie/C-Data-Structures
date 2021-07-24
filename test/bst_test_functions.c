@@ -105,9 +105,9 @@ START_TEST(tree_creation_replace){
 
 
 static TFun create_destroy_test_list[] = {
-    tree_creation_not_null,
-    tree_creation_node_null,
-    tree_creation_replace,
+//    tree_creation_not_null,
+//    tree_creation_node_null,
+//    tree_creation_replace,
     NULL
 };
 
@@ -128,6 +128,9 @@ START_TEST(traversal_order_test){
     bst_insert(tree, create_payload(50, 4), BST_REPLACE_FALSE);
     bst_insert(tree, create_payload(29, 5), BST_REPLACE_FALSE);
     bst_insert(tree, create_payload(55, 5), BST_REPLACE_FALSE);
+
+    print_2d(tree, print);
+    printf("\n");
 
     // create a list of the order that we expected
     int values_in_order[6] = {10, 28, 29, 30, 50, 55};
@@ -342,11 +345,11 @@ Suite * bst_test_suite(void)
     test_cases = tcase_create("Traversal Test Functions");
     add_tests(test_cases, test_list);
     suite_add_tcase(bst_suite, test_cases);
-
-    test_list = rotation_tests;
-    test_cases = tcase_create("Rotation Test Functions");
-    add_tests(test_cases, test_list);
-    suite_add_tcase(bst_suite, test_cases);
+//
+//    test_list = rotation_tests;
+//    test_cases = tcase_create("Rotation Test Functions");
+//    add_tests(test_cases, test_list);
+//    suite_add_tcase(bst_suite, test_cases);
 
 
 
