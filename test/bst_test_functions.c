@@ -130,7 +130,14 @@ START_TEST(traversal_order_test){
     bst_insert(tree, create_payload(55, 5), BST_REPLACE_FALSE);
 
     print_2d(tree, print);
-    printf("\n");
+    printf("\n\n\n");
+
+    my_structure * t = create_payload(28, 0);
+    bst_remove(tree, t);
+
+        print_2d(tree, print);
+        printf("\n");
+
 
     // create a list of the order that we expected
     int values_in_order[6] = {10, 28, 29, 30, 50, 55};

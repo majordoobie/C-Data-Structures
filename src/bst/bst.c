@@ -27,7 +27,6 @@ static void print_2d_iter(node_t * node, int space, void (* callback)(node_paylo
 static void in_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
 static void pre_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
 static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
-
 static node_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload);
 
 
@@ -127,6 +126,130 @@ static node_t * insert_node(node_t * node, node_payload_t * payload, bst_status_
 
     return node;
 }
+
+/*!
+ * @brief Iterate through the right side of given node until NULL is reached then return
+ * the key of that node
+ * @param node[in] node_t
+ * @return Returns the node_payload_t of the last node on the right side of a node given
+ */
+static node_payload_t * find_max_payload(node_t * node)
+{
+    while (NULL != node->right_child)
+    {
+        node = node->right_child;
+    }
+    return node->key;
+}
+
+/*!
+ * @brief Iterate through the right side of given node until NULL is reached then return
+ * the key of that node
+ * @param node[in] node_t
+ * @return Returns the node_payload_t of the last node on the right side of a node given
+ */
+static node_payload_t * find_min_payload(node_t * node)
+{
+    while (NULL != node->left_child)
+    {
+        node = node->left_child;
+    }
+    return node->key;
+}
+
+static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst)
+{
+    if (NULL == node)
+    {
+        return NULL;
+    }
+
+    bst_compare_t result = bst->compare(node->key, payload);
+
+    if (BST_LT == result)
+    {
+        node->left_child = remove_node(node->left_child, payload, bst);
+    }
+    else if (BST_GT == result)
+    {
+        node->right_child = remove_node(node->right_child, payload, bst);
+    }
+    // match found
+    else
+    {
+        // if node has a single or no child
+        if ((NULL == node->right_child) || (NULL == node->left_child))
+        {
+            node_t * temp = node->left_child ? node->left_child : node->right_child;
+
+            // If temp is null, then node has no children ez
+            if (NULL == temp)
+            {
+                temp = node;
+                node = NULL;
+            }
+            else
+            {
+                * node = * temp;
+                free(temp);
+            }
+        }
+        else
+        {
+            node_payload_t * temp = find_min_payload(node->right_child);
+            node->key = temp;
+            node->right_child = remove_node(node->right_child, temp, bst);
+        }
+    }
+
+    if (NULL == node)
+    {
+        return node;
+    }
+
+    set_height(node);
+    int b_factor = get_balance_factor(node);
+
+    if ((b_factor > 1) && (get_balance_factor(node->left_child) >= 0))
+    {
+        right_rotation(node, bst);
+    }
+    if ((b_factor > 1) && (get_balance_factor(node->left_child) < 0))
+    {
+        node->left_child = left_rotation(node->left_child, bst);
+        return right_rotation(node, bst);
+    }
+
+    if ((b_factor < -1) && (get_balance_factor(node->right_child) <= 0))
+    {
+        return left_rotation(node, bst);
+    }
+
+    if ((b_factor < -1) && (get_balance_factor(node->right_child) > 0))
+    {
+        node->right_child = right_rotation(node->right_child, bst);
+        return left_rotation(node, bst);
+    }
+    return node;
+
+}
+
+bst_status_t bst_remove(bst_t * bst, node_payload_t * payload)
+{
+    //static node_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload)
+    node_payload_t * node_payload = bst_get_node(bst, payload);
+    if (NULL == node_payload)
+    {
+        return BST_NODE_NOT_FOUND;
+    }
+
+    // free the returned payload, we don't need it anymore
+    free(node_payload);
+    remove_node(bst->root, payload, bst);
+    return BST_INSERT_SUCCESS;
+}
+
+
 
 
 static node_t * balance_tree(node_t * node, bst_t * bst)

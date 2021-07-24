@@ -17,7 +17,8 @@ typedef enum
     BST_ROTATION_SUCCESS,
     BST_ROTATE_RIGHT,
     BST_ROTATE_LEFT,
-    BST_ROTATE_FAILURE
+    BST_ROTATE_FAILURE,
+    BST_NODE_NOT_FOUND,
 } bst_status_t;
 
 typedef enum
@@ -51,6 +52,7 @@ node_payload_t * bst_get_node(bst_t * bst, node_payload_t * payload);
 void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *, void *), void * void_ptr);
 void print_2d(bst_t * bst, void (* callback)(node_payload_t *));
 bst_status_t rotate(bst_t * bst, node_payload_t * payload, bst_status_t side);
+bst_status_t bst_remove(bst_t * bst, node_payload_t * payload);
 
 #endif //BST_H
 
