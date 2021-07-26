@@ -103,11 +103,39 @@ START_TEST(tree_creation_replace){
     bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
 }END_TEST
 
+START_TEST(tree_node_deletion){
+    // tree creation
+    bst_t * tree = bst_init(compare, free_payload);
+
+    // external structure to stuff into the tree
+    bst_insert(tree, create_payload(30, 1), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(10, 2), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(28, 3), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(50, 4), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(29, 5), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(55, 5), BST_REPLACE_FALSE);
+
+    my_structure * target_payload = create_payload(28, 5);
+
+    print_2d(tree, print);
+    printf("\n\n\n");
+
+    bst_remove(tree, target_payload);
+
+    print_2d(tree, print);
+    printf("\n");
+
+    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
+    free(target_payload);
+
+}END_TEST
+
 
 static TFun create_destroy_test_list[] = {
 //    tree_creation_not_null,
 //    tree_creation_node_null,
 //    tree_creation_replace,
+    tree_node_deletion,
     NULL
 };
 
@@ -129,14 +157,6 @@ START_TEST(traversal_order_test){
     bst_insert(tree, create_payload(29, 5), BST_REPLACE_FALSE);
     bst_insert(tree, create_payload(55, 5), BST_REPLACE_FALSE);
 
-    print_2d(tree, print);
-    printf("\n\n\n");
-
-    my_structure * t = create_payload(28, 0);
-    bst_remove(tree, t);
-
-        print_2d(tree, print);
-        printf("\n");
 
 
     // create a list of the order that we expected
@@ -147,6 +167,8 @@ START_TEST(traversal_order_test){
     iter_struct_t * iter_obj = calloc(1, sizeof(* iter_obj));
     iter_obj->my_struct_list = calloc(10, sizeof(my_structure));
 
+
+    bst_traversal(tree, BST_IN_ORDER, print, iter_obj);
 
     // Compare each node to the order value we expected
     bst_traversal(tree, BST_IN_ORDER, save_nodes, iter_obj);
@@ -348,10 +370,10 @@ Suite * bst_test_suite(void)
     add_tests(test_cases, test_list);
     suite_add_tcase(bst_suite, test_cases);
 
-    test_list = traversal_bst_test;
-    test_cases = tcase_create("Traversal Test Functions");
-    add_tests(test_cases, test_list);
-    suite_add_tcase(bst_suite, test_cases);
+//    test_list = traversal_bst_test;
+//    test_cases = tcase_create("Traversal Test Functions");
+//    add_tests(test_cases, test_list);
+//    suite_add_tcase(bst_suite, test_cases);
 //
 //    test_list = rotation_tests;
 //    test_cases = tcase_create("Rotation Test Functions");

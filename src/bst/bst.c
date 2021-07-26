@@ -12,6 +12,11 @@ struct node {
     node_payload_t * key;
 };
 
+static node_t * find_max_payload(node_t * node);
+static node_t * find_min_payload(node_t * node);
+static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst);
+static int get_height(node_t * node);
+static node_t * insert_node(node_t * node, node_payload_t * payload, bst_status_t replace, bst_t * bst);
 static int get_balance_factor(node_t * node);
 static bool is_right_heavy(node_t * node);
 static bool is_left_heavy(node_t * node);
@@ -30,6 +35,12 @@ static void post_order_traversal_node(node_t * node, void (* function)(node_payl
 static node_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload);
 
 
+/*!
+ * @brief Public function used to printout the binary tree in a way that can visualized
+ * @param bst[in] bst_t
+ * @param callback[in] Call back function used to call on each node. Ideally, this is for
+ * printint each node
+ */
 void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
 {
     print_2d_iter(bst->root, 0, callback);
@@ -64,99 +75,30 @@ void bst_destroy(bst_t * bst, bst_status_t free_payload)
     bst = NULL;
 }
 
-static node_t * create_node(node_payload_t * payload)
+
+bst_status_t bst_remove(bst_t * bst, node_payload_t * payload)
 {
-    // create a new_node object
-    node_t * new_node = calloc(1, sizeof(* new_node));
-    new_node->key = payload;
-    return new_node;
+    //static node_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload)
+    node_payload_t * node_payload = bst_get_node(bst, payload);
+    if (NULL == node_payload)
+    {
+        return BST_NODE_NOT_FOUND;
+    }
+
+    // free the returned payload, we don't need it anymore
+    bst->root = remove_node(bst->root, payload, bst);
+    free(node_payload);
+    return BST_INSERT_SUCCESS;
 }
 
 /*!
- * @brief Function is used to check for null or return height value
- * @param node[in] node_t
- * @return return the height of a node
+ * @brief Recursive function to find the node to remove. There is 3 special cases that
+ * the function uses to know how to promote a node.
+ * @param node
+ * @param payload
+ * @param bst
+ * @return
  */
-static int get_height(node_t * node)
-{
-    if (NULL == node)
-    {
-        return -1;
-    }
-    else
-    {
-        return node->height;
-    }
-}
-
-static int node_max(int left, int right)
-{
-    return (left > right) ? left : right;
-}
-
-static void set_height(node_t * node)
-{
-    node->height = node_max(
-        get_height(node->left_child),
-        get_height(node->right_child)
-    ) + 1;
-}
-
-static node_t * insert_node(node_t * node, node_payload_t * payload, bst_status_t replace, bst_t * bst)
-{
-    // if the current node is NULL, create a node for it
-    if (NULL == node)
-    {
-        return create_node(payload);
-    }
-
-    // run the comparison function supplied
-    bst_compare_t result = bst->compare(node->key, payload);
-    if (BST_LT == result)
-    {
-        node->left_child = insert_node(node->left_child, payload, replace, bst);
-    }
-    else
-    {
-        node->right_child = insert_node(node->right_child, payload, replace, bst);
-    }
-
-    set_height(node);
-    node = balance_tree(node, bst);
-
-    return node;
-}
-
-/*!
- * @brief Iterate through the right side of given node until NULL is reached then return
- * the key of that node
- * @param node[in] node_t
- * @return Returns the node_payload_t of the last node on the right side of a node given
- */
-static node_payload_t * find_max_payload(node_t * node)
-{
-    while (NULL != node->right_child)
-    {
-        node = node->right_child;
-    }
-    return node->key;
-}
-
-/*!
- * @brief Iterate through the right side of given node until NULL is reached then return
- * the key of that node
- * @param node[in] node_t
- * @return Returns the node_payload_t of the last node on the right side of a node given
- */
-static node_payload_t * find_min_payload(node_t * node)
-{
-    while (NULL != node->left_child)
-    {
-        node = node->left_child;
-    }
-    return node->key;
-}
-
 static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst)
 {
     if (NULL == node)
@@ -174,130 +116,118 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
     {
         node->right_child = remove_node(node->right_child, payload, bst);
     }
-    // match found
     else
     {
-        // if node has a single or no child
-        if ((NULL == node->right_child) || (NULL == node->left_child))
+        /*
+         * The following two IF statements check if the left or right node are NULL. If
+         * they are, return the opposite. Returning will assign that node to one of the
+         * two if statements above i.e. "node->right_child = remove();"
+         */
+        if (NULL == node->left_child)
         {
-            node_t * temp = node->left_child ? node->left_child : node->right_child;
-
-            // If temp is null, then node has no children ez
-            if (NULL == temp)
-            {
-                temp = node;
-                node = NULL;
-            }
-            else
-            {
-                * node = * temp;
-                free(temp);
-            }
+            return node->right_child;
+        }
+        else if (NULL == node->right_child)
+        {
+            return node->left_child;
         }
         else
         {
-            node_payload_t * temp = find_min_payload(node->right_child);
-            node->key = temp;
-            node->right_child = remove_node(node->right_child, temp, bst);
+            /*
+             * This section will return the NEW child node for the functions ABOVE. If
+             * either child node of the current node is NULL, it will return the opposite
+             * making that node the new child of one of the parent nodes above.
+             *
+             * To correctly promote a node, you either want the largest node value
+             * on the current nodes left subtree or the smallest node to the right
+             * subtree. The approach will instead check the height to make sure the tree
+             * is balanced.
+             * https://github.com/williamfiset/Algorithms/blob/a6e72cd6c1c7e5a4fde916c4140d6d2b4076762e/src/main/java/com/williamfiset/algorithms/datastructures/balancedtree/AVLTreeRecursive.java#L291
+             */
+            if (node->left_child->height > node->right_child->height)
+            {
+                node_t * promote_node = find_max_payload(node);
+                node->key = promote_node->key;
+                node->left_child = remove_node(node->left_child, promote_node->key, bst);
+                free(promote_node);
+            }
+            else
+            {
+                node_t * promote_note = find_min_payload(node->right_child); // returns left most node
+                node->key = promote_note->key; // sets current to left most node
+                node->right_child = remove_node(node->right_child, promote_note->key, bst);
+                free(promote_note);
+            }
+
         }
     }
-
-    if (NULL == node)
-    {
-        return node;
-    }
-
     set_height(node);
-    int b_factor = get_balance_factor(node);
-
-    if ((b_factor > 1) && (get_balance_factor(node->left_child) >= 0))
-    {
-        right_rotation(node, bst);
-    }
-    if ((b_factor > 1) && (get_balance_factor(node->left_child) < 0))
-    {
-        node->left_child = left_rotation(node->left_child, bst);
-        return right_rotation(node, bst);
-    }
-
-    if ((b_factor < -1) && (get_balance_factor(node->right_child) <= 0))
-    {
-        return left_rotation(node, bst);
-    }
-
-    if ((b_factor < -1) && (get_balance_factor(node->right_child) > 0))
-    {
-        node->right_child = right_rotation(node->right_child, bst);
-        return left_rotation(node, bst);
-    }
+    node = balance_tree(node, bst);
     return node;
+        // match found
+
+//    else
+//    {
+//        // if node has a single or no child
+//        if ((NULL == node->right_child) || (NULL == node->left_child))
+//        {
+//            node_t * temp = node->left_child ? node->left_child : node->right_child;
+//
+//            // If temp is null, then node has no children ez
+//            if (NULL == temp)
+//            {
+//                temp = node;
+//                node = NULL;
+//            }
+//            else
+//            {
+//                * node = * temp;
+//                free(temp);
+//            }
+//        }
+//        else
+//        {
+//            node_payload_t * temp = find_max_payload(node->right_child);
+//            node->key = temp;
+//            node->right_child = remove_node(node->right_child, temp, bst);
+//        }
+//    }
+//
+//    if (NULL == node)
+//    {
+//        return node;
+//    }
+//
+//    set_height(node);
+//    int b_factor = get_balance_factor(node);
+//
+//    if ((b_factor > 1) && (get_balance_factor(node->left_child) >= 0))
+//    {
+//        right_rotation(node, bst);
+//    }
+//    if ((b_factor > 1) && (get_balance_factor(node->left_child) < 0))
+//    {
+//        node->left_child = left_rotation(node->left_child, bst);
+//        return right_rotation(node, bst);
+//    }
+//
+//    if ((b_factor < -1) && (get_balance_factor(node->right_child) <= 0))
+//    {
+//        return left_rotation(node, bst);
+//    }
+//
+//    if ((b_factor < -1) && (get_balance_factor(node->right_child) > 0))
+//    {
+//        node->right_child = right_rotation(node->right_child, bst);
+//        return left_rotation(node, bst);
+//    }
+//    return node;
 
 }
 
-bst_status_t bst_remove(bst_t * bst, node_payload_t * payload)
-{
-    //static node_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload)
-    node_payload_t * node_payload = bst_get_node(bst, payload);
-    if (NULL == node_payload)
-    {
-        return BST_NODE_NOT_FOUND;
-    }
-
-    // free the returned payload, we don't need it anymore
-    free(node_payload);
-    remove_node(bst->root, payload, bst);
-    return BST_INSERT_SUCCESS;
-}
 
 
 
-
-static node_t * balance_tree(node_t * node, bst_t * bst)
-{
-    if (is_left_heavy(node))
-    {
-        // check if a left rotation is required before right
-        if (get_balance_factor(node->left_child) < 0)
-        {
-            node->left_child = left_rotation(node->left_child, bst);
-        }
-        // always perform a right rotation
-        return right_rotation(node, bst);
-    }
-
-    else if (is_right_heavy(node))
-    {
-        // check if right rotation is needed before left
-        if (get_balance_factor(node->right_child) > 0)
-        {
-            node->right_child = right_rotation(node->right_child, bst);
-        }
-        // always perform a left rotation
-        return left_rotation(node, bst);
-    }
-
-    // if execution gets here, then the tree is already balanced
-    return node;
-}
-
-static bool is_right_heavy(node_t * node)
-{
-    return (get_balance_factor(node) < -1);
-}
-static bool is_left_heavy(node_t * node)
-{
-    return (get_balance_factor(node) > 1);
-}
-
-/*!
- * @brief Private function to get the height of the current node while checking for nulls
- * @param node[in] node_t
- * @return Node balance factor value
- */
-static int get_balance_factor(node_t * node)
-{
-    return (NULL == node) ? 0 : get_height(node->left_child) - get_height(node->right_child);
-}
 
 
 /*!
@@ -558,4 +488,144 @@ static node_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_
     {
         return search_node(bst, node->right_child, target_payload);
     }
+}
+static node_t * create_node(node_payload_t * payload)
+{
+    // create a new_node object
+    node_t * new_node = calloc(1, sizeof(* new_node));
+    new_node->key = payload;
+    return new_node;
+}
+
+/*!
+ * @brief Function is used to check for null or return height value
+ * @param node[in] node_t
+ * @return return the height of a node
+ */
+static int get_height(node_t * node)
+{
+    if (NULL == node)
+    {
+        return -1;
+    }
+    else
+    {
+        return node->height;
+    }
+}
+
+static int node_max(int left, int right)
+{
+    return (left > right) ? left : right;
+}
+
+static void set_height(node_t * node)
+{
+    node->height = node_max(
+        get_height(node->left_child),
+        get_height(node->right_child)
+    ) + 1;
+}
+
+static node_t * insert_node(node_t * node, node_payload_t * payload, bst_status_t replace, bst_t * bst)
+{
+    // if the current node is NULL, create a node for it
+    if (NULL == node)
+    {
+        return create_node(payload);
+    }
+
+    // run the comparison function supplied
+    bst_compare_t result = bst->compare(node->key, payload);
+    if (BST_LT == result)
+    {
+        node->left_child = insert_node(node->left_child, payload, replace, bst);
+    }
+    else
+    {
+        node->right_child = insert_node(node->right_child, payload, replace, bst);
+    }
+
+    // TODO: fix hat to do when we have the same node
+    set_height(node);
+    node = balance_tree(node, bst);
+
+    return node;
+}
+
+/*!
+ * @brief Iterate through the right side of given node until NULL is reached then return
+ * the key of that node
+ * @param node[in] node_t
+ * @return Returns the node_payload_t of the last node on the right side of a node given
+ */
+static node_t * find_max_payload(node_t * node)
+{
+    while (NULL != node->right_child)
+    {
+        node = node->right_child;
+    }
+    return node;
+}
+
+/*!
+ * @brief Iterate through the right side of given node until NULL is reached then return
+ * the key of that node
+ * @param node[in] node_t
+ * @return Returns the node_payload_t of the last node on the right side of a node given
+ */
+static node_t * find_min_payload(node_t * node)
+{
+    while (NULL != node->left_child)
+    {
+        node = node->left_child;
+    }
+    return node;
+}
+
+static node_t * balance_tree(node_t * node, bst_t * bst)
+{
+    if (is_left_heavy(node))
+    {
+        // check if a left rotation is required before right
+        if (get_balance_factor(node->left_child) < 0)
+        {
+            node->left_child = left_rotation(node->left_child, bst);
+        }
+        // always perform a right rotation
+        return right_rotation(node, bst);
+    }
+
+    else if (is_right_heavy(node))
+    {
+        // check if right rotation is needed before left
+        if (get_balance_factor(node->right_child) > 0)
+        {
+            node->right_child = right_rotation(node->right_child, bst);
+        }
+        // always perform a left rotation
+        return left_rotation(node, bst);
+    }
+
+    // if execution gets here, then the tree is already balanced
+    return node;
+}
+
+static bool is_right_heavy(node_t * node)
+{
+    return (get_balance_factor(node) < -1);
+}
+static bool is_left_heavy(node_t * node)
+{
+    return (get_balance_factor(node) > 1);
+}
+
+/*!
+ * @brief Private function to get the height of the current node while checking for nulls
+ * @param node[in] node_t
+ * @return Node balance factor value
+ */
+static int get_balance_factor(node_t * node)
+{
+    return (NULL == node) ? 0 : get_height(node->left_child) - get_height(node->right_child);
 }
