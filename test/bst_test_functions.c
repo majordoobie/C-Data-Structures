@@ -21,11 +21,6 @@ void print(my_structure * node_payload)
     printf("%d", node_payload->value);
 }
 
-void print_out(my_structure * node_payload, void * ptr)
-{
-    printf("%d ", node_payload->value);
-}
-
 // Save nodes into a list
 void save_nodes(my_structure * node_payload, void * ptr)
 {
@@ -49,7 +44,7 @@ my_structure * create_payload(int val1, int val2)
 }
 
 /*!
- * @brief Basic tree creationg for testing everything
+ * @brief Basic tree creating for testing everything
  */
 bst_t * create_test_30_10_28_50_29_55()
 {
@@ -57,12 +52,12 @@ bst_t * create_test_30_10_28_50_29_55()
     bst_t * tree = bst_init(compare, free_payload);
 
     // external structure to stuff into the tree
-    bst_insert(tree, create_payload(30, 1), BST_REPLACE_FALSE);
-    bst_insert(tree, create_payload(10, 2), BST_REPLACE_FALSE);
-    bst_insert(tree, create_payload(28, 3), BST_REPLACE_FALSE);
-    bst_insert(tree, create_payload(50, 4), BST_REPLACE_FALSE);
-    bst_insert(tree, create_payload(29, 5), BST_REPLACE_FALSE);
-    bst_insert(tree, create_payload(55, 5), BST_REPLACE_FALSE);
+    bst_insert(tree, create_payload(30, 1), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(10, 2), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(28, 3), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(50, 4), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(29, 5), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(55, 5), REPLACE_PAYLOAD_FALSE);
 
     return tree;
 }
@@ -80,14 +75,14 @@ bst_t * create_test_30_10_28_50_29_55()
 START_TEST(tree_creation_not_null){
     bst_t * tree = bst_init(compare, free_payload);
     ck_assert_ptr_ne(tree, NULL);
-    bst_destroy(tree, BST_FREE_PAYLOAD_FALSE);
+    bst_destroy(tree, FREE_PAYLOAD_FALSE);
 }END_TEST
 
 START_TEST(tree_creation_node_null){
     // TREE CREATION
     bst_t * tree = create_test_30_10_28_50_29_55();
 
-    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
     ck_assert_msg(tree, "Memory freed - use valgrind to get value");
 
 }END_TEST
@@ -105,14 +100,14 @@ START_TEST(tree_creation_replace){
     ck_assert_ptr_ne(found_payload, target_payload);
 
 
-    bst_insert(tree, target_payload, BST_REPLACE_TRUE);
+    bst_insert(tree, target_payload, REPLACE_PAYLOAD_TRUE);
     found_payload = bst_get_node(tree, target_payload);
 
     // Once the new struct is insert, fetch it and confirm that they are the same
     ck_assert_ptr_eq(found_payload, target_payload);
 
 
-    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
 }END_TEST
 
 START_TEST(tree_node_deletion_root){
@@ -123,21 +118,21 @@ START_TEST(tree_node_deletion_root){
 
     // DELETE NODE
     my_structure * target_payload = create_payload(30, 0);
-    bst_remove(tree, target_payload);
+    bst_remove(tree, target_payload, FREE_PAYLOAD_TRUE);
 
-    // CAPTURE NDOES
+    // CAPTURE NODES
     iter_struct_t * iter_obj = calloc(1, sizeof(* iter_obj));
     iter_obj->my_struct_list = calloc(10, sizeof(my_structure));
 
     // CHECK ASSERTION
-    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+    bst_traversal(tree, TRAVERSAL_PRE_ORDER, save_nodes, iter_obj);
     for (int i = 0; i < iter_obj->count; i++)
     {
         ck_assert_int_eq(iter_obj->my_struct_list[i]->value, expected_result[i]);
     }
 
     // FREE
-    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
     free(target_payload);
     free(iter_obj->my_struct_list);
     free(iter_obj);
@@ -151,22 +146,22 @@ START_TEST(tree_node_deletion_edge){
 
     // DELETE NODE
     my_structure * target_payload = create_payload(29, 5);
-    bst_remove(tree, target_payload);
+    bst_remove(tree, target_payload, FREE_PAYLOAD_TRUE);
 
-    // CAPTURE NDOES
+    // CAPTURE NODES
     iter_struct_t * iter_obj = calloc(1, sizeof(* iter_obj));
     iter_obj->my_struct_list = calloc(10, sizeof(my_structure));
 
 
     // CHECK ASSERTION
-    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+    bst_traversal(tree, TRAVERSAL_PRE_ORDER, save_nodes, iter_obj);
     for (int i = 0; i < iter_obj->count; i++)
     {
         ck_assert_int_eq(iter_obj->my_struct_list[i]->value, expected_result[i]);
     }
 
     // FREE
-    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
     free(target_payload);
     free(iter_obj->my_struct_list);
     free(iter_obj);
@@ -180,22 +175,22 @@ START_TEST(tree_node_deletion_children){
 
     // DELETE NODE
     my_structure * target_payload = create_payload(28, 5);
-    bst_remove(tree, target_payload);
+    bst_remove(tree, target_payload, FREE_PAYLOAD_TRUE);
 
-    // CAPTURE NDOES
+    // CAPTURE NODES
     iter_struct_t * iter_obj = calloc(1, sizeof(* iter_obj));
     iter_obj->my_struct_list = calloc(10, sizeof(my_structure));
 
 
     // CHECK ASSERTION
-    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+    bst_traversal(tree, TRAVERSAL_PRE_ORDER, save_nodes, iter_obj);
     for (int i = 0; i < iter_obj->count; i++)
     {
         ck_assert_int_eq(iter_obj->my_struct_list[i]->value, expected_result[i]);
     }
 
     // FREE
-    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
     free(target_payload);
     free(iter_obj->my_struct_list);
     free(iter_obj);
@@ -224,27 +219,27 @@ START_TEST(traversal_order_test){
 
 
     // Compare each node to the order value we expected
-    bst_traversal(tree, BST_IN_ORDER, save_nodes, iter_obj);
+    bst_traversal(tree, TRAVERSAL_IN_ORDER, save_nodes, iter_obj);
     for (int i = 0; i < iter_obj->count; i++)
     {
         ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_in_order[i]);
     }
 
     iter_obj->count = 0;
-    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+    bst_traversal(tree, TRAVERSAL_PRE_ORDER, save_nodes, iter_obj);
     for (int i = 0; i < iter_obj->count; i++)
     {
         ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_pre_order[i]);
     }
 
     iter_obj->count = 0;
-    bst_traversal(tree, BST_POST_ORDER, save_nodes, iter_obj);
+    bst_traversal(tree, TRAVERSAL_POST_ORDER, save_nodes, iter_obj);
     for (int i = 0; i < iter_obj->count; i++)
     {
         ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_post_order[i]);
     }
 
-    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
     free(iter_obj->my_struct_list);
     free(iter_obj);
 }END_TEST
@@ -260,17 +255,17 @@ START_TEST(rotation_test_insert_leaf){
 
     // Create new payload to add
     my_structure * payload = create_payload(5, 0);
-    bst_insert(tree, payload, BST_REPLACE_FALSE);
+    bst_insert(tree, payload, REPLACE_PAYLOAD_FALSE);
 
 
     // Compare each node to the order value we expected
-    bst_traversal(tree, BST_PRE_ORDER, save_nodes, iter_obj);
+    bst_traversal(tree, TRAVERSAL_PRE_ORDER, save_nodes, iter_obj);
     for (int i = 0; i < iter_obj->count; i++)
     {
         ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_pre_order_before_rotation[i]);
     }
 
-    bst_destroy(tree, BST_FREE_PAYLOAD_TRUE);
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
     free(iter_obj->my_struct_list);
     free(iter_obj);
 
@@ -282,19 +277,19 @@ START_TEST(rotation_test_insert_leaf){
  * Enable or Disable tests from each group
  */
 static TFun rotation_tests[] = {
-//    rotation_test_insert_leaf,
+    rotation_test_insert_leaf,
     NULL
 };
 
 static TFun traversal_bst_test[] = {
-//    traversal_order_test,
+    traversal_order_test,
     NULL
 };
 
 static TFun create_destroy_test_list[] = {
-//    tree_creation_not_null,
-//    tree_creation_node_null,
-//    tree_creation_replace,
+    tree_creation_not_null,
+    tree_creation_node_null,
+    tree_creation_replace,
     tree_node_deletion_children,
     tree_node_deletion_edge,
     tree_node_deletion_root,
@@ -304,7 +299,7 @@ static TFun create_destroy_test_list[] = {
 static void add_tests(TCase * test_cases, TFun * test_functions)
 {
   while (* test_functions) {
-    // add the test from the core_tests array to the tcase
+    // add the test from the core_tests array to the t-case
     tcase_add_test(test_cases, * test_functions);
     test_functions++;
   }
