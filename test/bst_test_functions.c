@@ -93,18 +93,10 @@ START_TEST(tree_creation_node_null){
 }END_TEST
 
 START_TEST(tree_creation_replace){
-    // tree creation
-    bst_t * tree = bst_init(compare, free_payload);
+    // CREATE TREE
+    bst_t * tree = create_test_30_10_28_50_29_55();
 
-    // external structure to stuff into the tree
-    bst_insert(tree, create_payload(30, 1), BST_REPLACE_FALSE);
-    bst_insert(tree, create_payload(10, 2), BST_REPLACE_FALSE);
-    bst_insert(tree, create_payload(28, 3), BST_REPLACE_FALSE);
-    bst_insert(tree, create_payload(50, 4), BST_REPLACE_FALSE);
-    bst_insert(tree, create_payload(29, 5), BST_REPLACE_FALSE);
-    bst_insert(tree, create_payload(55, 5), BST_REPLACE_FALSE);
-
-    my_structure * target_payload = create_payload(28, 5);
+    my_structure * target_payload = create_payload(28, 0);
     my_structure * found_payload = bst_get_node(tree, target_payload);
 
     // confirm that both payloads are different entities
@@ -115,6 +107,8 @@ START_TEST(tree_creation_replace){
 
     bst_insert(tree, target_payload, BST_REPLACE_TRUE);
     found_payload = bst_get_node(tree, target_payload);
+
+    // Once the new struct is insert, fetch it and confirm that they are the same
     ck_assert_ptr_eq(found_payload, target_payload);
 
 
@@ -288,19 +282,18 @@ START_TEST(rotation_test_insert_leaf){
  * Enable or Disable tests from each group
  */
 static TFun rotation_tests[] = {
-    rotation_test_insert_leaf,
+//    rotation_test_insert_leaf,
     NULL
 };
 
 static TFun traversal_bst_test[] = {
-    traversal_order_test,
+//    traversal_order_test,
     NULL
 };
 
 static TFun create_destroy_test_list[] = {
-    tree_creation_not_null,
-    tree_creation_node_null,
-    //TODO: FIX THIS
+//    tree_creation_not_null,
+//    tree_creation_node_null,
 //    tree_creation_replace,
     tree_node_deletion_children,
     tree_node_deletion_edge,

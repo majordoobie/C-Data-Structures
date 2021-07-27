@@ -78,16 +78,14 @@ void bst_destroy(bst_t * bst, bst_status_t free_payload)
 
 bst_status_t bst_remove(bst_t * bst, node_payload_t * payload)
 {
-    //static node_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload)
     node_payload_t * node_payload = bst_get_node(bst, payload);
     if (NULL == node_payload)
     {
         return BST_NODE_NOT_FOUND;
     }
 
-    // free the returned payload, we don't need it anymore
     bst->root = remove_node(bst->root, payload, bst);
-    free(node_payload);
+    bst->free_payload(node_payload);
     return BST_INSERT_SUCCESS;
 }
 
@@ -116,20 +114,31 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
     {
         node->right_child = remove_node(node->right_child, payload, bst);
     }
-    else
+    else if (BST_EQ == result)
     {
         /*
          * The following two IF statements check if the left or right node are NULL. If
          * they are, return the opposite. Returning will assign that node to one of the
          * two if statements above i.e. "node->right_child = remove();"
          */
-        if (NULL == node->left_child)
+        if ((NULL == node->left_child) || (NULL == node->right_child))
         {
-            return node->right_child;
-        }
-        else if (NULL == node->right_child)
-        {
-            return node->left_child;
+            // free the payload before returning the right or left child
+//            bst->free_payload(node->key);
+
+            if (NULL == node->right_child)
+            {
+                node_t * child_node = node->left_child;
+                free(node);
+                return child_node;
+            }
+            else
+            {
+                node_t * child_node = node->right_child;
+                free(node);
+                return child_node;
+
+            }
         }
         else
         {
@@ -146,17 +155,37 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
              */
             if (node->left_child->height > node->right_child->height)
             {
-                node_t * promote_node = find_max_payload(node);
+                // Find the MAX RIGHT value starting from the current nodes LEFT
+                node_t * promote_node = find_max_payload(node->left_child);
+
+                // free the target nodes payload
+//                bst->free_payload(node->key);
+
+                // set new payload to node
                 node->key = promote_node->key;
-                node->left_child = remove_node(node->left_child, promote_node->key, bst);
-                free(promote_node);
+
+                // Seek out the new key we set to delete the old one
+                node->left_child = remove_node(node->left_child, node->key, bst);
+
+                // free promoted node since we moved payload to current node
+//                free(promote_node);
             }
             else
             {
-                node_t * promote_note = find_min_payload(node->right_child); // returns left most node
-                node->key = promote_note->key; // sets current to left most node
-                node->right_child = remove_node(node->right_child, promote_note->key, bst);
-                free(promote_note);
+                // Find the MAX LEFT value starting from the current nodes RIGHT
+                node_t * promote_node = find_min_payload(node->right_child);
+
+                // free the target nodes payload
+//                bst->free_payload(node->key);
+
+                // set new payload to node
+                node->key = promote_node->key;
+
+                // Seek out the new key we set to delete the old one
+                node->right_child = remove_node(node->right_child, node->key, bst);
+
+                // free promoted node since we moved payload to current node
+//                free(promote_node);
             }
 
         }
@@ -164,64 +193,6 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
     set_height(node);
     node = balance_tree(node, bst);
     return node;
-        // match found
-
-//    else
-//    {
-//        // if node has a single or no child
-//        if ((NULL == node->right_child) || (NULL == node->left_child))
-//        {
-//            node_t * temp = node->left_child ? node->left_child : node->right_child;
-//
-//            // If temp is null, then node has no children ez
-//            if (NULL == temp)
-//            {
-//                temp = node;
-//                node = NULL;
-//            }
-//            else
-//            {
-//                * node = * temp;
-//                free(temp);
-//            }
-//        }
-//        else
-//        {
-//            node_payload_t * temp = find_max_payload(node->right_child);
-//            node->key = temp;
-//            node->right_child = remove_node(node->right_child, temp, bst);
-//        }
-//    }
-//
-//    if (NULL == node)
-//    {
-//        return node;
-//    }
-//
-//    set_height(node);
-//    int b_factor = get_balance_factor(node);
-//
-//    if ((b_factor > 1) && (get_balance_factor(node->left_child) >= 0))
-//    {
-//        right_rotation(node, bst);
-//    }
-//    if ((b_factor > 1) && (get_balance_factor(node->left_child) < 0))
-//    {
-//        node->left_child = left_rotation(node->left_child, bst);
-//        return right_rotation(node, bst);
-//    }
-//
-//    if ((b_factor < -1) && (get_balance_factor(node->right_child) <= 0))
-//    {
-//        return left_rotation(node, bst);
-//    }
-//
-//    if ((b_factor < -1) && (get_balance_factor(node->right_child) > 0))
-//    {
-//        node->right_child = right_rotation(node->right_child, bst);
-//        return left_rotation(node, bst);
-//    }
-//    return node;
 
 }
 
@@ -541,12 +512,20 @@ static node_t * insert_node(node_t * node, node_payload_t * payload, bst_status_
     {
         node->left_child = insert_node(node->left_child, payload, replace, bst);
     }
-    else
+    else if (BST_GT == result)
     {
         node->right_child = insert_node(node->right_child, payload, replace, bst);
     }
+    // This
+    else if (BST_EQ == result)
+    {
+        if (BST_REPLACE_TRUE == replace)
+        {
+            free(node->key);
+            node->key = payload;
+        }
+    }
 
-    // TODO: fix hat to do when we have the same node
     set_height(node);
     node = balance_tree(node, bst);
 

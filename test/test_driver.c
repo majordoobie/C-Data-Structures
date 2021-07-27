@@ -14,7 +14,7 @@ int main(int argc, char ** argv)
 
     // prepare the test suites
     srunner_add_suite(sr, bst_test_suite());
-    srunner_add_suite(sr, hashtable_test_suite());
+//    srunner_add_suite(sr, hashtable_test_suite());
 
     // run the test suites
     srunner_run_all(sr, CK_VERBOSE);

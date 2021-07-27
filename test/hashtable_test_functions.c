@@ -1,5 +1,6 @@
 #include <hashtable_test_functions.h>
 #include <stdio.h>
+#include <check.h>
 
 START_TEST(create_structure_not_null){
     printf("Testing a okay...\n");
