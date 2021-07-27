@@ -1,0 +1,5 @@
+#ifndef HASHTABLE_TEST_FUNCTIONS_H
+#define HASHTABLE_TEST_FUNCTIONS_H
+#include <check.h>
+
+#endif //HASHTABLE_TEST_FUNCTIONS_H

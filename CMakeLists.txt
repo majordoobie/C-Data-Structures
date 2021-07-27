@@ -4,5 +4,5 @@ project(bst_adt C)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_STANDARD 11)
 
-add_subdirectory(src/bst)
+add_subdirectory(src/bst src/hashtable)
 add_subdirectory(test)
