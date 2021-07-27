@@ -1,4 +1,4 @@
-DIRS=src/bst stc/hashtable test
+DIRS=src/bst test
 BUILD_DIRS=$(DIRS:%=build-%)
 CLEAN_DIRS=$(DIRS:%=clean-%)
 DEBUG_DIRS=$(DIRS:%=debug-%)
