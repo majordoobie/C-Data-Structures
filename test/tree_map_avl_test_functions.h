@@ -1,0 +1,6 @@
+#ifndef TREE_MAP_AVL_TEST_FUNCTIONS_H
+#define TREE_MAP_AVL_TEST_FUNCTIONS_H
+#include <check.h>
+
+
+#endif //TREE_MAP_AVL_TEST_FUNCTIONS_H

@@ -5,5 +5,5 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_STANDARD 11)
 
 add_subdirectory(src/bst)
-#add_subdirectory(src/hashtable)
+add_subdirectory(src/tree_map_avl)
 add_subdirectory(test)
