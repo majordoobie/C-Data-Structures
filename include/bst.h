@@ -8,9 +8,8 @@ typedef enum
 {
     BST_INSERT_SUCCESS,
     BST_INSERT_FAILURE,
-    BST_INSERT_EQUAL,
-    BST_SEARCH_FAILURE,
-    BST_ROTATION_SUCCESS,
+    BST_REMOVE_SUCCESS,
+    BST_REMOVE_FAILURE,
     BST_NODE_NOT_FOUND,
 } bst_status_t;
 
@@ -51,7 +50,7 @@ typedef struct bst
 } bst_t;
 
 bst_t * bst_init(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), void (* free_payload)(node_payload_t *));
-void bst_insert(bst_t * bst, node_payload_t * payload, bst_replace_t replace);
+bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_replace_t replace);
 bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t free_payload);
 void bst_destroy(bst_t * bst, bst_destroy_t free_payload);
 void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *, void *), void * void_ptr);

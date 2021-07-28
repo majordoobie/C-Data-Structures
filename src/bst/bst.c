@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+int8_t global_result = 0;
+
 struct node {
     int height;
     struct node * left_child;
@@ -95,12 +97,15 @@ void bst_destroy(bst_t * bst, bst_destroy_t free_payload)
  */
 bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t free_payload)
 {
+    // Attempt to fetch the payload passed in, if not found return not found
     node_payload_t * node_payload = bst_get_node(bst, payload);
     if (NULL == node_payload)
     {
         return BST_NODE_NOT_FOUND;
     }
 
+    // If payload is in the tree, remove it and set the new root in case we have a
+    // rotation
     bst->root = remove_node(bst->root, payload, bst);
 
     // Free payload if flag is set to true
@@ -108,7 +113,17 @@ bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t fre
     {
         bst->free_payload(node_payload);
     }
-    return BST_INSERT_SUCCESS;
+
+    // Check if operation was successful
+    if (1 == global_result)
+    {
+        global_result = 0;
+        return BST_REMOVE_SUCCESS;
+    }
+    else
+    {
+        return BST_REMOVE_FAILURE;
+    }
 }
 
 /*!
@@ -119,9 +134,19 @@ bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t fre
  * @param payload[in] node_payload_t payload used for the new node
  * @param replace[in] Option to replace or ignore equivalent nodes
  */
-void bst_insert(bst_t * bst, node_payload_t * payload, bst_replace_t replace)
+bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_replace_t replace)
 {
     bst->root = insert_node(bst->root, payload, replace, bst);
+
+    if (1 == global_result)
+    {
+        global_result = 0;
+        return BST_INSERT_SUCCESS;
+    }
+    else
+    {
+        return BST_INSERT_FAILURE;
+    }
 }
 
 /*!
@@ -198,6 +223,7 @@ static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace
     // if the current node is NULL, create a node for it
     if (NULL == node)
     {
+        global_result = 1;
         return create_node(payload);
     }
 
@@ -215,6 +241,8 @@ static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace
     }
     else if (BST_EQ == result)
     {
+        global_result = 1;
+
         if (REPLACE_PAYLOAD_TRUE == replace)
         {
             free(node->key);
@@ -262,12 +290,13 @@ static node_t * get_node(bst_t * bst, node_t * node, node_payload_t * target_pay
 }
 
 /*
- * @brief Recursive function to find the node to remove. There is 3 special cases that
- * the function uses to know how to promote a node.
- * @param node
- * @param payload
- * @param bst
- * @return
+ * @brief Recursively move through the nodes until a match is found. Once it is found,
+ * return the node to be freed.
+ *
+ * @param node[in] node_t
+ * @param payload[in] node_payload_t
+ * @param bst[in] bst_t
+ * @return Return the new root if rotation occurred
  */
 static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst)
 {
@@ -295,6 +324,9 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
          */
         if ((NULL == node->left_child) || (NULL == node->right_child))
         {
+            // set global to 1 meaning that removal was a success
+            global_result = 1;
+
             if (NULL == node->right_child)
             {
                 node_t * child_node = node->left_child;
@@ -355,6 +387,7 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
 
 /*!
  * @brief Recursion function to free each node
+ *
  * @param bst[in] bst_t
  * @param node[in] node_t
  * @param free_payload[in] bst_status_t should include either FREE_PAYLOAD_FALSE or TRUE
@@ -378,6 +411,12 @@ static void free_all_nodes(bst_t * bst, node_t * node, bst_destroy_t free_payloa
     }
 }
 
+/*!
+ * @brief Function uses node heights to know when and how to rotate the tree to balance it
+ *
+ * @param node[in] node_t
+ * @return The node passed in with its new rotation orientation
+ */
 static node_t * balance_tree(node_t * node)
 {
     if (is_left_heavy(node))
@@ -406,6 +445,12 @@ static node_t * balance_tree(node_t * node)
     return node;
 }
 
+/*!
+ * @brief Perform right rotation on a node
+ *
+ * @param node[in] node_t
+ * @return The new node in the current position
+ */
 static node_t * right_rotation(node_t * node)
 {
     node_t * new_root = node->left_child;
@@ -417,6 +462,12 @@ static node_t * right_rotation(node_t * node)
     return new_root;
 }
 
+/*!
+ * @brief Perform left rotation on a node
+ *
+ * @param node[in] node_t
+ * @return The new node in the current position
+ */
 static node_t * left_rotation(node_t * node)
 {
     node_t * new_root = node->right_child;
@@ -430,6 +481,7 @@ static node_t * left_rotation(node_t * node)
 
 /*!
  * @brief Private function to get the height of the current node while checking for nulls
+ *
  * @param node[in] node_t
  * @return Node balance factor value
  */
@@ -438,6 +490,11 @@ static int get_balance_factor(node_t * node)
     return (NULL == node) ? 0 : get_height(node->left_child) - get_height(node->right_child);
 }
 
+/*!
+ * @brief Set the height of the nodes
+ *
+ * @param node[in] node_t
+ */
 static void set_height(node_t * node)
 {
     node->height = node_max(
@@ -448,6 +505,7 @@ static void set_height(node_t * node)
 
 /*!
  * @brief Function is used to check for null or return height value
+ *
  * @param node[in] node_t
  * @return return the height of a node
  */
@@ -462,6 +520,7 @@ static int get_height(node_t * node)
         return node->height;
     }
 }
+
 
 static bool is_right_heavy(node_t * node)
 {
