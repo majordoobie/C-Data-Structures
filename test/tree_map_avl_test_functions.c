@@ -1,7 +1,48 @@
 #include <tree_map_avl_test_functions.h>
 #include <stdio.h>
+#include <check.h>
+#include <bst.h>
+#include <stdlib.h>
+#include <tree_map_avl.h>
+
+typedef struct bst_node_payload_t
+{
+    char ** student_name;
+    double grade_avg;
+} key_val_t;
+
+bst_compare_t map_compare(key_val_t * current_payload, key_val_t * new_payload)
+{
+    return BST_EQ;
+}
+
+void map_free_payload(key_val_t * node_payload)
+{
+    free(node_payload->student_name);
+    free(node_payload);
+}
+
+key_val_t * create_key_val_t(const char * name, double grade_avg)
+{
+    key_val_t * student = calloc(1, sizeof(* student));
+    return student;
+}
+
+dict_t * create_dict()
+{
+    return init_dict(map_compare, map_free_payload);
+}
+// TEST CODE BELOW
+
+START_TEST(create_destroy_test){
+    dict_t * dict = create_dict();
+    ck_assert_ptr_ne(dict, NULL);
+    destroy_dict(dict);
+
+}END_TEST
 
 static TFun create_destroy_test_list[] = {
+    create_destroy_test,
     NULL
 };
 
