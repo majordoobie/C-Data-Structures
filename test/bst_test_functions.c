@@ -61,6 +61,26 @@ bst_t * create_test_30_10_28_50_29_55()
 
     return tree;
 }
+
+bst_t * create_test_5_4_3_2_1_6_7_8_9_6()
+{
+    // tree creation
+    bst_t * tree = bst_init(compare, free_payload);
+
+    // external structure to stuff into the tree
+    bst_insert(tree, create_payload(5, 1), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(4, 2), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(3, 3), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(2, 4), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(1, 5), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(6, 5), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(7, 5), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(8, 5), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(9, 5), REPLACE_PAYLOAD_FALSE);
+
+    return tree;
+
+}
 /*
  * Above this is some driver code to run the BST API
  */
@@ -271,6 +291,30 @@ START_TEST(rotation_test_insert_leaf){
 
 }END_TEST
 
+START_TEST(rotation_test_big_data){
+    // TREE CREATION
+    bst_t * tree = create_test_5_4_3_2_1_6_7_8_9_6();
+
+    int values_pre_order_before_rotation[10] = {4, 2, 1, 3, 6, 5, 8, 7, 9};
+
+    // Create iteration structure
+    iter_struct_t * iter_obj = calloc(1, sizeof(* iter_obj));
+    iter_obj->my_struct_list = calloc(10, sizeof(my_structure));
+
+
+    // Compare each node to the order value we expected
+    bst_traversal(tree, TRAVERSAL_PRE_ORDER, save_nodes, iter_obj);
+    for (int i = 0; i < iter_obj->count; i++)
+    {
+        ck_assert_int_eq(iter_obj->my_struct_list[i]->value, values_pre_order_before_rotation[i]);
+    }
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
+    free(iter_obj->my_struct_list);
+    free(iter_obj);
+
+
+}END_TEST
+
 START_TEST(fetch_existing_node){
     bst_t * tree = create_test_30_10_28_50_29_55();
     my_structure * target = create_payload(28, 0);
@@ -317,6 +361,7 @@ START_TEST(fetch_existing_update_node){
  */
 static TFun rotation_tests[] = {
     rotation_test_insert_leaf,
+    rotation_test_big_data,
     NULL
 };
 

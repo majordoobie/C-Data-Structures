@@ -6,7 +6,7 @@ OBJ=../bin
 
 SRCS=$(wildcard *.c)
 OBJS=$(patsubst %.c, $(OBJ)/%.o, $(SRCS))
-LIB=$(BIN)/libbst.a
+LIB=$(BIN)/libbst.a $(BIN)/libtree_map.a
 
 all: bst_test clean_up
 

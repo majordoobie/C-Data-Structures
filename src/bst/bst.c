@@ -67,6 +67,11 @@ void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
 bst_t * bst_init(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), void (* free_payload)(node_payload_t *))
 {
     bst_t * bst = calloc(1, sizeof(* bst));
+    if (NULL == bst)
+    {
+        fprintf(stderr, "Fatal: failed to allocate %zu bytes for bst_t.\n", sizeof(* bst));
+        abort();
+    }
     bst->compare = compare;
     bst->free_payload = free_payload;
     return bst;
@@ -202,6 +207,11 @@ static node_t * create_node(node_payload_t * payload)
 {
     // create a new_node object
     node_t * new_node = calloc(1, sizeof(* new_node));
+    if (NULL == new_node)
+    {
+        fprintf(stderr, "Fatal: failed to allocate %zu bytes.\n", sizeof(* new_node));
+        abort();
+    }
     new_node->key = payload;
     return new_node;
 }

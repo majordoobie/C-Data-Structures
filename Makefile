@@ -1,4 +1,4 @@
-DIRS=src/bst test
+DIRS=src/bst src/tree_map_avl test
 BUILD_DIRS=$(DIRS:%=build-%)
 CLEAN_DIRS=$(DIRS:%=clean-%)
 DEBUG_DIRS=$(DIRS:%=debug-%)
