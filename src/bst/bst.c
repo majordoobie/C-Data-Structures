@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+int8_t global_result = 0;
+
 struct node {
     int height;
     struct node * left_child;
@@ -14,7 +16,7 @@ struct node {
 // Private insert/deletion functions
 static node_t * create_node(node_payload_t * payload);
 static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_t * bst);
-static node_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload);
+static node_t * get_node(bst_t * bst, node_t * node, node_payload_t * target_payload);
 static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst);
 static void free_all_nodes(bst_t * bst, node_t * node, bst_destroy_t free_payload);
 
@@ -31,6 +33,7 @@ static bool is_right_heavy(node_t * node);
 static bool is_left_heavy(node_t * node);
 static node_t * find_max_payload(node_t * node);
 static node_t * find_min_payload(node_t * node);
+static int node_max(int left, int right);
 
 // Iterable and print functions
 static void print_2d_iter(node_t * node, int space, void (* callback)(node_payload_t *));
@@ -94,12 +97,15 @@ void bst_destroy(bst_t * bst, bst_destroy_t free_payload)
  */
 bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t free_payload)
 {
+    // Attempt to fetch the payload passed in, if not found return not found
     node_payload_t * node_payload = bst_get_node(bst, payload);
     if (NULL == node_payload)
     {
         return BST_NODE_NOT_FOUND;
     }
 
+    // If payload is in the tree, remove it and set the new root in case we have a
+    // rotation
     bst->root = remove_node(bst->root, payload, bst);
 
     // Free payload if flag is set to true
@@ -107,7 +113,17 @@ bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t fre
     {
         bst->free_payload(node_payload);
     }
-    return BST_INSERT_SUCCESS;
+
+    // Check if operation was successful
+    if (1 == global_result)
+    {
+        global_result = 0;
+        return BST_REMOVE_SUCCESS;
+    }
+    else
+    {
+        return BST_REMOVE_FAILURE;
+    }
 }
 
 /*!
@@ -117,27 +133,33 @@ bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t fre
  * @param bst[in] bst_t tree pointer
  * @param payload[in] node_payload_t payload used for the new node
  * @param replace[in] Option to replace or ignore equivalent nodes
- * @return bst_status_t of the operation
  */
 bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_replace_t replace)
 {
-    //TODO: Fix return
     bst->root = insert_node(bst->root, payload, replace, bst);
-    return BST_ROTATION_SUCCESS;
+
+    if (1 == global_result)
+    {
+        global_result = 0;
+        return BST_INSERT_SUCCESS;
+    }
+    else
+    {
+        return BST_INSERT_FAILURE;
+    }
 }
 
 /*!
- * @brief Public function to find a given payload by utilizing the registered compare
- * callback function. For this reason, primitives can not be used as a search term. A
- * whole node_payload_t has to be created for the purpose of finding the right node.
+ * @brief Public function to fetch a payload from a node.
+ *
  * @param bst[in] bst_t
- * @param payload[in] node_payload_t this is a "temp" payload to utilize the key for the
- * compare function
- * @return Returns the pointer to the note_payload_t if found, otherwise a NULL is returned
+ * @param payload[in] node_payload_t You must create a payload with at least the key
+ * data initialized to do the comparisons
+ * @return Found nodes payload or NULL
  */
 node_payload_t * bst_get_node(bst_t * bst, node_payload_t * payload)
 {
-    node_t * node = search_node(bst, bst->root, payload);
+    node_t * node = get_node(bst, bst->root, payload);
     if (NULL == node)
     {
         return NULL;
@@ -145,10 +167,10 @@ node_payload_t * bst_get_node(bst_t * bst, node_payload_t * payload)
     return node->key;
 }
 
-
 /*!
  * @brief Function that calls the internal traversal function and calls the callback
  * function passed to each node to be processed.
+ *
  * @param bst[in] bst_t
  * @param type[in] Type of traversal
  * @param callback[in] Pointer to external supplied function for node processing
@@ -171,6 +193,11 @@ void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_pay
     }
 }
 
+/*!
+ * @brief Create a node object with the passed in payload
+ * @param payload[in] node_payload_t
+ * @return New node
+ */
 static node_t * create_node(node_payload_t * payload)
 {
     // create a new_node object
@@ -179,16 +206,31 @@ static node_t * create_node(node_payload_t * payload)
     return new_node;
 }
 
+/*!
+ * @brief Insert the payload into a newly created node and add it to the tree. If the
+ * node already exists, check if the replace flag is set to True, if so, replace payload
+ * in the node.
+ *
+ * @param node[in] node_t
+ * @param payload[in] node_payload_t
+ * @param replace[in] bst_replace_t
+ * @param bst[in] bst_t
+ * @return Return the newest root node. This will change if a rotation is needed to
+ * maintain the tree balanced
+ */
 static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_t * bst)
 {
     // if the current node is NULL, create a node for it
     if (NULL == node)
     {
+        global_result = 1;
         return create_node(payload);
     }
 
     // run the comparison function supplied
     bst_compare_t result = bst->compare(node->key, payload);
+
+    // Recurse until a proper location is found or a match is found
     if (BST_LT == result)
     {
         node->left_child = insert_node(node->left_child, payload, replace, bst);
@@ -197,9 +239,10 @@ static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace
     {
         node->right_child = insert_node(node->right_child, payload, replace, bst);
     }
-        // This
     else if (BST_EQ == result)
     {
+        global_result = 1;
+
         if (REPLACE_PAYLOAD_TRUE == replace)
         {
             free(node->key);
@@ -214,46 +257,46 @@ static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace
 }
 
 /*!
- * @brief Private function used in conjunction with bst_get_node. Read description there
- * for more information.
+ * @brief Private iterative function to find the node payload that matches the payload
+ * passed in.
+ *
  * @param bst[in] bst_t
  * @param node[in] node_t
  * @param target_payload[in] node_payload_t
- * @return Returns the node that has been found, otherwise it returns a NULL
+ * @return Found node or NULL
  */
-static node_t * search_node(bst_t * bst, node_t * node, node_payload_t * target_payload)
+static node_t * get_node(bst_t * bst, node_t * node, node_payload_t * target_payload)
 {
-    // if the current node is NULL, then just return it
-    if (NULL == node)
+    bst_compare_t result;
+    while (NULL != node)
     {
-        return NULL;
-    }
+        result = bst->compare(node->key, target_payload);
 
-    // compare the current node to the target payload
-    bst_compare_t result = bst->compare(node->key, target_payload);
-
-    // check the result, and either recurse or return
-    if (BST_EQ == result)
-    {
-        return node;
+        if (BST_EQ == result)
+        {
+            return node;
+        }
+        else if (BST_LT == result)
+        {
+            node = node->left_child;
+        }
+        else if (BST_GT == result)
+        {
+            node = node->right_child;
+        }
     }
-    else if (BST_LT == result)
-    {
-        return search_node(bst, node->left_child, target_payload);
-    }
-    else
-    {
-        return search_node(bst, node->right_child, target_payload);
-    }
+    // Return NULL when node is not found
+    return NULL;
 }
 
 /*
- * @brief Recursive function to find the node to remove. There is 3 special cases that
- * the function uses to know how to promote a node.
- * @param node
- * @param payload
- * @param bst
- * @return
+ * @brief Recursively move through the nodes until a match is found. Once it is found,
+ * return the node to be freed.
+ *
+ * @param node[in] node_t
+ * @param payload[in] node_payload_t
+ * @param bst[in] bst_t
+ * @return Return the new root if rotation occurred
  */
 static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst)
 {
@@ -281,6 +324,9 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
          */
         if ((NULL == node->left_child) || (NULL == node->right_child))
         {
+            // set global to 1 meaning that removal was a success
+            global_result = 1;
+
             if (NULL == node->right_child)
             {
                 node_t * child_node = node->left_child;
@@ -341,6 +387,7 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
 
 /*!
  * @brief Recursion function to free each node
+ *
  * @param bst[in] bst_t
  * @param node[in] node_t
  * @param free_payload[in] bst_status_t should include either FREE_PAYLOAD_FALSE or TRUE
@@ -364,6 +411,12 @@ static void free_all_nodes(bst_t * bst, node_t * node, bst_destroy_t free_payloa
     }
 }
 
+/*!
+ * @brief Function uses node heights to know when and how to rotate the tree to balance it
+ *
+ * @param node[in] node_t
+ * @return The node passed in with its new rotation orientation
+ */
 static node_t * balance_tree(node_t * node)
 {
     if (is_left_heavy(node))
@@ -392,6 +445,12 @@ static node_t * balance_tree(node_t * node)
     return node;
 }
 
+/*!
+ * @brief Perform right rotation on a node
+ *
+ * @param node[in] node_t
+ * @return The new node in the current position
+ */
 static node_t * right_rotation(node_t * node)
 {
     node_t * new_root = node->left_child;
@@ -403,6 +462,12 @@ static node_t * right_rotation(node_t * node)
     return new_root;
 }
 
+/*!
+ * @brief Perform left rotation on a node
+ *
+ * @param node[in] node_t
+ * @return The new node in the current position
+ */
 static node_t * left_rotation(node_t * node)
 {
     node_t * new_root = node->right_child;
@@ -414,6 +479,92 @@ static node_t * left_rotation(node_t * node)
     return new_root;
 }
 
+/*!
+ * @brief Private function to get the height of the current node while checking for nulls
+ *
+ * @param node[in] node_t
+ * @return Node balance factor value
+ */
+static int get_balance_factor(node_t * node)
+{
+    return (NULL == node) ? 0 : get_height(node->left_child) - get_height(node->right_child);
+}
+
+/*!
+ * @brief Set the height of the nodes
+ *
+ * @param node[in] node_t
+ */
+static void set_height(node_t * node)
+{
+    node->height = node_max(
+        get_height(node->left_child),
+        get_height(node->right_child)
+    ) + 1;
+}
+
+/*!
+ * @brief Function is used to check for null or return height value
+ *
+ * @param node[in] node_t
+ * @return return the height of a node
+ */
+static int get_height(node_t * node)
+{
+    if (NULL == node)
+    {
+        return -1;
+    }
+    else
+    {
+        return node->height;
+    }
+}
+
+
+static bool is_right_heavy(node_t * node)
+{
+    return (get_balance_factor(node) < -1);
+}
+static bool is_left_heavy(node_t * node)
+{
+    return (get_balance_factor(node) > 1);
+}
+
+/*!
+ * @brief Iterate through the right side of given node until NULL is reached then return
+ * the key of that node
+ * @param node[in] node_t
+ * @return Returns the node_payload_t of the last node on the right side of a node given
+ */
+static node_t * find_max_payload(node_t * node)
+{
+    while (NULL != node->right_child)
+    {
+        node = node->right_child;
+    }
+    return node;
+}
+
+/*!
+ * @brief Iterate through the right side of given node until NULL is reached then return
+ * the key of that node
+ * @param node[in] node_t
+ * @return Returns the node_payload_t of the last node on the right side of a node given
+ */
+static node_t * find_min_payload(node_t * node)
+{
+    while (NULL != node->left_child)
+    {
+        node = node->left_child;
+    }
+    return node;
+}
+
+static int node_max(int left, int right)
+{
+    return (left > right) ? left : right;
+}
 /*!
  * @brief Function to recursively printout the nodes in a manner that you can visually see
  * in the terminal
@@ -487,83 +638,6 @@ static void post_order_traversal_node(node_t * node, void (* function)(node_payl
 
 
 
-/*!
- * @brief Function is used to check for null or return height value
- * @param node[in] node_t
- * @return return the height of a node
- */
-static int get_height(node_t * node)
-{
-    if (NULL == node)
-    {
-        return -1;
-    }
-    else
-    {
-        return node->height;
-    }
-}
-
-static int node_max(int left, int right)
-{
-    return (left > right) ? left : right;
-}
-
-static void set_height(node_t * node)
-{
-    node->height = node_max(
-        get_height(node->left_child),
-        get_height(node->right_child)
-    ) + 1;
-}
 
 
-/*!
- * @brief Iterate through the right side of given node until NULL is reached then return
- * the key of that node
- * @param node[in] node_t
- * @return Returns the node_payload_t of the last node on the right side of a node given
- */
-static node_t * find_max_payload(node_t * node)
-{
-    while (NULL != node->right_child)
-    {
-        node = node->right_child;
-    }
-    return node;
-}
 
-/*!
- * @brief Iterate through the right side of given node until NULL is reached then return
- * the key of that node
- * @param node[in] node_t
- * @return Returns the node_payload_t of the last node on the right side of a node given
- */
-static node_t * find_min_payload(node_t * node)
-{
-    while (NULL != node->left_child)
-    {
-        node = node->left_child;
-    }
-    return node;
-}
-
-
-static bool is_right_heavy(node_t * node)
-{
-    return (get_balance_factor(node) < -1);
-}
-static bool is_left_heavy(node_t * node)
-{
-    return (get_balance_factor(node) > 1);
-}
-
-/*!
- * @brief Private function to get the height of the current node while checking for nulls
- * @param node[in] node_t
- * @return Node balance factor value
- */
-static int get_balance_factor(node_t * node)
-{
-    return (NULL == node) ? 0 : get_height(node->left_child) - get_height(node->right_child);
-}

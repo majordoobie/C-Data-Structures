@@ -271,7 +271,46 @@ START_TEST(rotation_test_insert_leaf){
 
 }END_TEST
 
+START_TEST(fetch_existing_node){
+    bst_t * tree = create_test_30_10_28_50_29_55();
+    my_structure * target = create_payload(28, 0);
 
+    my_structure * find = bst_get_node(tree, target);
+
+    ck_assert_int_eq(target->value, find->value);
+
+    free(target);
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
+}END_TEST
+
+START_TEST(fetch_non_existing_node){
+    bst_t * tree = create_test_30_10_28_50_29_55();
+    my_structure * target = create_payload(90, 0);
+
+    my_structure * find = bst_get_node(tree, target);
+
+    ck_assert_ptr_eq(find, NULL);
+
+    free(target);
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
+}END_TEST
+
+START_TEST(fetch_existing_update_node){
+    bst_t * tree = create_test_30_10_28_50_29_55();
+    my_structure * target = create_payload(28, 0);
+
+    my_structure * find = bst_get_node(tree, target);
+
+    ck_assert_int_ne(target->other_value, find->other_value);
+    find->other_value = target->other_value;
+
+    find = bst_get_node(tree, target);
+    ck_assert_int_eq(find->other_value, target->other_value);
+
+
+    free(target);
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
+}END_TEST
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
  * Enable or Disable tests from each group
@@ -286,6 +325,12 @@ static TFun traversal_bst_test[] = {
     NULL
 };
 
+static TFun fetch_tests[] = {
+    fetch_existing_node,
+    fetch_non_existing_node,
+    fetch_existing_update_node,
+    NULL
+};
 static TFun create_destroy_test_list[] = {
     tree_creation_not_null,
     tree_creation_node_null,
@@ -328,6 +373,10 @@ Suite * bst_test_suite(void)
     suite_add_tcase(bst_suite, test_cases);
 
 
+    test_list = fetch_tests;
+    test_cases = tcase_create("Fetch Nodes");
+    add_tests(test_cases, test_list);
+    suite_add_tcase(bst_suite, test_cases);
 
     return bst_suite;
 }
