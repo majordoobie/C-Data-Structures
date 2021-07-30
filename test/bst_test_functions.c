@@ -22,11 +22,23 @@ void print(my_structure * node_payload)
 }
 
 // Save nodes into a list
-void save_nodes(my_structure * node_payload, void * ptr)
+bst_recurse_t save_nodes(my_structure * node_payload, void * ptr)
 {
     iter_struct_t * iter = (iter_struct_t *) ptr;
     iter->my_struct_list[iter->count] = node_payload;
     iter->count++;
+    return RECURSE_TRUE;
+}
+
+bst_recurse_t stop_recurse(my_structure * node_payload, void * ptr)
+{
+    recursion_test_t * match = (recursion_test_t *) ptr;
+    if (node_payload->other_value == match->target)
+    {
+        match->payload = node_payload;
+        return RECURSE_STOP;
+    }
+    return RECURSE_TRUE;
 }
 
 void free_payload(my_structure * node_payload)
@@ -52,12 +64,12 @@ bst_t * create_test_30_10_28_50_29_55()
     bst_t * tree = bst_init(compare, free_payload);
 
     // external structure to stuff into the tree
-    bst_insert(tree, create_payload(30, 1), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(10, 2), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(28, 3), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(50, 4), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(29, 5), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(55, 5), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(30, 1), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(10, 2), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(28, 3), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(50, 4), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(29, 5), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(55, 5), REPLACE_PAYLOAD_FALSE, 0, 0);
 
     return tree;
 }
@@ -68,15 +80,15 @@ bst_t * create_test_5_4_3_2_1_6_7_8_9_6()
     bst_t * tree = bst_init(compare, free_payload);
 
     // external structure to stuff into the tree
-    bst_insert(tree, create_payload(5, 1), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(4, 2), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(3, 3), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(2, 4), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(1, 5), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(6, 5), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(7, 5), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(8, 5), REPLACE_PAYLOAD_FALSE);
-    bst_insert(tree, create_payload(9, 5), REPLACE_PAYLOAD_FALSE);
+    bst_insert(tree, create_payload(5, 1), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(4, 2), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(3, 3), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(2, 4), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(1, 5), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(6, 100), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(7, 5), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(8, 100), REPLACE_PAYLOAD_FALSE, 0, 0);
+    bst_insert(tree, create_payload(9, 5), REPLACE_PAYLOAD_FALSE, 0, 0);
 
     return tree;
 
@@ -120,7 +132,7 @@ START_TEST(tree_creation_replace){
     ck_assert_ptr_ne(found_payload, target_payload);
 
 
-    bst_insert(tree, target_payload, REPLACE_PAYLOAD_TRUE);
+        bst_insert(tree, target_payload, REPLACE_PAYLOAD_TRUE, 0, 0);
     found_payload = bst_get_node(tree, target_payload);
 
     // Once the new struct is insert, fetch it and confirm that they are the same
@@ -275,7 +287,7 @@ START_TEST(rotation_test_insert_leaf){
 
     // Create new payload to add
     my_structure * payload = create_payload(5, 0);
-    bst_insert(tree, payload, REPLACE_PAYLOAD_FALSE);
+        bst_insert(tree, payload, REPLACE_PAYLOAD_FALSE, 0, 0);
 
 
     // Compare each node to the order value we expected
@@ -355,6 +367,19 @@ START_TEST(fetch_existing_update_node){
     free(target);
     bst_destroy(tree, FREE_PAYLOAD_TRUE);
 }END_TEST
+START_TEST(fetch_exists_recursion){
+    bst_t * tree = create_test_5_4_3_2_1_6_7_8_9_6();
+    recursion_test_t * match = calloc(1, sizeof(* match));
+    match->target = 100;
+
+    bst_traversal(tree, TRAVERSAL_IN_ORDER, stop_recurse, match);
+
+    ck_assert_int_eq(match->payload->value, 6);
+
+    bst_destroy(tree, FREE_PAYLOAD_TRUE);
+    free(match);
+
+}END_TEST
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
  * Enable or Disable tests from each group
@@ -374,6 +399,7 @@ static TFun fetch_tests[] = {
     fetch_existing_node,
     fetch_non_existing_node,
     fetch_existing_update_node,
+    fetch_exists_recursion,
     NULL
 };
 static TFun create_destroy_test_list[] = {
