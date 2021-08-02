@@ -15,7 +15,7 @@ typedef struct dict_t
  * @param free_payload[in] Callback function used to free the key_val_t
  * @return Dictionary object or abort
  */
-dict_t * init_dict(bst_recurse_t (* value_search)(node_payload_t *, void *), bst_compare_t (* compare)(key_val_t *, key_val_t *), void (* free_payload)(node_payload_t *))
+dict_t * init_dict(bst_compare_t (* compare)(key_val_t *, key_val_t *), void (* free_payload)(node_payload_t *), bst_recurse_t (* value_search)(node_payload_t *, void *))
 {
     dict_t * dict = calloc(1, sizeof(* dict));
     if (NULL == dict)
@@ -74,7 +74,7 @@ uint8_t put_key_val(dict_t * dict, key_val_t * key_val)
  * @param ptr
  * @return
  */
-uint8_t put_key_val_adv(dict_t * dict, key_val_t * key_val, bst_status_t (* callback)(key_val_t * key_val, void *), void * ptr)
+uint8_t put_key_val_adv(dict_t * dict, key_val_t * key_val, bst_status_t (* callback)(key_val_t * key_val, void *, void *), void * ptr)
 {
     bst_status_t status = bst_insert(dict->tree, key_val, REPLACE_PAYLOAD_TRUE, callback, ptr);
     if (status == BST_INSERT_SUCCESS)
@@ -100,10 +100,10 @@ key_val_t * get_key_val(dict_t * dict, key_val_t * key)
 }
 
 /*!
- * @brief Check if the key passed in is found in the dictionary
+ * @brief Check if the collation_value passed in is found in the dictionary
  * @param dict[in] dict_t
  * @param key[in] key_val_t
- * @return Returns true if key is found else return false
+ * @return Returns true if collation_value is found else return false
  */
 bool contains_key(dict_t * dict, key_val_t * key)
 {
@@ -129,13 +129,25 @@ void contains_value(dict_t * dict, void * ptr)
 }
 
 /*!
- * @brief Remove a key value pair from the dictionary
+ * @brief Remove a collation_value value pair from the dictionary
  * @param dict[in] dict_t
  * @param key[in] key_val_t
  */
 void remove_key_val(dict_t * dict, key_val_t * key)
 {
-   bst_remove(dict->tree, key, FREE_PAYLOAD_TRUE);
+   if (BST_REMOVE_SUCCESS == bst_remove(dict->tree, key, FREE_PAYLOAD_TRUE))
+   {
+       dict->count--;
+   }
 }
 
+void recurse_dict(dict_t * dict, bst_recurse_t (* callback)(key_val_t * key_val, void * ptr), void * ptr)
+{
+    bst_traversal(dict->tree, TRAVERSAL_IN_ORDER, callback, ptr);
+}
+
+int get_size(dict_t * dict)
+{
+    return dict->count;
+}
 

@@ -4,24 +4,28 @@ CFLAGS+=-Wall -Wextra -Wpedantic -Waggregate-return -Wwrite-strings -Wvla -Wfloa
 BIN=../../bin
 SRCS=$(wildcard *.c)
 OBJS=$(patsubst %.c, $(BIN)/%.o, $(SRCS))
+TARGET=libtree_map.a
 
-all: libtree_map.a clean_up
+all: $(TARGET) clean_up
 
-.PHONY: debug
+.PHONY: debug clean check profile
+
+profile: CFLAGS+= -pg
+profile: $(TARGET)
+
 debug: CFLAGS+= -g
-debug: libtree_map.a
+debug: $(TARGET)
 
-libtree_map.a: $(OBJS)
-	ar rcs $(BIN)/libtree_map.a $(BIN)/tree_map_avl.o
-	ranlib $(BIN)/libtree_map.a
+$(TARGET): $(OBJS)
+	ar rcs $(BIN)/$(TARGET) $(BIN)/tree_map_avl.o
+	ranlib $(BIN)/$(TARGET)
 
 $(OBJS): $(SRCS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean_up:
-	rm -rf $(BIN)/*.o
+	rm -rf $(OBJS)
 
-.PHONY: clean
 clean:
-	rm -rf $(BIN)/*.o
-	rm -rf $(BIN)/*.a
+	rm -rf $(OBJS)
+	rm -rf $(BIN)/$(TARGET)
