@@ -64,12 +64,12 @@ bst_recurse_t map_stop_recurse(key_val_t * node_payload, void * ptr)
 
 dict_t * create_dict()
 {
-    return init_dict(map_stop_recurse, map_compare, map_free_payload);
+    return init_dict(map_compare, map_free_payload, map_stop_recurse);
 }
 
 dict_t * create_multi_dict()
 {
-    dict_t * dict = init_dict(map_stop_recurse, map_compare, map_free_payload);
+    dict_t * dict = init_dict(map_compare, map_free_payload, map_stop_recurse);
 
     put_key_val(dict, create_key_val_t("Johnson Caputo", 74));
     put_key_val(dict, create_key_val_t("johnson Caputo", 106));

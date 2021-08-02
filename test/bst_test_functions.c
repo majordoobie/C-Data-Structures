@@ -424,7 +424,7 @@ static void add_tests(TCase * test_cases, TFun * test_functions)
 Suite * bst_test_suite(void)
 {
     // suite creation
-    Suite * bst_suite = suite_create("BST Test");
+    Suite * bst_suite = suite_create("\nBST Test Suite");
     TFun * test_list;
     TCase * test_cases;
 

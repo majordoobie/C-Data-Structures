@@ -56,7 +56,7 @@ typedef struct bst
 } bst_t;
 
 bst_t * bst_init(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), void (* free_payload)(node_payload_t *));
-bst_status_t bst_insert(bst_t *bst, node_payload_t *payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *), void *ptr);
+bst_status_t bst_insert(bst_t *bst, node_payload_t *payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *, void *), void *ptr);
 bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t free_payload);
 void bst_destroy(bst_t * bst, bst_destroy_t free_payload);
 void bst_traversal(bst_t * bst, bst_traversal_t type, bst_recurse_t (* callback)(node_payload_t *, void *), void * void_ptr);
