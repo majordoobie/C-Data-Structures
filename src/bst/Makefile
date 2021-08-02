@@ -4,24 +4,28 @@ CFLAGS+=-Wall -Wextra -Wpedantic -Waggregate-return -Wwrite-strings -Wvla -Wfloa
 BIN=../../bin
 SRCS=$(wildcard *.c)
 OBJS=$(patsubst %.c, $(BIN)/%.o, $(SRCS))
+TARGET=libbst.a
 
-all: libbst.a clean_up
+all: $(TARGET)
 
-.PHONY: debug
+.PHONY: debug clean check profile
+
+profile: CFLAGS+= -pg
+profile: $(TARGET)
+
 debug: CFLAGS+= -g
-debug: libbst.a
+debug: $(TARGET)
 
-libbst.a: $(OBJS)
-	ar rcs $(BIN)/libbst.a $(BIN)/bst.o
-	ranlib $(BIN)/libbst.a
+$(TARGET): $(OBJS)
+	ar rcs $(BIN)/$(TARGET) $(BIN)/bst.o
+	ranlib $(BIN)/$(TARGET)
 
 $(OBJS): $(SRCS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean_up:
-	rm -rf $(BIN)/*.o
+	rm -rf $(OBJS)
 
-.PHONY: clean
 clean:
-	rm -rf $(BIN)/*.o
-	rm -rf $(BIN)/*.a
+	rm -rf $(OBJS)
+	rm -rf $(BIN)/$(TARGET)

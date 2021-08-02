@@ -15,7 +15,7 @@ struct node {
 
 // Private insert/deletion functions
 static node_t * create_node(node_payload_t * payload);
-static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *), void *ptr, bst_t * bst);
+static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *, void *), void *ptr, bst_t * bst);
 static node_t * get_node(bst_t * bst, node_t * node, node_payload_t * target_payload);
 static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst);
 static void free_all_nodes(bst_t * bst, node_t * node, bst_destroy_t free_payload);
@@ -56,7 +56,7 @@ void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
 }
 
 /*!
- * @brief Initialize the tree structure to include the payload size of the node keys.
+ * @brief Initialize the tree structure to include the payload file_count of the node keys.
  * The bst structure also will also require two callback functions. One function to perform
  * comparisons and another function to free the payloads.
  *
@@ -117,6 +117,7 @@ bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t fre
     if (FREE_PAYLOAD_TRUE == free_payload)
     {
         bst->free_payload(node_payload);
+        global_result = 1;
     }
 
     // Check if operation was successful
@@ -139,7 +140,7 @@ bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t fre
  * @param payload[in] node_payload_t payload used for the new node
  * @param replace[in] Option to replace or ignore equivalent nodes
  */
-bst_status_t bst_insert(bst_t *bst, node_payload_t *payload, bst_replace_t replace, bst_status_t (* callback)(node_payload_t *, void *), void * ptr)
+bst_status_t bst_insert(bst_t *bst, node_payload_t *payload, bst_replace_t replace, bst_status_t (* callback)(node_payload_t *, void *, void *), void * ptr)
 {
     bst->root = insert_node(bst->root, payload, replace, callback, ptr, bst);
 
@@ -158,7 +159,7 @@ bst_status_t bst_insert(bst_t *bst, node_payload_t *payload, bst_replace_t repla
  * @brief Public function to fetch a payload from a node.
  *
  * @param bst[in] bst_t
- * @param payload[in] node_payload_t You must create a payload with at least the key
+ * @param payload[in] node_payload_t You must create a payload with at least the collation_value
  * data initialized to do the comparisons
  * @return Found nodes payload or NULL
  */
@@ -234,13 +235,30 @@ static node_t * create_node(node_payload_t * payload)
  * @return Return the newest root node. This will change if a rotation is needed to
  * maintain the tree balanced
  */
-static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *), void *ptr, bst_t * bst)
+static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *, void *), void *ptr, bst_t * bst)
 {
     // if the current node is NULL, create a node for it
     if (NULL == node)
     {
         global_result = 1;
-        return create_node(payload);
+        if (NULL == callback)
+        {
+            return create_node(payload);
+        }
+        else
+        {
+            // if callback exists, call it to determine if node should be created
+            bst_status_t result = callback(payload, NULL, ptr);
+            if (BST_INSERT_SUCCESS == result)
+            {
+                return create_node(payload);
+            }
+            else
+            {
+                global_result = 0;
+                return NULL;
+            }
+        }
     }
 
     // run the comparison function supplied
@@ -263,12 +281,13 @@ static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace
         {
             if (NULL == callback)
             {
-                free(node->key);
+                bst->free_payload(node->key);
                 node->key = payload;
             }
             else
             {
-                callback(node->key, ptr);
+                //TODO: Leak is here
+                callback(node->key, payload, ptr);
             }
         }
     }
@@ -386,7 +405,7 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
                 // set new payload to node
                 node->key = promote_node->key;
 
-                // Seek out the new key we set to delete the old one
+                // Seek out the new collation_value we set to delete the old one
                 node->left_child = remove_node(node->left_child, node->key, bst);
             }
             else
@@ -397,7 +416,7 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
                 // set new payload to node
                 node->key = promote_node->key;
 
-                // Seek out the new key we set to delete the old one
+                // Seek out the new collation_value we set to delete the old one
                 node->right_child = remove_node(node->right_child, node->key, bst);
             }
 
@@ -557,7 +576,7 @@ static bool is_left_heavy(node_t * node)
 
 /*!
  * @brief Iterate through the right side of given node until NULL is reached then return
- * the key of that node
+ * the collation_value of that node
  * @param node[in] node_t
  * @return Returns the node_payload_t of the last node on the right side of a node given
  */
@@ -572,7 +591,7 @@ static node_t * find_max_payload(node_t * node)
 
 /*!
  * @brief Iterate through the right side of given node until NULL is reached then return
- * the key of that node
+ * the collation_value of that node
  * @param node[in] node_t
  * @return Returns the node_payload_t of the last node on the right side of a node given
  */
