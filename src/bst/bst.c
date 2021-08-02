@@ -15,7 +15,7 @@ struct node {
 
 // Private insert/deletion functions
 static node_t * create_node(node_payload_t * payload);
-static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_t * bst);
+static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *, void *), void *ptr, bst_t * bst);
 static node_t * get_node(bst_t * bst, node_t * node, node_payload_t * target_payload);
 static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst);
 static void free_all_nodes(bst_t * bst, node_t * node, bst_destroy_t free_payload);
@@ -37,9 +37,9 @@ static int node_max(int left, int right);
 
 // Iterable and print functions
 static void print_2d_iter(node_t * node, int space, void (* callback)(node_payload_t *));
-static void in_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
-static void pre_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
-static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr);
+static bst_recurse_t in_order_traversal_node(node_t * node, bst_recurse_t recurse, bst_recurse_t (* function)(node_payload_t *, void *), void * void_ptr);
+static bst_recurse_t pre_order_traversal_node(node_t * node, bst_recurse_t recurse, bst_recurse_t (* function)(node_payload_t *, void *), void * void_ptr);
+static bst_recurse_t post_order_traversal_node(node_t * node, bst_recurse_t recurse, bst_recurse_t (* function)(node_payload_t *, void *), void * void_ptr);
 
 
 /*!
@@ -56,7 +56,7 @@ void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
 }
 
 /*!
- * @brief Initialize the tree structure to include the payload size of the node keys.
+ * @brief Initialize the tree structure to include the payload file_count of the node keys.
  * The bst structure also will also require two callback functions. One function to perform
  * comparisons and another function to free the payloads.
  *
@@ -67,6 +67,11 @@ void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
 bst_t * bst_init(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), void (* free_payload)(node_payload_t *))
 {
     bst_t * bst = calloc(1, sizeof(* bst));
+    if (NULL == bst)
+    {
+        fprintf(stderr, "Fatal: failed to allocate %zu bytes for bst_t.\n", sizeof(* bst));
+        abort();
+    }
     bst->compare = compare;
     bst->free_payload = free_payload;
     return bst;
@@ -112,6 +117,7 @@ bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t fre
     if (FREE_PAYLOAD_TRUE == free_payload)
     {
         bst->free_payload(node_payload);
+        global_result = 1;
     }
 
     // Check if operation was successful
@@ -134,9 +140,9 @@ bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t fre
  * @param payload[in] node_payload_t payload used for the new node
  * @param replace[in] Option to replace or ignore equivalent nodes
  */
-bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_replace_t replace)
+bst_status_t bst_insert(bst_t *bst, node_payload_t *payload, bst_replace_t replace, bst_status_t (* callback)(node_payload_t *, void *, void *), void * ptr)
 {
-    bst->root = insert_node(bst->root, payload, replace, bst);
+    bst->root = insert_node(bst->root, payload, replace, callback, ptr, bst);
 
     if (1 == global_result)
     {
@@ -153,7 +159,7 @@ bst_status_t bst_insert(bst_t * bst, node_payload_t * payload, bst_replace_t rep
  * @brief Public function to fetch a payload from a node.
  *
  * @param bst[in] bst_t
- * @param payload[in] node_payload_t You must create a payload with at least the key
+ * @param payload[in] node_payload_t You must create a payload with at least the collation_value
  * data initialized to do the comparisons
  * @return Found nodes payload or NULL
  */
@@ -175,18 +181,18 @@ node_payload_t * bst_get_node(bst_t * bst, node_payload_t * payload)
  * @param type[in] Type of traversal
  * @param callback[in] Pointer to external supplied function for node processing
  */
-void bst_traversal(bst_t * bst, bst_traversal_t type, void (* callback)(node_payload_t *, void *), void * void_ptr)
+void bst_traversal(bst_t * bst, bst_traversal_t type, bst_recurse_t (* callback)(node_payload_t *, void *), void * void_ptr)
 {
     switch (type)
     {
         case TRAVERSAL_IN_ORDER:
-            in_order_traversal_node(bst->root, callback, void_ptr);
+            in_order_traversal_node(bst->root, RECURSE_TRUE, callback, void_ptr);
             break;
         case TRAVERSAL_POST_ORDER:
-            post_order_traversal_node(bst->root, callback, void_ptr);
+            post_order_traversal_node(bst->root, RECURSE_TRUE, callback, void_ptr);
             break;
         case TRAVERSAL_PRE_ORDER:
-            pre_order_traversal_node(bst->root, callback, void_ptr);
+            pre_order_traversal_node(bst->root, RECURSE_TRUE, callback, void_ptr);
             break;
         default:
             break;
@@ -202,6 +208,11 @@ static node_t * create_node(node_payload_t * payload)
 {
     // create a new_node object
     node_t * new_node = calloc(1, sizeof(* new_node));
+    if (NULL == new_node)
+    {
+        fprintf(stderr, "Fatal: failed to allocate %zu bytes.\n", sizeof(* new_node));
+        abort();
+    }
     new_node->key = payload;
     return new_node;
 }
@@ -211,20 +222,43 @@ static node_t * create_node(node_payload_t * payload)
  * node already exists, check if the replace flag is set to True, if so, replace payload
  * in the node.
  *
+ * Additionally, if more granular control is needed for adding matched nodes, you have
+ * the option of providing a callback function along with a void pointer to whatever
+ * structure is needed
+ *
  * @param node[in] node_t
  * @param payload[in] node_payload_t
  * @param replace[in] bst_replace_t
+ * @param callback[in] Pointer to a callback function for the option to do with a already matched node
+ * @param ptr[in] NULL pointer for using callback
  * @param bst[in] bst_t
  * @return Return the newest root node. This will change if a rotation is needed to
  * maintain the tree balanced
  */
-static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_t * bst)
+static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *, void *), void *ptr, bst_t * bst)
 {
     // if the current node is NULL, create a node for it
     if (NULL == node)
     {
         global_result = 1;
-        return create_node(payload);
+        if (NULL == callback)
+        {
+            return create_node(payload);
+        }
+        else
+        {
+            // if callback exists, call it to determine if node should be created
+            bst_status_t result = callback(payload, NULL, ptr);
+            if (BST_INSERT_SUCCESS == result)
+            {
+                return create_node(payload);
+            }
+            else
+            {
+                global_result = 0;
+                return NULL;
+            }
+        }
     }
 
     // run the comparison function supplied
@@ -233,11 +267,11 @@ static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace
     // Recurse until a proper location is found or a match is found
     if (BST_LT == result)
     {
-        node->left_child = insert_node(node->left_child, payload, replace, bst);
+        node->left_child = insert_node(node->left_child, payload, replace, callback, ptr, bst);
     }
     else if (BST_GT == result)
     {
-        node->right_child = insert_node(node->right_child, payload, replace, bst);
+        node->right_child = insert_node(node->right_child, payload, replace, callback, ptr, bst);
     }
     else if (BST_EQ == result)
     {
@@ -245,8 +279,16 @@ static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace
 
         if (REPLACE_PAYLOAD_TRUE == replace)
         {
-            free(node->key);
-            node->key = payload;
+            if (NULL == callback)
+            {
+                bst->free_payload(node->key);
+                node->key = payload;
+            }
+            else
+            {
+                //TODO: Leak is here
+                callback(node->key, payload, ptr);
+            }
         }
     }
 
@@ -274,6 +316,7 @@ static node_t * get_node(bst_t * bst, node_t * node, node_payload_t * target_pay
 
         if (BST_EQ == result)
         {
+            //TODO: Add a way to call a callback function with a NULL pointer
             return node;
         }
         else if (BST_LT == result)
@@ -362,7 +405,7 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
                 // set new payload to node
                 node->key = promote_node->key;
 
-                // Seek out the new key we set to delete the old one
+                // Seek out the new collation_value we set to delete the old one
                 node->left_child = remove_node(node->left_child, node->key, bst);
             }
             else
@@ -373,7 +416,7 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
                 // set new payload to node
                 node->key = promote_node->key;
 
-                // Seek out the new key we set to delete the old one
+                // Seek out the new collation_value we set to delete the old one
                 node->right_child = remove_node(node->right_child, node->key, bst);
             }
 
@@ -533,7 +576,7 @@ static bool is_left_heavy(node_t * node)
 
 /*!
  * @brief Iterate through the right side of given node until NULL is reached then return
- * the key of that node
+ * the collation_value of that node
  * @param node[in] node_t
  * @return Returns the node_payload_t of the last node on the right side of a node given
  */
@@ -548,7 +591,7 @@ static node_t * find_max_payload(node_t * node)
 
 /*!
  * @brief Iterate through the right side of given node until NULL is reached then return
- * the key of that node
+ * the collation_value of that node
  * @param node[in] node_t
  * @return Returns the node_payload_t of the last node on the right side of a node given
  */
@@ -597,42 +640,81 @@ static void print_2d_iter(node_t * node, int space, void(*callback)(node_payload
  * @param node[in] The current node being inspected
  * @param function[in] External function to call on each node
  */
-static void in_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr)
+static bst_recurse_t in_order_traversal_node(node_t * node, bst_recurse_t recurse, bst_recurse_t (* function)(node_payload_t *, void *), void * void_ptr)
 {
     if (NULL == node)
     {
-        return;
+        return recurse;
     }
-    in_order_traversal_node(node->left_child, function, void_ptr);
-    function(node->key, void_ptr);
-    in_order_traversal_node(node->right_child, function, void_ptr);
+
+    if (RECURSE_TRUE == recurse)
+    {
+        in_order_traversal_node(node->left_child, recurse, function, void_ptr);
+    }
+
+    if (RECURSE_TRUE == recurse)
+    {
+        recurse = function(node->key, void_ptr);
+    }
+
+    if (RECURSE_TRUE == recurse)
+    {
+        recurse = in_order_traversal_node(node->right_child, recurse, function, void_ptr);
+    }
+
+    return recurse;
 }
+
+
 
 /*!
  * @brief Recursion function to travel through the tree
  * @param node[in] The current node being inspected
  * @param function[in] External function to call on each node
  */
-static void pre_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr)
+static bst_recurse_t pre_order_traversal_node(node_t * node, bst_recurse_t recurse, bst_recurse_t (* function)(node_payload_t *, void *), void * void_ptr)
 {
     if (NULL == node)
     {
-        return;
+        return recurse;
     }
-    function(node->key, void_ptr);
-    pre_order_traversal_node(node->left_child, function, void_ptr);
-    pre_order_traversal_node(node->right_child, function, void_ptr);
+    if (RECURSE_TRUE == recurse)
+    {
+        recurse = function(node->key, void_ptr);
+    }
+
+    if (RECURSE_TRUE == recurse)
+    {
+        recurse = pre_order_traversal_node(node->left_child, recurse, function, void_ptr);
+    }
+
+    if (RECURSE_TRUE == recurse)
+    {
+        recurse = pre_order_traversal_node(node->right_child, recurse, function, void_ptr);
+    }
+    return recurse;
 }
 
-static void post_order_traversal_node(node_t * node, void (* function)(node_payload_t *, void *), void * void_ptr)
+static bst_recurse_t post_order_traversal_node(node_t * node, bst_recurse_t recurse, bst_recurse_t (* function)(node_payload_t *, void *), void * void_ptr)
 {
     if (NULL == node)
     {
-        return;
+        return recurse;
     }
-    post_order_traversal_node(node->left_child, function, void_ptr);
-    post_order_traversal_node(node->right_child, function, void_ptr);
-    function(node->key, void_ptr);
+
+    if (RECURSE_TRUE == recurse)
+    {
+        recurse = post_order_traversal_node(node->left_child, recurse, function, void_ptr);
+    }
+    if (RECURSE_TRUE == recurse)
+    {
+        recurse = post_order_traversal_node(node->right_child, recurse, function, void_ptr);
+    }
+    if (RECURSE_TRUE == recurse)
+    {
+        recurse = function(node->key, void_ptr);
+    }
+    return recurse;
 }
 
 
