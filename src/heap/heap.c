@@ -48,13 +48,14 @@ void print_heap(heap_t * heap, void (print_test)(heap_payload_t * payload))
  * @param destroy[in] Function called on each payload when freeing
  * @return Heap pointer
  */
-heap_t * init_heap(heap_compare_t (* compare)(heap_payload_t * payload, heap_payload_t * payload2), void (* destroy)(heap_payload_t * payload))
+heap_t * init_heap(heap_compare_t (*compare)(heap_payload_t *, heap_payload_t *), void (*destroy)(heap_payload_t *), bool maxheap)
 {
     heap_t * heap = calloc(1, sizeof(* heap));
     heap->compare = compare;
     heap->destroy = destroy;
     heap->heap_size = BASE_SIZE;
     heap->heap_array = calloc(heap->heap_size, sizeof(heap_payload_t *));
+    heap->direction = maxheap ? HEAP_GT : HEAP_LT;
     return heap;
 }
 
@@ -175,7 +176,7 @@ static void bubble_up(heap_t * heap)
     int index = heap->length - 1;
 
     // make sure that it's in the correct position
-    while ((index > 0) && (heap->compare(heap->heap_array[index], heap->heap_array[parent_index(index)]) == HEAP_GT))
+    while ((index > 0) && (heap->compare(heap->heap_array[index], heap->heap_array[parent_index(index)]) == heap->direction))
     {
         swap(heap, index, parent_index(index));
         index = parent_index(index);
@@ -261,6 +262,8 @@ static bool is_valid_parent(heap_t * heap, int index)
     if (!(has_right_child(heap, index)))
     {
 
+        return !((-(heap->direction)) == left_compare);
+        /*
         if (HEAP_LT == left_compare)
         {
             // If current node is less than its left child, this is not a left_compare parent
@@ -270,6 +273,7 @@ static bool is_valid_parent(heap_t * heap, int index)
         {
             return true;
         }
+        */
     }
 
     /*
@@ -277,6 +281,8 @@ static bool is_valid_parent(heap_t * heap, int index)
      * the current node is greater than both
      */
     heap_compare_t right_compare = heap->compare(heap->heap_array[index], get_right_child(heap, index));
+    return !( ((-(heap->direction)) == left_compare) || ((-(heap->direction)) == right_compare));
+    /*
     if ((HEAP_LT == left_compare) || (HEAP_LT == right_compare))
     {
         return false;
@@ -285,6 +291,7 @@ static bool is_valid_parent(heap_t * heap, int index)
     {
         return true;
     }
+    */
 }
 
 static bool has_left_child(heap_t * heap, int index)
@@ -314,7 +321,7 @@ static int get_largest_child_index(heap_t * heap, int index)
         return left_child_index(index);
     }
 
-    if (heap->compare(get_left_child(heap, index), get_right_child(heap, index)) == HEAP_GT)
+    if (heap->compare(get_left_child(heap, index), get_right_child(heap, index)) == heap->direction)
     {
         return left_child_index(index);
     }

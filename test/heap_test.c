@@ -44,13 +44,13 @@ void heap_destroy(heap_payload_t * payload)
 
 
 START_TEST(test_creation){
-    heap_t * heap = init_heap(heap_compare, heap_destroy);
+    heap_t * heap = init_heap(heap_compare, heap_destroy, 0);
     ck_assert_ptr_ne(heap, NULL);
     destroy_heap(heap);
 }END_TEST
 
-START_TEST(test_creation_insert){
-    heap_t * heap = init_heap(heap_compare, heap_destroy);
+START_TEST(test_creation_insert_min){
+    heap_t * heap = init_heap(heap_compare, heap_destroy, 0);
     ck_assert_ptr_ne(heap, NULL);
 
     insert_heap(heap, create_heap_payload(5, 0));
@@ -60,11 +60,14 @@ START_TEST(test_creation_insert){
     insert_heap(heap, create_heap_payload(2, 0));
     insert_heap(heap, create_heap_payload(6, 0));
 
+    print_heap(heap, print_testing);
 
     pop_heap(heap);
+
+
     heap_payload_t * pop = pop_heap(heap);
     // second pop should be the six
-    ck_assert_int_eq(pop->key, 6);
+    ck_assert_int_eq(pop->key, 2);
 
     pop = pop_heap(heap);
     // third pop should be the five
@@ -72,16 +75,47 @@ START_TEST(test_creation_insert){
 
     pop = pop_heap(heap);
     // fourth pop should be the two
-    ck_assert_int_eq(pop->key, 2);
+    ck_assert_int_eq(pop->key, 6);
 
     destroy_heap(heap);
 }END_TEST
 
+START_TEST(test_creation_insert_max){
+    heap_t * heap = init_heap(heap_compare, heap_destroy, 1);
+    ck_assert_ptr_ne(heap, NULL);
+
+    insert_heap(heap, create_heap_payload(5, 0));
+    insert_heap(heap, create_heap_payload(19, 0));
+    insert_heap(heap, create_heap_payload(6, 0));
+    insert_heap(heap, create_heap_payload(2, 0));
+    insert_heap(heap, create_heap_payload(2, 0));
+    insert_heap(heap, create_heap_payload(6, 0));
+
+    print_heap(heap, print_testing);
+
+    pop_heap(heap);
+
+
+    heap_payload_t * pop = pop_heap(heap);
+    // second pop should be the six
+    ck_assert_int_eq(pop->key, 6);
+
+    pop = pop_heap(heap);
+    // third pop should be the five
+    ck_assert_int_eq(pop->key, 6);
+
+    pop = pop_heap(heap);
+    // fourth pop should be the two
+    ck_assert_int_eq(pop->key, 5);
+
+    destroy_heap(heap);
+    }END_TEST
 
 
 static TFun heap_create_test[] = {
     test_creation,
-    test_creation_insert,
+    test_creation_insert_max,
+    test_creation_insert_min,
     NULL
 };
 
