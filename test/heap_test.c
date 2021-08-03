@@ -8,6 +8,11 @@ typedef struct payload_t {
     int value;
 } heap_payload_t;
 
+void print_testing(heap_payload_t * payload)
+{
+    printf("%d\n", payload->key);
+}
+
 heap_payload_t * create_heap_payload(int key, int value)
 {
     heap_payload_t * payload = malloc(sizeof(* payload));
@@ -16,13 +21,20 @@ heap_payload_t * create_heap_payload(int key, int value)
     return payload;
 }
 
-int heap_compare(heap_payload_t * payload, heap_payload_t * payload2)
+heap_compare_t heap_compare(heap_payload_t * payload, heap_payload_t * payload2)
 {
     if (payload->key > payload2->key)
     {
-        return 1;
+        return HEAP_GT;
     }
-    return 0;
+    else if (payload->key < payload2->key)
+    {
+        return HEAP_LT;
+    }
+    else
+    {
+        return HEAP_EQ;
+    }
 }
 
 void heap_destroy(heap_payload_t * payload)
@@ -42,11 +54,25 @@ START_TEST(test_creation_insert){
     ck_assert_ptr_ne(heap, NULL);
 
     insert_heap(heap, create_heap_payload(5, 0));
-    insert_heap(heap, create_heap_payload(6, 0));
     insert_heap(heap, create_heap_payload(19, 0));
+    insert_heap(heap, create_heap_payload(6, 0));
     insert_heap(heap, create_heap_payload(2, 0));
     insert_heap(heap, create_heap_payload(2, 0));
-    insert_heap(heap, create_heap_payload(2, 0));
+    insert_heap(heap, create_heap_payload(6, 0));
+
+
+    pop_heap(heap);
+    heap_payload_t * pop = pop_heap(heap);
+    // second pop should be the six
+    ck_assert_int_eq(pop->key, 6);
+
+    pop = pop_heap(heap);
+    // third pop should be the five
+    ck_assert_int_eq(pop->key, 5);
+
+    pop = pop_heap(heap);
+    // fourth pop should be the two
+    ck_assert_int_eq(pop->key, 2);
 
     destroy_heap(heap);
 }END_TEST
