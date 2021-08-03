@@ -7,6 +7,17 @@ typedef enum
     BASE_SIZE = 5,
 } heap_default_t;
 
+
+typedef struct heap_t
+{
+    int length;
+    int heap_size;
+    heap_compare_t direction;
+    heap_payload_t ** heap_array;
+    heap_compare_t (* compare)(heap_payload_t * payload, heap_payload_t * payload2);
+    void (* destroy)(heap_payload_t * payload);
+} heap_t;
+
 static void ensure_space(heap_t * heap);
 static void ensure_downgrade_size(heap_t * heap);
 static void
@@ -48,14 +59,15 @@ void print_heap(heap_t * heap, void (print_test)(heap_payload_t * payload))
  * @param destroy[in] Function called on each payload when freeing
  * @return Heap pointer
  */
-heap_t * init_heap(heap_compare_t (*compare)(heap_payload_t *, heap_payload_t *), void (*destroy)(heap_payload_t *), bool maxheap)
+heap_t * init_heap(heap_compare_t (*compare)(heap_payload_t *, heap_payload_t *), void (*destroy)(heap_payload_t *), heap_type_t type)
 {
-    heap_t * heap = calloc(1, sizeof(* heap));
+    heap_t * heap = malloc(sizeof(* heap));
     heap->compare = compare;
     heap->destroy = destroy;
     heap->heap_size = BASE_SIZE;
+    heap->length = 0;
     heap->heap_array = calloc(heap->heap_size, sizeof(heap_payload_t *));
-    heap->direction = maxheap ? HEAP_GT : HEAP_LT;
+    heap->direction = type ? HEAP_LT : HEAP_GT;
     return heap;
 }
 

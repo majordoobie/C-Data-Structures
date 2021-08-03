@@ -50,7 +50,7 @@ START_TEST(test_creation){
 }END_TEST
 
 START_TEST(test_creation_insert_min){
-    heap_t * heap = init_heap(heap_compare, heap_destroy, 0);
+    heap_t * heap = init_heap(heap_compare, heap_destroy, MIN_HEAP);
     ck_assert_ptr_ne(heap, NULL);
 
     insert_heap(heap, create_heap_payload(5, 0));
@@ -81,7 +81,7 @@ START_TEST(test_creation_insert_min){
 }END_TEST
 
 START_TEST(test_creation_insert_max){
-    heap_t * heap = init_heap(heap_compare, heap_destroy, 1);
+    heap_t * heap = init_heap(heap_compare, heap_destroy, MAX_HEAP);
     ck_assert_ptr_ne(heap, NULL);
 
     insert_heap(heap, create_heap_payload(5, 0));
