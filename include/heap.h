@@ -1,7 +1,7 @@
 #ifndef HEAP_H
 #define HEAP_H
 
-typedef struct heap_payload_t heap_payload_t; // I Typedef their structure to something internal
+typedef struct payload_t heap_payload_t; // I Typedef their structure to something internal
 typedef struct
 {
     int length;

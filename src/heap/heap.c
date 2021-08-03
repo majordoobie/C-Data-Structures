@@ -8,7 +8,9 @@ typedef enum
 } heap_default_t;
 
 static void ensure_space(heap_t * heap);
-
+static void bubble_up(heap_t * heap);
+static int parent_index(int index);
+static void swap(heap_t * heap, int child, int parent);
 
 /*!
  * @brief Create the basic heap structure with default array size of 10 blocks
@@ -22,7 +24,7 @@ heap_t * init_heap(int (* compare)(heap_payload_t * payload, heap_payload_t * pa
     heap->compare = compare;
     heap->destroy = destroy;
     heap->heap_size = BASE_SIZE;
-    heap->heap_array = calloc(heap->heap_size, sizeof(heap->heap_array));
+    heap->heap_array = calloc(heap->heap_size, sizeof(heap_payload_t *));
     return heap;
 }
 
@@ -42,10 +44,15 @@ void destroy_heap(heap_t * heap)
 
 void insert_heap(heap_t * heap, heap_payload_t * payload)
 {
+    // checks to make sure we have enough space
     ensure_space(heap);
 
+    // adds the payload to the array
     heap->heap_array[heap->length] = payload;
     heap->length++;
+
+    // perform bubble up
+    bubble_up(heap);
 }
 
 static void ensure_space(heap_t * heap)
@@ -61,4 +68,29 @@ static void ensure_space(heap_t * heap)
         }
         heap->heap_array =  re_alloc;
     }
+}
+
+static void bubble_up(heap_t * heap)
+{
+    // get the last index
+    int index = heap->length - 1;
+
+    // make sure that it's in the correct position
+    while ((index > 0) && heap->compare(heap->heap_array[index], heap->heap_array[parent_index(index)]))
+    {
+        swap(heap, index, parent_index(index));
+        index = parent_index(index);
+    }
+}
+
+static int parent_index(int index)
+{
+    return (index - 1) / 2;
+}
+
+static void swap(heap_t * heap, int child, int parent)
+{
+    heap_payload_t * temp_payload = heap->heap_array[child];
+    heap->heap_array[child] = heap->heap_array[parent];
+    heap->heap_array[parent] = temp_payload;
 }

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef struct heap_payload_t {
+typedef struct payload_t {
     int key;
     int value;
 } heap_payload_t;
@@ -18,7 +18,11 @@ heap_payload_t * create_heap_payload(int key, int value)
 
 int heap_compare(heap_payload_t * payload, heap_payload_t * payload2)
 {
-    return 1;
+    if (payload->key > payload2->key)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 void heap_destroy(heap_payload_t * payload)
