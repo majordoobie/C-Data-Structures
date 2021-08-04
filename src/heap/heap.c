@@ -12,7 +12,7 @@ typedef struct heap_t
 {
     int length;
     int heap_size;
-    heap_compare_t direction;
+    heap_compare_t heap_type;
     heap_payload_t ** heap_array;
     heap_compare_t (* compare)(heap_payload_t * payload, heap_payload_t * payload2);
     void (* destroy)(heap_payload_t * payload);
@@ -67,7 +67,7 @@ heap_t * init_heap(heap_compare_t (*compare)(heap_payload_t *, heap_payload_t *)
     heap->heap_size = BASE_SIZE;
     heap->length = 0;
     heap->heap_array = calloc(heap->heap_size, sizeof(heap_payload_t *));
-    heap->direction = type ? HEAP_LT : HEAP_GT;
+    heap->heap_type = type ? HEAP_LT : HEAP_GT;
     return heap;
 }
 
@@ -127,13 +127,18 @@ heap_payload_t * pop_heap(heap_t * heap)
         return NULL;
     }
 
+    // pop the root node and decrement our length size
     heap_payload_t * removal_payload = heap->heap_array[0];
     heap->length--;
     heap->heap_array[0] = heap->heap_array[heap->length];
 
+    // perform the bubble down algorithm
     bubble_down(heap);
 
+    // resize array if we need to
     ensure_downgrade_size(heap);
+
+    // return pop value
     return removal_payload;
 }
 
@@ -188,7 +193,7 @@ static void bubble_up(heap_t * heap)
     int index = heap->length - 1;
 
     // make sure that it's in the correct position
-    while ((index > 0) && (heap->compare(heap->heap_array[index], heap->heap_array[parent_index(index)]) == heap->direction))
+    while ((index > 0) && (heap->compare(heap->heap_array[index], heap->heap_array[parent_index(index)]) == heap->heap_type))
     {
         swap(heap, index, parent_index(index));
         index = parent_index(index);
@@ -271,31 +276,28 @@ static bool is_valid_parent(heap_t * heap, int index)
     // since left child exists, check if current item is greater or less than
     heap_compare_t left_compare = heap->compare(heap->heap_array[index], get_left_child(heap, index));
 
+    // If there is no right child, check to see if the left child makes the parent valid or not
     if (!(has_right_child(heap, index)))
     {
-
-        return !((-(heap->direction)) == left_compare);
-        /*
-        if (HEAP_LT == left_compare)
+        // if compare DOES NOT equal the type set return false. This will return true for EQ
+        if (heap->heap_type != left_compare)
         {
-            // If current node is less than its left child, this is not a left_compare parent
             return false;
         }
         else
         {
             return true;
         }
-        */
     }
 
+
     /*
-     * If we get here then the current node is both a left and right child. Check that
-     * the current node is greater than both
+     * If we get here then the current node has both a left and right child. Check that
+     * the current node is greater/less than both
      */
     heap_compare_t right_compare = heap->compare(heap->heap_array[index], get_right_child(heap, index));
-    return !( ((-(heap->direction)) == left_compare) || ((-(heap->direction)) == right_compare));
-    /*
-    if ((HEAP_LT == left_compare) || (HEAP_LT == right_compare))
+
+    if ((heap->heap_type != left_compare) || ( heap->heap_type != right_compare))
     {
         return false;
     }
@@ -303,7 +305,6 @@ static bool is_valid_parent(heap_t * heap, int index)
     {
         return true;
     }
-    */
 }
 
 static bool has_left_child(heap_t * heap, int index)
@@ -323,17 +324,20 @@ static bool has_right_child(heap_t * heap, int index)
  */
 static int get_largest_child_index(heap_t * heap, int index)
 {
+    // If there is no left child, then there is no right. Root is the largest child
     if (!(has_left_child(heap, index)))
     {
         return index;
     }
 
+    // If there is no right child, then there is a left child, return left child
     if (!(has_right_child(heap, index)))
     {
         return left_child_index(index);
     }
 
-    if (heap->compare(get_left_child(heap, index), get_right_child(heap, index)) == heap->direction)
+    // compare which children are the biggest/smallest
+    if (heap->compare(get_left_child(heap, index), get_right_child(heap, index)) == heap->heap_type)
     {
         return left_child_index(index);
     }
