@@ -5,6 +5,7 @@ extern Suite * bst_test_suite(void);
 extern Suite * hashtable_test_suite(void);
 extern Suite * tree_map_test_suite(void);
 extern Suite * heap_lib_test(void);
+extern Suite * stack_lib_test(void);
 
 int main(int argc, char ** argv)
 {
@@ -18,6 +19,7 @@ int main(int argc, char ** argv)
     srunner_add_suite(sr, bst_test_suite());
     srunner_add_suite(sr, tree_map_test_suite());
     srunner_add_suite(sr, heap_lib_test());
+    srunner_add_suite(sr, stack_lib_test());
 
 //    srunner_add_suite(sr, hashtable_test_suite());
 

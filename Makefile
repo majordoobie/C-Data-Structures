@@ -1,10 +1,13 @@
-DIRS=src/bst src/tree_map_avl src/heap test
+DIRS=src/bst src/tree_map_avl src/heap src/stack_adt test
 BUILD_DIRS=$(DIRS:%=build-%)
 CLEAN_DIRS=$(DIRS:%=clean-%)
 DEBUG_DIRS=$(DIRS:%=debug-%)
 PROFILE_DIRS=$(DIRS:%=profile-%)
 
-all: $(BUILD_DIRS)
+all: SETUP $(BUILD_DIRS)
+
+SETUP:
+	@mkdir -p bin
 
 $(BUILD_DIRS):
 	$(MAKE) -C $(@:build-%=%)

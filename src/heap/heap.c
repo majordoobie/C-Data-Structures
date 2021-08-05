@@ -20,8 +20,7 @@ typedef struct heap_t
 
 static void ensure_space(heap_t * heap);
 static void ensure_downgrade_size(heap_t * heap);
-static void
-resize_heap(heap_t *heap);
+static void resize_heap(heap_t *heap);
 
 static void bubble_up(heap_t * heap);
 static void bubble_down(heap_t * heap);

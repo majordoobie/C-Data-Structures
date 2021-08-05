@@ -61,19 +61,22 @@ START_TEST(test_creation_insert_min){
     insert_heap(heap, create_heap_payload(6, 0));
 
     // pop to the void
-    pop_heap(heap);
+    heap_destroy(pop_heap(heap));
 
     // pop next value which should be 2
     heap_payload_t * pop = pop_heap(heap);
     ck_assert_int_eq(pop->key, 2);
+    heap_destroy(pop);
 
     // pop again
     pop = pop_heap(heap);
     ck_assert_int_eq(pop->key, 5);
+    heap_destroy(pop);
 
     // pop again
     pop = pop_heap(heap);
     ck_assert_int_eq(pop->key, 6);
+    heap_destroy(pop);
 
     // destroy heap
     destroy_heap(heap);
@@ -91,19 +94,22 @@ START_TEST(test_creation_insert_max){
     insert_heap(heap, create_heap_payload(6, 0));
 
     // pop into the void
-    pop_heap(heap);
+    heap_destroy(pop_heap(heap));
 
     // second pop should be the six
     heap_payload_t * pop = pop_heap(heap);
     ck_assert_int_eq(pop->key, 6);
+    heap_destroy(pop);
 
     // third pop should be the five
     pop = pop_heap(heap);
     ck_assert_int_eq(pop->key, 6);
+    heap_destroy(pop);
 
     // fourth pop should be the two
     pop = pop_heap(heap);
     ck_assert_int_eq(pop->key, 5);
+    heap_destroy(pop);
 
     destroy_heap(heap);
 }END_TEST
