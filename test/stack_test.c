@@ -3,19 +3,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct stack_payload_t
+typedef struct payload_t
 {
     int value;
-} payload_t;
+} stack_payload_t;
 
 void stack_free(stack_payload_t * payload)
 {
     free(payload);
 }
 
-payload_t * create_stack_payload(int value)
+stack_payload_t * create_stack_payload(int value)
 {
-    payload_t * payload = malloc(sizeof(* payload));
+    stack_payload_t * payload = malloc(sizeof(* payload));
     payload->value = value;
     return payload;
 }
@@ -26,8 +26,30 @@ START_TEST(creation_test){
     destroy_stack(stack);
 }END_TEST
 
+START_TEST(stack_push_pop_test){
+    stack_t * stack = init_stack(stack_free);
+    // stack should be empty
+    ck_assert(is_stack_empty(stack));
+
+    push_stack(stack, create_stack_payload(2));
+    push_stack(stack, create_stack_payload(2));
+    push_stack(stack, create_stack_payload(2));
+    push_stack(stack, create_stack_payload(5));
+
+    // stack should not be empty
+    ck_assert(!is_stack_empty(stack));
+
+    stack_payload_t * payload = pop_stack(stack);
+    ck_assert_int_eq(payload->value, 5);
+
+    free(payload);
+    destroy_stack(stack);
+
+}END_TEST
+
 static TFun stack_creation_test[] = {
     creation_test,
+    stack_push_pop_test,
     NULL
 };
 
