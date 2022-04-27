@@ -4,6 +4,22 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/*
+ * bst_node_payload_t is the INTERNAL struct tag name. You must typedef the
+ * expected struct tag with whatever alias you would like to use.
+ *
+ * i.e. in your code:
+ * typedef struct bst_node_payload_t
+ * {
+ *      int key;
+ *      void * data;
+ * } your_alias_t;
+ *
+ * By creating two typedefs with the same tag, we can access both the internal
+ * name and whatever name you would like to use
+ */
+typedef struct bst_node_payload_t node_payload_t; // I Typedef their structure to something internal
+
 typedef enum
 {
     BST_INSERT_SUCCESS,
@@ -45,9 +61,12 @@ typedef enum
     RECURSE_STOP,
 } bst_recurse_t;
 
-typedef struct node node_t;
-typedef struct bst_node_payload_t node_payload_t; // I Typedef their structure to something internal
 
+/*
+ * The entire tree is stored in the bst_t structure along with the passed in
+ * functions from the user.
+ */
+typedef struct node node_t;
 typedef struct bst
 {
     node_t * root;
