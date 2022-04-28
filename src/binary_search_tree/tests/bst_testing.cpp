@@ -74,6 +74,7 @@ TEST(INITIAL_TEST, INIT_TEST_TO_COMPILE)
     // clean up
     bst_destroy(tree, FREE_PAYLOAD_TRUE);
 
+
     free_payload(payload);
 }
 
@@ -120,6 +121,29 @@ TEST_F(TreeTestFixture, Sample)
 }
 
 
+
+/*
+ * -> Changing sizes of mains
+ * H + k : expand main pane
+ * H + j : shrink main pane
+ *
+ * -> Move focus
+ * H + l : Move focus clockwise
+ * H + h : Move focus counter clockwise
+ * H + ; : Move focus to clockwise screen
+ *
+ * -> Moving windows
+ * H + o : swap focused window clockwise
+ * H + i : swap focused window counter clockwise
+ * H + m : swap focused window to main window
+ * H + ' : swap focus window to clockwise screen
+ * throw windows to space ${int}
+ *
+ * -> Layouts
+ * H + f : select fullscreen
+ * H + n : cycle layout forward
+ *
+ */
 
 
 
