@@ -84,7 +84,6 @@ class TreeTestFixture : public ::testing::Test
         void SetUp() override
         {
             // expected order it 5->4->3->2->1->6->7->8->9->6
-            bst_t * tree = bst_init(compare, free_payload);
             bst_insert(tree, create_payload(5), REPLACE_PAYLOAD_FALSE,nullptr, nullptr);
             bst_insert(tree, create_payload(4), REPLACE_PAYLOAD_FALSE,nullptr, nullptr);
             bst_insert(tree, create_payload(3), REPLACE_PAYLOAD_FALSE,   nullptr,nullptr);
@@ -95,19 +94,29 @@ class TreeTestFixture : public ::testing::Test
             bst_insert(tree, create_payload(8), REPLACE_PAYLOAD_FALSE,   nullptr,nullptr);
             bst_insert(tree, create_payload(9), REPLACE_PAYLOAD_FALSE,   nullptr,nullptr);
         }
+        void TearDown() override
+        {
+            bst_destroy(tree, FREE_PAYLOAD_TRUE);
+        }
 
     public:
-        bst_t * get_tree()
-        {
-            return
-        }
+        bst_t * tree = bst_init(compare, free_payload);
+
 
 
 };
 
 TEST_F(TreeTestFixture, Sample)
 {
-    bst_insert(tree)
+    bst_insert(tree, create_payload(1), REPLACE_PAYLOAD_FALSE, nullptr, nullptr);
+
+    // Create another payload with the same key to remove it
+    mock_struct_t * payload = create_payload(1);
+    mock_struct_t * fetched_payload = bst_get_node(tree, payload);
+
+    // ensure that they are the same keys
+    EXPECT_EQ(fetched_payload->key, payload->key);
+
 }
 
 
