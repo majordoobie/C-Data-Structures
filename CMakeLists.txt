@@ -18,3 +18,4 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
 ENDIF()
 
 add_subdirectory(binary_search_tree)
+add_subdirectory(tree_map_avl)
