@@ -69,46 +69,102 @@ mock_struct_t *create_payload(int val, const char *string)
 
 class TreeTestFixture : public ::testing::Test
 {
-    protected:
-        void SetUp() override
-        {
-            // expected order it 5->4->3->2->1->6->7->8->9->6
-            tree = bst_init(compare, free_payload);
-            bst_insert(tree,
-                       create_payload(5, nullptr), REPLACE_PAYLOAD_FALSE, nullptr, nullptr);
-            bst_insert(tree,
-                       create_payload(4, nullptr), REPLACE_PAYLOAD_FALSE, nullptr, nullptr);
-            bst_insert(tree,
-                       create_payload(3, nullptr), REPLACE_PAYLOAD_FALSE, nullptr, nullptr);
-            bst_insert(tree,
-                       create_payload(2, nullptr), REPLACE_PAYLOAD_FALSE, nullptr, nullptr);
-            bst_insert(tree,
-                       create_payload(1, nullptr), REPLACE_PAYLOAD_FALSE, nullptr, nullptr);
-            bst_insert(tree,
-                       create_payload(6, nullptr), REPLACE_PAYLOAD_FALSE, nullptr, nullptr);
-            bst_insert(tree,
-                       create_payload(7, nullptr), REPLACE_PAYLOAD_FALSE, nullptr, nullptr);
-            bst_insert(tree,
-                       create_payload(8, nullptr), REPLACE_PAYLOAD_FALSE, nullptr, nullptr);
-            bst_insert(tree,
-                       create_payload(9, nullptr), REPLACE_PAYLOAD_FALSE, nullptr, nullptr);
+ protected:
+    void SetUp() override
+    {
+        // expected order it 5->4->3->2->1->6->7->8->9->6
+        tree = bst_init(compare, free_payload);
+        bst_insert(tree,
+                   create_payload(5, nullptr),
+                   REPLACE_PAYLOAD_FALSE,
+                   nullptr,
+                   nullptr);
+        bst_insert(tree,
+                   create_payload(4, nullptr),
+                   REPLACE_PAYLOAD_FALSE,
+                   nullptr,
+                   nullptr);
+        bst_insert(tree,
+                   create_payload(3, nullptr),
+                   REPLACE_PAYLOAD_FALSE,
+                   nullptr,
+                   nullptr);
+        bst_insert(tree,
+                   create_payload(2, nullptr),
+                   REPLACE_PAYLOAD_FALSE,
+                   nullptr,
+                   nullptr);
+        bst_insert(tree,
+                   create_payload(1, nullptr),
+                   REPLACE_PAYLOAD_FALSE,
+                   nullptr,
+                   nullptr);
+        bst_insert(tree,
+                   create_payload(6, nullptr),
+                   REPLACE_PAYLOAD_FALSE,
+                   nullptr,
+                   nullptr);
+        bst_insert(tree,
+                   create_payload(7, nullptr),
+                   REPLACE_PAYLOAD_FALSE,
+                   nullptr,
+                   nullptr);
+        bst_insert(tree,
+                   create_payload(8, nullptr),
+                   REPLACE_PAYLOAD_FALSE,
+                   nullptr,
+                   nullptr);
+        bst_insert(tree,
+                   create_payload(9, nullptr),
+                   REPLACE_PAYLOAD_FALSE,
+                   nullptr,
+                   nullptr);
 
 
-            // create single nodes for testing
-            payload_1 = create_payload(1, nullptr);
-            payload_2 = create_payload(1, "New String");
-        }
-        void TearDown() override
-        {
-            bst_destroy(tree, FREE_PAYLOAD_TRUE);
-            free_payload(payload_1);
-            free_payload(payload_2);
-        }
+        // create single nodes for testing
+        payload_1 = create_payload(1, nullptr);
+        payload_2 = create_payload(1, "New String");
+    }
+    void TearDown() override
+    {
+        bst_destroy(tree, FREE_PAYLOAD_TRUE);
+        free_payload(payload_1);
+        free_payload(payload_2);
+    }
 
-    public:
-        avl_tree_t * tree;
-        mock_struct_t * payload_1;
-        mock_struct_t * payload_2;
+ public:
+    avl_tree_t *tree;
+    mock_struct_t *payload_1;
+    mock_struct_t *payload_2;
+
+
+    /*!
+     * Define the struct type used for testing the traversal orders
+     */
+    typedef struct
+    {
+        int index;
+        int * array;
+    } test_traversal_t;
+
+    /*!
+     * This method is used as a callback for the traversal functions. This is
+     * for the purpose of testing that the correct order if found. The function
+     * will save each index into the saved memory space and later on it is used
+     * to test the the correct order was extracted from testing
+     * @param payload
+     * @param void_array
+     * @return
+     */
+    static bst_recurse_t test_order(mock_struct_t *payload, void *void_array)
+    {
+        test_traversal_t *array = (test_traversal_t *)void_array;
+
+        array->array[array->index] = payload->key;
+        array->index++;
+
+        return RECURSE_TRUE;
+    }
 };
 
 // Test that we can fetch a payload that exists
@@ -153,28 +209,65 @@ TEST_F(TreeTestFixture, TestPayloadReplacement)
 
 
 /*
- * Test Traversal
+ * Test that the order saved into the test_traversal_t is the order that the
+ * traversal test is expecting
  */
-typedef struct
+TEST_F(TreeTestFixture, TraversalInOrder)
 {
-    int index;
-    int * array;
-} test_traversal_t;
+    int array_count = 9;
+    int expected_array[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 
-//TEST_F(TreeTestFixture, TraversalInOrder)
-//{
-//    test_traversal_t * test_struct = (test_traversal_t * )calloc(1, sizeof(test_traversal_t));
-//    test_struct->array = (int *)calloc(9, sizeof(int));
-//
-//    for (int index = 1; index < 10; index++)
-//    {
-//        test_struct->array[index - 1] = index;
-//    }
-//
-//    free(test_struct->array);
-//    free(test_struct);
-//}
+    test_traversal_t * test_struct = (test_traversal_t * )calloc(1, sizeof(test_traversal_t));
+    test_struct->array = (int *)calloc(array_count, sizeof(int));
 
+    bst_traversal(tree, TRAVERSAL_IN_ORDER, test_order, test_struct);
+
+    for (int index = 0; index < array_count; index++)
+    {
+        EXPECT_EQ(expected_array[index], test_struct->array[index]);
+    }
+
+    free(test_struct->array);
+    free(test_struct);
+}
+
+TEST_F(TreeTestFixture, TraversalPreOrder)
+{
+    int array_count = 9;
+    int expected_array[] = {4, 2, 1, 3, 6, 5, 8, 7, 9};
+
+    test_traversal_t * test_struct = (test_traversal_t * )calloc(1, sizeof(test_traversal_t));
+    test_struct->array = (int *)calloc(array_count, sizeof(int));
+
+    bst_traversal(tree, TRAVERSAL_PRE_ORDER, test_order, test_struct);
+
+    for (int index = 0; index < array_count; index++)
+    {
+        EXPECT_EQ(expected_array[index], test_struct->array[index]);
+    }
+
+    free(test_struct->array);
+    free(test_struct);
+}
+
+TEST_F(TreeTestFixture, TraversalPostOrder)
+{
+    int array_count = 9;
+    int expected_array[] = {1, 3, 2, 5, 7, 9, 8, 6, 4};
+
+    test_traversal_t * test_struct = (test_traversal_t * )calloc(1, sizeof(test_traversal_t));
+    test_struct->array = (int *)calloc(array_count, sizeof(int));
+
+    bst_traversal(tree, TRAVERSAL_POST_ORDER, test_order, test_struct);
+
+    for (int index = 0; index < array_count; index++)
+    {
+        EXPECT_EQ(expected_array[index], test_struct->array[index]);
+    }
+
+    free(test_struct->array);
+    free(test_struct);
+}
 
 
 

@@ -302,7 +302,6 @@ static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace
             }
             else
             {
-                //TODO: Leak is here
                 callback(node->key, payload, ptr);
             }
         }
