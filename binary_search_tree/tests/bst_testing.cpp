@@ -140,13 +140,6 @@ class TreeTestFixture : public ::testing::Test
 
     /*!
      * Define the struct type used for testing the traversal orders
-     */
-    typedef struct
-    {
-        int index;
-        int * array;
-    } test_traversal_t;
-
     /*!
      * This method is used as a callback for the traversal functions. This is
      * for the purpose of testing that the correct order if found. The function
@@ -155,6 +148,19 @@ class TreeTestFixture : public ::testing::Test
      * @param payload
      * @param void_array
      * @return
+     *
+     */
+    typedef struct
+    {
+        int index;
+        int * array;
+    } test_traversal_t;
+
+    /*!
+     * @brief This is a brief
+     * @param payload
+     * @param void_array
+     * @return My return type
      */
     static bst_recurse_t test_order(mock_struct_t *payload, void *void_array)
     {
