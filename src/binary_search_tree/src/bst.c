@@ -15,10 +15,10 @@ struct node {
 
 // Private insert/deletion functions
 static node_t * create_node(node_payload_t * payload);
-static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *, void *), void *ptr, bst_t * bst);
-static node_t * get_node(bst_t * bst, node_t * node, node_payload_t * target_payload);
-static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst);
-static void free_all_nodes(bst_t * bst, node_t * node, bst_destroy_t free_payload);
+static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *, void *), void *ptr, avl_tree_t * bst);
+static node_t * get_node(avl_tree_t * bst, node_t * node, node_payload_t * target_payload);
+static node_t * remove_node(node_t * node, node_payload_t * payload, avl_tree_t * bst);
+static void free_all_nodes(avl_tree_t * bst, node_t * node, bst_destroy_t free_payload);
 
 // Private rotation functions
 static node_t * balance_tree(node_t * node);
@@ -47,10 +47,10 @@ static bst_recurse_t post_order_traversal_node(node_t * node, bst_recurse_t recu
  * The functions takes a callback functions used to pass the actual payloads to be printed.
  *
  * The callback function should be a simple printf("%d ", node->value);
- * @param bst[in] bst_t
+ * @param bst[in] avl_tree_t
  * @param callback[in] Call back function used to call on each node.
  */
-void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
+void print_2d(avl_tree_t * bst, void (*callback)(node_payload_t *))
 {
     print_2d_iter(bst->root, 0, callback);
 }
@@ -64,12 +64,12 @@ void print_2d(bst_t * bst, void (*callback)(node_payload_t *))
  * @param free_payload[in] Payload freeing function
  * @return Pointer to the tree control block
  */
-bst_t * bst_init(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), void (* free_payload)(node_payload_t *))
+avl_tree_t * bst_init(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), void (* free_payload)(node_payload_t *))
 {
-    bst_t * bst = calloc(1, sizeof(* bst));
+    avl_tree_t * bst = calloc(1, sizeof(* bst));
     if (NULL == bst)
     {
-        fprintf(stderr, "Fatal: failed to allocate %zu bytes for bst_t.\n", sizeof(* bst));
+        fprintf(stderr, "Fatal: failed to allocate %zu bytes for avl_tree_t.\n", sizeof(* bst));
         abort();
     }
     bst->compare = compare;
@@ -80,11 +80,11 @@ bst_t * bst_init(bst_compare_t (* compare)(node_payload_t *, node_payload_t *), 
 /*!
  * @brief Public function to destroy the binary tree with the option to either free the
  * payloads or leave them alone.
- * @param bst[in] bst_t
+ * @param bst[in] avl_tree_t
  * @param free_payload[in] Flag used to either destroy or preserve the payloads in the
  * nodes. The "True" will call the payload_free callback used when registering the bst
  */
-void bst_destroy(bst_t * bst, bst_destroy_t free_payload)
+void bst_destroy(avl_tree_t * bst, bst_destroy_t free_payload)
 {
     free_all_nodes(bst, bst->root, free_payload);
     free(bst);
@@ -95,12 +95,12 @@ void bst_destroy(bst_t * bst, bst_destroy_t free_payload)
  * @brief Public function used to remove a node with the option to either preserver or
  * free the payload itself.
  *
- * @param bst[in] bst_t
+ * @param bst[in] avl_tree_t
  * @param payload[in] node_payload_t
  * @param free_payload Flag to either free or preserver payload
  * @return
  */
-bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t free_payload)
+bst_status_t bst_remove(avl_tree_t * bst, node_payload_t * payload, bst_destroy_t free_payload)
 {
     // Attempt to fetch the payload passed in, if not found return not found
     node_payload_t * node_payload = bst_get_node(bst, payload);
@@ -136,11 +136,11 @@ bst_status_t bst_remove(bst_t * bst, node_payload_t * payload, bst_destroy_t fre
  * @brief Create a new node with the given node_payload. Iterate over the tree using the
  * compare function supplied to the BST object and push the new node onto the tree.
  *
- * @param bst[in] bst_t tree pointer
+ * @param bst[in] avl_tree_t tree pointer
  * @param payload[in] node_payload_t payload used for the new node
  * @param replace[in] Option to replace or ignore equivalent nodes
  */
-bst_status_t bst_insert(bst_t *bst, node_payload_t *payload, bst_replace_t replace, bst_status_t (* callback)(node_payload_t *, void *, void *), void * ptr)
+bst_status_t bst_insert(avl_tree_t *bst, node_payload_t *payload, bst_replace_t replace, bst_status_t (* callback)(node_payload_t *, void *, void *), void * ptr)
 {
     bst->root = insert_node(bst->root, payload, replace, callback, ptr, bst);
 
@@ -158,12 +158,12 @@ bst_status_t bst_insert(bst_t *bst, node_payload_t *payload, bst_replace_t repla
 /*!
  * @brief Public function to fetch a payload from a node.
  *
- * @param bst[in] bst_t
+ * @param bst[in] avl_tree_t
  * @param payload[in] node_payload_t You must create a payload with at least the collation_value
  * data initialized to do the comparisons
  * @return Found nodes payload or NULL
  */
-node_payload_t * bst_get_node(bst_t * bst, node_payload_t * payload)
+node_payload_t * bst_get_node(avl_tree_t * bst, node_payload_t * payload)
 {
     node_t * node = get_node(bst, bst->root, payload);
     if (NULL == node)
@@ -174,14 +174,30 @@ node_payload_t * bst_get_node(bst_t * bst, node_payload_t * payload)
 }
 
 /*!
- * @brief Function that calls the internal traversal function and calls the callback
- * function passed to each node to be processed.
+ * @brief Traverses the tree and calls the callback function passed in using
+ * the current node. Traversal stops when a bst_recurse_t is used or when
+ * the tree is done.
  *
- * @param bst[in] bst_t
- * @param type[in] Type of traversal
- * @param callback[in] Pointer to external supplied function for node processing
+ * The function iterates over all the nodes using the traversal algorithm
+ * specified. Additionally, after each node is fetch, the node is then passed
+ * to the callback function along with the optional void_ptr.
+ *
+ * The callback function will return a bst_recurse_t object which will tell
+ * the traversal function to either continue or stop recursive. When the tree
+ * is exhausted, the function will also stop recursion.
+ *
+ * Example Use Case:
+ * Get all the positive node values into a list. Create a callback function
+ * that will inspect the value and save the data in the node into the void_ptr.
+ * At the end you will have a void_ptr with all the values you were looking for.
+ *
+ * @param bst avl_tree_t
+ * @param type Type of traversal [TRAVERSAL_IN_ORDER, TRAVERSAL_OUT_ORDER,
+ *             TRAVERSAL_PRE_ORDER]
+ * @param callback Pointer to external supplied function for node processing
+ * @param void_ptr Optional void ptr
  */
-void bst_traversal(bst_t * bst, bst_traversal_t type, bst_recurse_t (* callback)(node_payload_t *, void *), void * void_ptr)
+void bst_traversal(avl_tree_t * bst, bst_traversal_t type, bst_recurse_t (* callback)(node_payload_t *, void *), void * void_ptr)
 {
     switch (type)
     {
@@ -231,11 +247,11 @@ static node_t * create_node(node_payload_t * payload)
  * @param replace[in] bst_replace_t
  * @param callback[in] Pointer to a callback function for the option to do with a already matched node
  * @param ptr[in] NULL pointer for using callback
- * @param bst[in] bst_t
+ * @param bst[in] avl_tree_t
  * @return Return the newest root node. This will change if a rotation is needed to
  * maintain the tree balanced
  */
-static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *, void *), void *ptr, bst_t * bst)
+static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace_t replace, bst_status_t (*callback)(node_payload_t *, void *, void *), void *ptr, avl_tree_t * bst)
 {
     // if the current node is NULL, create a node for it
     if (NULL == node)
@@ -302,12 +318,12 @@ static node_t * insert_node(node_t * node, node_payload_t * payload, bst_replace
  * @brief Private iterative function to find the node payload that matches the payload
  * passed in.
  *
- * @param bst[in] bst_t
+ * @param bst[in] avl_tree_t
  * @param node[in] node_t
  * @param target_payload[in] node_payload_t
  * @return Found node or NULL
  */
-static node_t * get_node(bst_t * bst, node_t * node, node_payload_t * target_payload)
+static node_t * get_node(avl_tree_t * bst, node_t * node, node_payload_t * target_payload)
 {
     bst_compare_t result;
     while (NULL != node)
@@ -338,10 +354,10 @@ static node_t * get_node(bst_t * bst, node_t * node, node_payload_t * target_pay
  *
  * @param node[in] node_t
  * @param payload[in] node_payload_t
- * @param bst[in] bst_t
+ * @param bst[in] avl_tree_t
  * @return Return the new root if rotation occurred
  */
-static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst)
+static node_t * remove_node(node_t * node, node_payload_t * payload, avl_tree_t * bst)
 {
     if (NULL == node)
     {
@@ -431,11 +447,11 @@ static node_t * remove_node(node_t * node, node_payload_t * payload, bst_t * bst
 /*!
  * @brief Recursion function to free each node
  *
- * @param bst[in] bst_t
+ * @param bst[in] avl_tree_t
  * @param node[in] node_t
  * @param free_payload[in] bst_status_t should include either FREE_PAYLOAD_FALSE or TRUE
  */
-static void free_all_nodes(bst_t * bst, node_t * node, bst_destroy_t free_payload)
+static void free_all_nodes(avl_tree_t * bst, node_t * node, bst_destroy_t free_payload)
 {
     if (NULL == node)
     {
