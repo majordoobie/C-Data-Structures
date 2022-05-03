@@ -1,3 +1,5 @@
+#${CMAKE_SOURCE_DIR}/binary_search_tree/src/bst.c
+
 add_executable(
         avl_tree_map_gtest
         avl_map_test.cpp

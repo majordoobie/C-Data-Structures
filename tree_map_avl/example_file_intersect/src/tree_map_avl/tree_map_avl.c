@@ -4,7 +4,7 @@
 
 typedef struct dict_t
 {
-    bst_t * tree;
+    avl_tree_t * tree;
     bst_recurse_t (* value_search)(node_payload_t *, void *);
     int count;
 } dict_t;
@@ -26,7 +26,7 @@ dict_t * init_dict(bst_compare_t (* compare)(key_val_t *, key_val_t *), void (* 
     dict->tree = bst_init(compare, free_payload);
     if (NULL == dict->tree)
     {
-        fprintf(stderr, "Fatal: failed to allocate %zu bytes.\n", sizeof(bst_t));
+        fprintf(stderr, "Fatal: failed to allocate %zu bytes.\n", sizeof(avl_tree_t));
         abort();
     }
     dict->value_search = value_search;

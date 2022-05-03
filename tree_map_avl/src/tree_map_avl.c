@@ -4,16 +4,29 @@
 
 typedef struct dict_t
 {
-    bst_t * tree;
+    avl_tree_t * tree;
     bst_recurse_t (* value_search)(node_payload_t *, void *);
     int count;
 } dict_t;
 
 /*!
- * @brief Initializes a dictionary "tree map"
- * @param compare[in] Compare function used to compare two keys to determine order
- * @param free_payload[in] Callback function used to free the key_val_t
- * @return Dictionary object or abort
+ * @brief Create a map between a key-value pair using a AVL tree as the
+ * backbone of the data structure
+ *
+ * The dict_t structure piggybacks off the avl_bst_t structure therefore it
+ * requires mostly the same inputs for initialization. It requires a compare
+ * function used to decide where the nodes are going to be placed in the tree
+ * structure. It will then require a function to free the individual nodes
+ * and for this implementation it requires a function to compare the values.
+ *
+ * The last function is unique to this data structure. It allows the user to
+ * search linearly for a value with in the data structure. This is not a fast
+ * implementation and should be used sparingly. l
+ *
+ * @param compare Function to compare nodes and create the tree structure
+ * @param free_payload Function to free the nodes
+ * @param value_search Function to search for a value instead of a key par
+ * @return
  */
 dict_t * init_dict(bst_compare_t (* compare)(key_val_t *, key_val_t *), void (* free_payload)(node_payload_t *), bst_recurse_t (* value_search)(node_payload_t *, void *))
 {
@@ -26,7 +39,7 @@ dict_t * init_dict(bst_compare_t (* compare)(key_val_t *, key_val_t *), void (* 
     dict->tree = bst_init(compare, free_payload);
     if (NULL == dict->tree)
     {
-        fprintf(stderr, "Fatal: failed to allocate %zu bytes.\n", sizeof(bst_t));
+        fprintf(stderr, "Fatal: failed to allocate %zu bytes.\n", sizeof(avl_tree_t));
         abort();
     }
     dict->value_search = value_search;
