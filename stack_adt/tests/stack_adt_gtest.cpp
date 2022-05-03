@@ -74,4 +74,3 @@ TEST_F(StackTestFixture, TestPeekValue)
     payload_t * payload = peek_stack(stack);
     EXPECT_EQ(payload->value, 3);
 }
-
