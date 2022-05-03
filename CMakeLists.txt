@@ -17,5 +17,5 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     enable_testing()
 ENDIF()
 
-add_subdirectory(binary_search_tree)
+add_subdirectory(avl_binary_search_tree)
 add_subdirectory(tree_map_avl)
