@@ -8,26 +8,26 @@ typedef enum
     BASE_SIZE = 5,
 } stack_default_t;
 
-static void ensure_space(stack_t * stack);
-static void ensure_downgrade_space(stack_t * stack);
-static void resize_stack(stack_t * stack);
+static void ensure_space(stack_adt_t * stack);
+static void ensure_downgrade_space(stack_adt_t * stack);
+static void resize_stack(stack_adt_t * stack);
 
-typedef struct stack_t
+typedef struct stack_adt_t
 {
     size_t length;
     size_t size;
     void (* destroy)(stack_payload_t * payload);
     stack_payload_t ** array;
-} stack_t;
+} stack_adt_t;
 
 /*!
  * @brief Initialize a stack
  * @param destroy[in] Callback function to a destroy function for the provided payloads
  * @return Stack pointer
  */
-stack_t * init_stack(void (* destroy)(stack_payload_t *))
+stack_adt_t * init_stack(void (* destroy)(stack_payload_t *))
 {
-    stack_t * stack = malloc(sizeof(* stack));
+    stack_adt_t * stack = malloc(sizeof(* stack));
     stack->length = 0;
     stack->size = BASE_SIZE;
     stack->destroy = destroy;
@@ -38,9 +38,9 @@ stack_t * init_stack(void (* destroy)(stack_payload_t *))
 /*!
  * @brief Iterates over the stack and calls the destroy callback on each payload then
  * frees the stack itself
- * @param stack[in] stack_t
+ * @param stack[in] stack_adt_t
  */
-void destroy_stack(stack_t * stack)
+void destroy_stack(stack_adt_t * stack)
 {
     for (size_t i = 0; i < stack->length; i++)
     {
@@ -52,10 +52,10 @@ void destroy_stack(stack_t * stack)
 
 /*!
  * @brief Push a payload onto the stack
- * @param stack[in] stack_t
+ * @param stack[in] stack_adt_t
  * @param payload[in] stack_payload_t
  */
-void push_stack(stack_t * stack, stack_payload_t * payload)
+void push_stack(stack_adt_t * stack, stack_payload_t * payload)
 {
     // Ensure that there is enough space in the stack to add another payload
     ensure_space(stack);
@@ -65,10 +65,10 @@ void push_stack(stack_t * stack, stack_payload_t * payload)
 
 /*!
  * @brief Pop a payload from the stack
- * @param stack[in] stack_t
+ * @param stack[in] stack_adt_t
  * @return Pointer to the payload that was removed
  */
-stack_payload_t * pop_stack(stack_t * stack)
+stack_payload_t * pop_stack(stack_adt_t * stack)
 {
     if (is_stack_empty(stack))
     {
@@ -83,10 +83,10 @@ stack_payload_t * pop_stack(stack_t * stack)
 
 /*!
  * @brief Returns the top most payload without removing it from the stack
- * @param stack[in] stack_t
+ * @param stack[in] stack_adt_t
  * @return Pointer to the payload on the stack
  */
-stack_payload_t * peek_stack(stack_t * stack)
+stack_payload_t * peek_stack(stack_adt_t * stack)
 {
     if (is_stack_empty(stack))
     {
@@ -96,12 +96,12 @@ stack_payload_t * peek_stack(stack_t * stack)
     return payload;
 }
 
-bool is_stack_empty(stack_t * stack)
+bool is_stack_empty(stack_adt_t * stack)
 {
     return stack->length == 0;
 }
 
-static void ensure_space(stack_t * stack)
+static void ensure_space(stack_adt_t * stack)
 {
     if (stack->length == stack->size)
     {
@@ -110,7 +110,7 @@ static void ensure_space(stack_t * stack)
     }
 }
 
-static void ensure_downgrade_space(stack_t * stack)
+static void ensure_downgrade_space(stack_adt_t * stack)
 {
     if (stack->length == (stack->size) / 2)
     {
@@ -119,7 +119,7 @@ static void ensure_downgrade_space(stack_t * stack)
     }
 }
 
-static void resize_stack(stack_t * stack)
+static void resize_stack(stack_adt_t * stack)
 {
     stack_payload_t ** re_alloc = realloc(stack->array, sizeof(stack->array) * stack->size);
     if (NULL == re_alloc)

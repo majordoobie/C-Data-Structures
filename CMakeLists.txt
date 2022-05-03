@@ -19,3 +19,4 @@ ENDIF()
 
 add_subdirectory(avl_binary_search_tree)
 add_subdirectory(tree_map_avl)
+add_subdirectory(stack_adt)
