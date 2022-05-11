@@ -1,0 +1,1 @@
+find build -iname \*testing_gtest\* -type f -executable -exec {} \;
