@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
-project(data_structures_c C)
+project(data_structures_c C CXX)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
-
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 # If in debug mode, then fetch the google test framework for testing
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     include(FetchContent)
