@@ -3,6 +3,10 @@
 
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Compare functions must implement the following return types
 typedef enum
 {
@@ -29,5 +33,9 @@ void insert_heap(heap_t * heap, heap_payload_t * payload);
 heap_payload_t * pop_heap(heap_t * heap);
 
 bool heap_is_empty(heap_t * heap);
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
 
 #endif //HEAP_H

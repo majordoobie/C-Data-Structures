@@ -1,10 +1,5 @@
 #include <gtest/gtest.h>
-
-extern "C"
-{
-    #include <stack.h>
-}
-
+#include <stack.h>
 
 typedef struct payload_t
 {

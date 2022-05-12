@@ -1,9 +1,5 @@
 #include <gtest/gtest.h>
-
-extern "C"
-{
-    #include <tree_map_avl.h>
-}
+#include <tree_map_avl.h>
 
 
 /*!

@@ -5,7 +5,7 @@ add_executable(
 
 target_link_libraries(
         hashtable_testing_gtest
-        heap
+        hashtable
         gtest
         gtest_main
 )

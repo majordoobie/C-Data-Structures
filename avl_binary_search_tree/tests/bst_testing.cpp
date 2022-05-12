@@ -1,9 +1,5 @@
 #include <gtest/gtest.h>
-
-extern "C"
-{
-     #include <bst.h>
-}
+#include <bst.h>
 
 /*
  * bst_node_payload_t is the INTERNAL struct tag name. You must typedef the

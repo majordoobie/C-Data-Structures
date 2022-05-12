@@ -1,7 +1,3 @@
-//
-// Created by Jay Galindez on 5/12/22.
-//
-
 #ifndef DATA_STRUCTURES_C_HASHTABLE_SRC_HASHTABLE_H_
 #define DATA_STRUCTURES_C_HASHTABLE_SRC_HASHTABLE_H_
 

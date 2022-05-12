@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+
+#endif
+
 /*
  * bst_node_payload_t is the INTERNAL struct tag name. You must typedef the
  * expected struct tag with whatever alias you would like to use.
@@ -92,5 +97,9 @@ void bst_traversal(avl_tree_t * bst, bst_traversal_t type, bst_recurse_t (* call
 node_payload_t * bst_get_node(avl_tree_t * bst, node_payload_t * payload);
 void print_2d(avl_tree_t * bst, void (* callback)(node_payload_t *));
 
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus
 #endif //BST_H
 

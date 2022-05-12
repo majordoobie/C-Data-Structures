@@ -3,6 +3,9 @@
 #include <bst.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef struct bst_node_payload_t key_val_t;
 typedef struct dict_t dict_t;
 
@@ -19,5 +22,7 @@ int get_size(dict_t * dict);
 
 void recurse_dict(dict_t * dict, bst_recurse_t (* callback)(key_val_t * key_val, void * ptr), void * ptr);
 
-
+#ifdef __cplusplus
+}
+#endif //__cplusplus
 #endif //TREE_MAP_AVL_H
