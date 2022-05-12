@@ -140,7 +140,6 @@ class TreeTestFixture : public ::testing::Test
 
     /*!
      * Define the struct type used for testing the traversal orders
-    /*!
      * This method is used as a callback for the traversal functions. This is
      * for the purpose of testing that the correct order if found. The function
      * will save each index into the saved memory space and later on it is used

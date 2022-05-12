@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-project(binary_search_tree C CXX)
+
+project(hashtable C CXX)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_STANDARD 11)
@@ -10,4 +10,3 @@ add_subdirectory(src)
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_subdirectory(tests)
 ENDIF()
-

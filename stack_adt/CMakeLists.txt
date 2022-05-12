@@ -7,4 +7,6 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(src)
-add_subdirectory(tests)
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_subdirectory(tests)
+ENDIF()
