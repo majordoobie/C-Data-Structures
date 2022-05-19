@@ -57,15 +57,11 @@ item_count)
 }
 
 
-
-
-
-
 class HeapTestFixture :public ::testing::Test
 {
  public:
-    heap_t * max_heap;
-    heap_t * min_heap;
+    heap_t * max_heap = nullptr;
+    heap_t * min_heap = nullptr;
     int highest_value = 16;
     int lowest_value = 2;
 
@@ -135,4 +131,16 @@ TEST_F(HeapTestFixture, TestAllPop)
         printf("-> %d\n", *payload);
         payload_destroy(payload);
     }
+}
+
+
+TEST_F(HeapTestFixture, DumpHeap)
+{
+    heap_dump(max_heap);
+    EXPECT_TRUE(heap_is_empty(max_heap));
+}
+
+TEST(HeapSort, HeapSortTest)
+{
+// TODO: Implement the heap sort for a plain array
 }

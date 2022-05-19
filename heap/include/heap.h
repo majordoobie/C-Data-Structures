@@ -34,6 +34,9 @@ void heap_destroy(heap_t * heap);
 void heap_insert(heap_t * heap, void * payload);
 void * heap_pop(heap_t * heap);
 
+void heap_sort(void ** array, size_t item_count, heap_compare_t (*
+compare)(void *, void *), heap_type_t type);
+
 void * heap_peek(heap_t * heap, int index);
 void heap_dump(heap_t * heap);
 

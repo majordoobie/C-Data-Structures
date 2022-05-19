@@ -41,20 +41,6 @@ static void * get_right_child(heap_t * heap, size_t index);
 
 static void verify_alloc(void * ptr);
 
-/*!
- * Function verifies the alloc, if the alloc fails abort as this could
- * mean that the system has ran out of memory.
- *
- * @param ptr Any allocated pointer
- */
-static void verify_alloc(void * ptr)
-{
-    if (NULL == ptr)
-    {
-        fprintf(stderr, "[!] Could not allocate memory!\n");
-        abort();
-    }
-}
 
 
 /*!
@@ -115,20 +101,48 @@ void heap_destroy(heap_t * heap)
 {
     for (size_t i = 0; i < heap->length; i++)
     {
-        heap->destroy(heap->heap_array[i]);
+        if (NULL != heap->destroy)
+        {
+            heap->destroy(heap->heap_array[i]);
+        }
     }
     free(heap->heap_array);
     free(heap);
+}
+
+void heap_sort(void ** array, size_t item_count, heap_compare_t (*
+compare)(void *, void *), heap_type_t type)
+{
+    heap_t * heap = heap_init(compare, NULL, type);
+
+    // heapify the array given
+    for (size_t i = 0; i < item_count; i++)
+    {
+        heap_insert(heap, array[i]);
+    }
+
+    // modify the array given in place with heapsort
+    for (size_t i = 0; i < item_count; i++)
+    {
+        array[i] = heap_pop(heap);
+    }
+    heap_destroy(heap);
 }
 
 //heap_payload_t * heap_peek(heap_t * heap, int index)
 //{
 //    ;;
 //}
-//void heap_dump(heap_t * heap)
-//{
-//    ;;
-//}
+
+void heap_dump(heap_t * heap)
+{
+    for (size_t i = 0; i < heap->length; i++)
+    {
+        heap->destroy(heap->heap_array[i]);
+    }
+    heap->length = 0;
+    ensure_downgrade_size(heap);
+}
 
 
 /*!
@@ -162,6 +176,10 @@ void heap_insert(heap_t * heap, void * payload)
 /*!
  * @brief Pop the next node in the heap, this should be the current highest node. The
  * array is resized if it needs to be to avoid taking up unnecessary space.
+ *
+ * This operation runs at O(lon n) because it relies on the bubble operations
+ * to restructure the tree
+ *
  * @param heap[in] heap_t
  * @return heap_payload_t
  */
@@ -212,6 +230,10 @@ static void ensure_downgrade_size(heap_t * heap)
         heap->heap_size = heap->heap_size / 2;
         resize_heap(heap);
     }
+    if ((heap->length == 0) & (heap->heap_size == BASE_SIZE))
+    {
+        resize_heap(heap);
+    }
 }
 
 /*!
@@ -231,7 +253,12 @@ static void resize_heap(heap_t *heap)
 }
 
 /*!
- * @brief Perform the bubble up function on the nodes to ensure the right order
+ * @brief Bubble up operations are performed on nodes that are of greater
+ * value than their parents. The operation is performed until the node
+ * has a parent that is of equal or less value
+ *
+ * This operation only occurs at maximum of the height of the tree making
+ * it have a time complexity of O(log n)
  * @param heap
  */
 static void bubble_up(heap_t * heap)
@@ -248,7 +275,13 @@ static void bubble_up(heap_t * heap)
 }
 
 /*!
- * @brief Performs a bubble down function on the current root index
+ * @brief Bubble down operations ar performed on nodes that are lesser
+ * than their parents. This operation is performed until the node
+ * has parents that are equal or greater value
+ *
+ * This operation only occurs at maximum of the height of the tree making
+ * it have a time complexity of O(log n)
+ *
  * @param heap[in]
  */
 static void bubble_down(heap_t * heap)
@@ -415,4 +448,19 @@ static void * get_left_child(heap_t * heap, size_t index)
 static void * get_right_child(heap_t * heap, size_t index)
 {
     return heap->heap_array[right_child_index(index)];
+}
+
+/*!
+ * Function verifies the alloc, if the alloc fails abort as this could
+ * mean that the system has ran out of memory.
+ *
+ * @param ptr Any allocated pointer
+ */
+static void verify_alloc(void * ptr)
+{
+    if (NULL == ptr)
+    {
+        fprintf(stderr, "[!] Could not allocate memory!\n");
+        abort();
+    }
 }
