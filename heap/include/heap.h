@@ -20,13 +20,15 @@ typedef enum
 typedef struct payload_t heap_payload_t;
 typedef struct heap_t heap_t;
 
-void print_heap(heap_t * heap, void (print_test)(heap_payload_t * payload));
+void heap_print(heap_t * heap, void (print_test)(heap_payload_t * payload));
 
-heap_t * init_heap(heap_compare_t (*compare)(heap_payload_t *, heap_payload_t *), void (*destroy)(heap_payload_t *), heap_type_t type);
-void destroy_heap(heap_t * heap);
+heap_t * heap_init(heap_compare_t (*compare)(heap_payload_t *, heap_payload_t *), void (*destroy)(heap_payload_t *), heap_type_t type);
+void heap_destroy(heap_t * heap);
+void heap_insert(heap_t * heap, heap_payload_t * payload);
+heap_payload_t * heap_pop(heap_t * heap);
 
-void insert_heap(heap_t * heap, heap_payload_t * payload);
-heap_payload_t * pop_heap(heap_t * heap);
+heap_payload_t * heap_peek(heap_t * heap, int index);
+void heap_dump(heap_t * heap);
 
 bool heap_is_empty(heap_t * heap);
 

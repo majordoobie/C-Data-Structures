@@ -44,7 +44,7 @@ static heap_payload_t * get_right_child(heap_t * heap, int index);
  * @param heap[in] heap_t
  * @param print_test[in] pointer to the print function for printing the "heap_payload_t"
  */
-void print_heap(heap_t * heap, void (print_test)(heap_payload_t * payload))
+void heap_print(heap_t * heap, void (print_test)(heap_payload_t * payload))
 {
     for (int i = 0; i < heap->length; i++)
     {
@@ -58,7 +58,7 @@ void print_heap(heap_t * heap, void (print_test)(heap_payload_t * payload))
  * @param destroy[in] Function called on each payload when freeing
  * @return Heap pointer
  */
-heap_t * init_heap(heap_compare_t (*compare)(heap_payload_t *, heap_payload_t *), void (*destroy)(heap_payload_t *), heap_type_t type)
+heap_t * heap_init(heap_compare_t (*compare)(heap_payload_t *, heap_payload_t *), void (*destroy)(heap_payload_t *), heap_type_t type)
 {
     heap_t * heap = malloc(sizeof(* heap));
     heap->compare = compare;
@@ -74,7 +74,7 @@ heap_t * init_heap(heap_compare_t (*compare)(heap_payload_t *, heap_payload_t *)
  * @brief Free the heap structure
  * @param heap[in] Allocated heap pointer
  */
-void destroy_heap(heap_t * heap)
+void heap_destroy(heap_t * heap)
 {
     for (int i = 0; i < heap->length; i++)
     {
@@ -83,6 +83,16 @@ void destroy_heap(heap_t * heap)
     free(heap->heap_array);
     free(heap);
 }
+
+//heap_payload_t * heap_peek(heap_t * heap, int index)
+//{
+//    ;;
+//}
+//void heap_dump(heap_t * heap)
+//{
+//    ;;
+//}
+
 
 /*!
  * @brief Check if the heap is currently empty
@@ -99,7 +109,7 @@ bool heap_is_empty(heap_t * heap)
  * @param heap[in] heap_t
  * @param payload[in] heap_payload_t
  */
-void insert_heap(heap_t * heap, heap_payload_t * payload)
+void heap_insert(heap_t * heap, heap_payload_t * payload)
 {
     // checks to make sure we have enough space
     ensure_space(heap);
@@ -118,7 +128,7 @@ void insert_heap(heap_t * heap, heap_payload_t * payload)
  * @param heap[in] heap_t
  * @return heap_payload_t
  */
-heap_payload_t * pop_heap(heap_t * heap)
+heap_payload_t * heap_pop(heap_t * heap)
 {
     // check if heap is empty, if so, return
     if (heap_is_empty(heap))
@@ -160,7 +170,7 @@ static void ensure_space(heap_t * heap)
  */
 static void ensure_downgrade_size(heap_t * heap)
 {
-    if (heap->length == (heap->heap_size / 2))
+    if ((heap->length == (heap->heap_size / 2)) & (heap->heap_size > BASE_SIZE))
     {
         heap->heap_size = heap->heap_size / 2;
         resize_heap(heap);
