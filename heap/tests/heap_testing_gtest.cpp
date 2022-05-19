@@ -1,36 +1,27 @@
 #include <gtest/gtest.h>
+#include <heap.h>
 
-extern "C"
+void print_test(void * payload)
 {
-    #include <heap.h>
+    printf("%d\n", *(int *)payload);
 }
 
-typedef struct payload_t
+/*!
+ * Mandatory function to use the DST, a function that compares the
+ * null pointers.
+ *
+ * @return Heap compare enum
+ */
+heap_compare_t heap_compare(void * payload, void * payload2)
 {
-    int key;
-    int value;
-} heap_payload_t;
+    int payload_1 = *(int *)payload;
+    int payload_2 = *(int *)payload2;
 
-void print_test(heap_payload_t * payload)
-{
-    printf("%d\n", payload->key);
-}
-
-heap_payload_t * create_heap_payload(int key, int value)
-{
-    heap_payload_t * payload = (heap_payload_t *)malloc(sizeof(heap_payload_t));
-    payload->key = key;
-    payload->value = value;
-    return payload;
-}
-
-heap_compare_t heap_compare(heap_payload_t * payload, heap_payload_t * payload2)
-{
-    if (payload->key > payload2->key)
+    if (payload_1 > payload_2)
     {
         return HEAP_GT;
     }
-    else if (payload->key < payload2->key)
+    else if (payload_1 < payload_2)
     {
         return HEAP_LT;
     }
@@ -40,10 +31,35 @@ heap_compare_t heap_compare(heap_payload_t * payload, heap_payload_t * payload2)
     }
 }
 
-void destroy_ext_heap(heap_payload_t * payload)
+int * create_heap_payload(int value)
+{
+    int * payload = (int *)malloc(sizeof(value));
+    *payload = value;
+    return payload;
+}
+
+void payload_destroy(void * payload)
 {
     free(payload);
 }
+
+void ** get_int_array(void ** item_array, size_t  item_size, size_t
+item_count)
+{
+    void ** new_array = (void **)calloc(item_count, sizeof(void *));
+    for (size_t i = 0; i < item_count; i++)
+    {
+        void * item = (void *)malloc(item_size);
+        memcpy(item, item_array[i], item_size);
+        new_array[i] = item;
+    }
+    return new_array;
+}
+
+
+
+
+
 
 class HeapTestFixture :public ::testing::Test
 {
@@ -56,26 +72,26 @@ class HeapTestFixture :public ::testing::Test
  protected:
     void SetUp() override
     {
-        max_heap = heap_init(heap_compare, destroy_ext_heap, MAX_HEAP);
+        max_heap = heap_init(heap_compare, payload_destroy, MAX_HEAP);
 
-        heap_insert(max_heap, create_heap_payload(16, 0));
-        heap_insert(max_heap, create_heap_payload(14, 0));
-        heap_insert(max_heap, create_heap_payload(10, 0));
-        heap_insert(max_heap, create_heap_payload(8, 0));
-        heap_insert(max_heap, create_heap_payload(7, 0));
-        heap_insert(max_heap, create_heap_payload(9, 0));
-        heap_insert(max_heap, create_heap_payload(3, 0));
-        heap_insert(max_heap, create_heap_payload(2, 0));
-        heap_insert(max_heap, create_heap_payload(4, 0));
-        heap_insert(max_heap, create_heap_payload(1, 0));
+        heap_insert(max_heap, create_heap_payload(16));
+        heap_insert(max_heap, create_heap_payload(14));
+        heap_insert(max_heap, create_heap_payload(10));
+        heap_insert(max_heap, create_heap_payload(8));
+        heap_insert(max_heap, create_heap_payload(7));
+        heap_insert(max_heap, create_heap_payload(9));
+        heap_insert(max_heap, create_heap_payload(3));
+        heap_insert(max_heap, create_heap_payload(2));
+        heap_insert(max_heap, create_heap_payload(4));
+        heap_insert(max_heap, create_heap_payload(1));
 
-        min_heap = heap_init(heap_compare, destroy_ext_heap, MIN_HEAP);
-        heap_insert(min_heap, create_heap_payload(5, 0));
-        heap_insert(min_heap, create_heap_payload(19, 0));
-        heap_insert(min_heap, create_heap_payload(6, 0));
-        heap_insert(min_heap, create_heap_payload(2, 0));
-        heap_insert(min_heap, create_heap_payload(2, 0));
-        heap_insert(min_heap, create_heap_payload(6, 0));
+        min_heap = heap_init(heap_compare, payload_destroy, MIN_HEAP);
+        heap_insert(min_heap, create_heap_payload(5));
+        heap_insert(min_heap, create_heap_payload(19));
+        heap_insert(min_heap, create_heap_payload(6));
+        heap_insert(min_heap, create_heap_payload(2));
+        heap_insert(min_heap, create_heap_payload(2));
+        heap_insert(min_heap, create_heap_payload(6));
     }
     void TearDown() override
     {
@@ -93,30 +109,30 @@ TEST_F(HeapTestFixture, TestPopValueForMax)
 {
     // The highest value should be stored on the next node for max_heap
     // while lowest should be stored for a min heap
-    payload_t * highest = heap_pop(max_heap);
-    payload_t * lowest = heap_pop(min_heap);
+    void * highest = heap_pop(max_heap);
+    void * lowest = heap_pop(min_heap);
 
-    EXPECT_EQ(highest->key, highest_value);
-    EXPECT_EQ(lowest->key, lowest_value);
+    EXPECT_EQ(*(int *)highest, highest_value);
+    EXPECT_EQ(*(int *)lowest, lowest_value);
 
-    destroy_ext_heap(highest);
-    destroy_ext_heap(lowest);
+    payload_destroy(highest);
+    payload_destroy(lowest);
 }
 
 TEST_F(HeapTestFixture, TestAllPop)
 {
-    payload_t * payload;
+    int * payload;
     while (!heap_is_empty(max_heap))
     {
-        payload = heap_pop(max_heap);
-        printf("-> %d\n", payload->key);
-        destroy_ext_heap(payload);
+        payload = (int*)heap_pop(max_heap);
+        printf("-> %d\n", *payload);
+        payload_destroy(payload);
     }
     printf("\n\n");
     while (!heap_is_empty(min_heap))
     {
-        payload = heap_pop(min_heap);
-        printf("-> %d\n", payload->key);
-        destroy_ext_heap(payload);
+        payload = (int*)heap_pop(min_heap);
+        printf("-> %d\n", *payload);
+        payload_destroy(payload);
     }
 }
