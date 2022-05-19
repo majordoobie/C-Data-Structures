@@ -25,7 +25,7 @@ typedef struct stack_adt_t
  * @param destroy[in] Callback function to a destroy function for the provided payloads
  * @return Stack pointer
  */
-stack_adt_t * init_stack(void (* destroy)(stack_payload_t *))
+stack_adt_t * stack_init(void (* destroy)(stack_payload_t *))
 {
     stack_adt_t * stack = malloc(sizeof(* stack));
     stack->length = 0;
@@ -40,7 +40,7 @@ stack_adt_t * init_stack(void (* destroy)(stack_payload_t *))
  * frees the stack itself
  * @param stack[in] stack_adt_t
  */
-void destroy_stack(stack_adt_t * stack)
+void stack_destroy(stack_adt_t * stack)
 {
     for (size_t i = 0; i < stack->length; i++)
     {
@@ -55,7 +55,7 @@ void destroy_stack(stack_adt_t * stack)
  * @param stack[in] stack_adt_t
  * @param payload[in] stack_payload_t
  */
-void push_stack(stack_adt_t * stack, stack_payload_t * payload)
+void stack_push(stack_adt_t * stack, stack_payload_t * payload)
 {
     // Ensure that there is enough space in the stack to add another payload
     ensure_space(stack);
@@ -68,9 +68,9 @@ void push_stack(stack_adt_t * stack, stack_payload_t * payload)
  * @param stack[in] stack_adt_t
  * @return Pointer to the payload that was removed
  */
-stack_payload_t * pop_stack(stack_adt_t * stack)
+stack_payload_t * stack_pop(stack_adt_t * stack)
 {
-    if (is_stack_empty(stack))
+    if (stack_is_empty(stack))
     {
         return NULL;
     }
@@ -86,17 +86,31 @@ stack_payload_t * pop_stack(stack_adt_t * stack)
  * @param stack[in] stack_adt_t
  * @return Pointer to the payload on the stack
  */
-stack_payload_t * peek_stack(stack_adt_t * stack)
+stack_payload_t * stack_peek(stack_adt_t * stack)
 {
-    if (is_stack_empty(stack))
+    return stack_nth_peek(stack, stack->length - 1);
+}
+
+stack_payload_t * stack_nth_peek(stack_adt_t * stack, size_t index)
+{
+    if (stack_is_empty(stack))
     {
         return NULL;
     }
-    stack_payload_t * payload = stack->array[stack->length - 1];
-    return payload;
+
+    if (index < stack->length)
+    {
+        return stack->array[index];
+    }
+    return NULL;
 }
 
-bool is_stack_empty(stack_adt_t * stack)
+size_t stack_size(stack_adt_t * stack)
+{
+    return stack->length;
+}
+
+bool stack_is_empty(stack_adt_t * stack)
 {
     return stack->length == 0;
 }
