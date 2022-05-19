@@ -74,3 +74,14 @@ TEST_F(StackTestFixture, TestPeekValue)
     payload_t * payload = peek_stack(stack);
     EXPECT_EQ(payload->value, 3);
 }
+
+TEST_F(StackTestFixture, TestPopAll)
+{
+    payload_t * payload;
+    while(!is_stack_empty(stack))
+    {
+        payload = pop_stack(stack);
+        free_payload(payload);
+    }
+
+}

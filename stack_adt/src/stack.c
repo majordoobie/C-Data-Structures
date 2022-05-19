@@ -112,7 +112,7 @@ static void ensure_space(stack_adt_t * stack)
 
 static void ensure_downgrade_space(stack_adt_t * stack)
 {
-    if (stack->length == (stack->size) / 2)
+    if ((stack->length == (stack->size) / 2) & (stack->length != 0))
     {
         stack->size = stack->size / 2;
         resize_stack(stack);
