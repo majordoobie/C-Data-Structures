@@ -16,19 +16,19 @@ class StackTestFixture :public ::testing::Test
  protected:
     void SetUp() override
     {
-        stack = init_stack(free_payload);
+        stack = stack_init(free_payload);
 
-        push_stack(stack, create_stack_payload(2));
-        push_stack(stack, create_stack_payload(2));
-        push_stack(stack, create_stack_payload(2));
-        push_stack(stack, create_stack_payload(2));
-        push_stack(stack, create_stack_payload(5));
-        push_stack(stack, create_stack_payload(3));
+        stack_push(stack, create_stack_payload(2));
+        stack_push(stack, create_stack_payload(2));
+        stack_push(stack, create_stack_payload(2));
+        stack_push(stack, create_stack_payload(2));
+        stack_push(stack, create_stack_payload(5));
+        stack_push(stack, create_stack_payload(3));
 
     }
     void TearDown() override
     {
-        destroy_stack(stack);
+        stack_destroy(stack);
     }
  public:
     stack_adt_t * stack = nullptr;
@@ -64,13 +64,58 @@ class StackTestFixture :public ::testing::Test
 
 TEST_F(StackTestFixture, TestPopValue)
 {
-    payload_t * payload = pop_stack(stack);
+    payload_t * payload = stack_pop(stack);
     EXPECT_EQ(payload->value, 3);
     free_payload(payload);
 }
 
 TEST_F(StackTestFixture, TestPeekValue)
 {
-    payload_t * payload = peek_stack(stack);
+    payload_t * payload = stack_peek(stack);
     EXPECT_EQ(payload->value, 3);
+    EXPECT_EQ(stack_size(stack), 6);
 }
+
+TEST_F(StackTestFixture, TestPopAll)
+{
+    payload_t * payload;
+    while(!stack_is_empty(stack))
+    {
+        payload = stack_pop(stack);
+        free_payload(payload);
+    }
+}
+
+TEST_F(StackTestFixture, TestFetchNthItem)
+{
+    payload_t * payload;
+    payload = stack_nth_peek(stack, 3);
+
+    // Using assert for safety
+    ASSERT_NE(payload, nullptr);
+    EXPECT_EQ(payload->value, 2);
+
+    payload = stack_nth_peek(stack, -3);
+    // Using assert for safety
+    ASSERT_EQ(payload, nullptr);
+
+
+    payload = stack_nth_peek(stack, stack_size(stack) + 10);
+    // Using assert for safety
+    ASSERT_EQ(payload, nullptr);
+}
+
+TEST_F(StackTestFixture, DumpStack)
+{
+    stack_dump(stack);
+    EXPECT_EQ(stack_size(stack), 0);
+}
+
+
+
+
+
+
+
+
+
