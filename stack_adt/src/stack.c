@@ -91,6 +91,15 @@ stack_payload_t * stack_peek(stack_adt_t * stack)
     return stack_nth_peek(stack, stack->length - 1);
 }
 
+
+/*!
+ * @brief Returns the payload at the nth position on the stack. The
+ * fuction does NOT pop items off the stack, so no free is necessary.
+ *
+ * @param stack[in] stack_adt_t
+ * @param index element to inspect
+ * @return Pointer to the payload on the stack
+ */
 stack_payload_t * stack_nth_peek(stack_adt_t * stack, size_t index)
 {
     if (stack_is_empty(stack))
@@ -104,6 +113,21 @@ stack_payload_t * stack_nth_peek(stack_adt_t * stack, size_t index)
     }
     return NULL;
 }
+
+/*!
+ * @brief Dumps and frees all elements in the stack
+ * @param stack
+ */
+void stack_dump(stack_adt_t * stack)
+{
+    stack_payload_t * payload;
+    while (!stack_is_empty(stack))
+    {
+        payload = stack_pop(stack);
+        stack->destroy(payload);
+    }
+}
+
 
 size_t stack_size(stack_adt_t * stack)
 {
@@ -126,7 +150,7 @@ static void ensure_space(stack_adt_t * stack)
 
 static void ensure_downgrade_space(stack_adt_t * stack)
 {
-    if ((stack->length == (stack->size) / 2) & (stack->length != 0))
+    if ((stack->length == (stack->size) / 2) & (stack->length > BASE_SIZE))
     {
         stack->size = stack->size / 2;
         resize_stack(stack);

@@ -103,7 +103,12 @@ TEST_F(StackTestFixture, TestFetchNthItem)
     payload = stack_nth_peek(stack, stack_size(stack) + 10);
     // Using assert for safety
     ASSERT_EQ(payload, nullptr);
+}
 
+TEST_F(StackTestFixture, DumpStack)
+{
+    stack_dump(stack);
+    EXPECT_EQ(stack_size(stack), 0);
 }
 
 
