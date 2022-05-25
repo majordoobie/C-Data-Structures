@@ -1,6 +1,7 @@
 #include <heap.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef enum
 {
@@ -99,7 +100,7 @@ heap_t * heap_init(heap_compare_t (* compare)(void *, void *),
  */
 void heap_destroy(heap_t * heap)
 {
-    for (size_t i = 0; i < heap->length; i++)
+    for(size_t i = 0; i < heap->length; i++)
     {
         if (NULL != heap->destroy)
         {
@@ -110,8 +111,7 @@ void heap_destroy(heap_t * heap)
     free(heap);
 }
 
-void heap_sort(void ** array, size_t item_count, heap_compare_t (*
-compare)(void *, void *), heap_type_t type)
+void heap_sort(void ** array, size_t item_count, heap_compare_t (*compare)(void *, void *), heap_type_t type)
 {
     heap_t * heap = heap_init(compare, NULL, type);
 
@@ -166,8 +166,10 @@ void heap_insert(heap_t * heap, void * payload)
     ensure_space(heap);
 
     // adds the payload to the array
+
     heap->heap_array[heap->length] = payload;
     heap->length++;
+
 
     // perform bubble up
     bubble_up(heap);

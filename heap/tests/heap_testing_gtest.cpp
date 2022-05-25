@@ -43,15 +43,12 @@ void payload_destroy(void * payload)
     free(payload);
 }
 
-void ** get_int_array(void ** item_array, size_t  item_size, size_t
-item_count)
+int * get_int_array(const int item_array[], size_t item_count)
 {
-    void ** new_array = (void **)calloc(item_count, sizeof(void *));
+    int * new_array = (int *)calloc(item_count, sizeof(int));
     for (size_t i = 0; i < item_count; i++)
     {
-        void * item = (void *)malloc(item_size);
-        memcpy(item, item_array[i], item_size);
-        new_array[i] = item;
+        new_array[i] = item_array[i];
     }
     return new_array;
 }
@@ -133,14 +130,45 @@ TEST_F(HeapTestFixture, TestAllPop)
     }
 }
 
-
 TEST_F(HeapTestFixture, DumpHeap)
 {
     heap_dump(max_heap);
     EXPECT_TRUE(heap_is_empty(max_heap));
 }
 
+
+
+heap_compare_t array_compare(void * payload, void * payload2)
+{
+    int val1 = *(int*)payload;
+    int val2 = *(int*)payload2;
+
+    if (val1 > val2)
+    {
+        return HEAP_GT;
+    }
+    else if (val1 < val2)
+    {
+        return HEAP_LT;
+    }
+    else
+    {
+        return HEAP_EQ;
+    }
+
+}
+
 TEST(HeapSort, HeapSortTest)
 {
-// TODO: Implement the heap sort for a plain array
+    int array_count = 3;
+    int my_array[] = {5, 3, 2};
+    int * array = get_int_array(my_array,  array_count);
+
+    heap_sort((void**)array, array_count, array_compare, MAX_HEAP);
+
+    for (int i = 0; i < array_count; i++)
+    {
+        printf("xx-> %d\n", array[i]);
+    }
+    free(array);
 }
