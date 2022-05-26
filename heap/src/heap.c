@@ -131,9 +131,34 @@ heap_t * heap_init(heap_type_t type,
         free(heap);
         return NULL;
     }
-
-
     return heap;
+}
+
+/*!
+ * @brief Insert a payload into the heap
+ * @param heap[in] heap_t
+ * @param payload[in] heap_payload_t
+ */
+void heap_insert(heap_t * heap, void * payload)
+{
+    // checks to make sure we have enough space
+    ensure_space(heap);
+
+    if (heap->data_mode == HEAP_PTR)
+    {
+        // adds the payload to the array
+        heap->heap_array[heap->length] = payload;
+    }
+    else
+    {
+        memcpy(heap->heap_array[heap->length], payload, heap->payload_size);
+    }
+
+    // increment the length of the array
+    heap->length++;
+
+    // perform bubble up
+    bubble_up(heap);
 }
 
 /*!
@@ -142,13 +167,19 @@ heap_t * heap_init(heap_type_t type,
  */
 void heap_destroy(heap_t * heap)
 {
-    for(size_t i = 0; i < heap->length; i++)
+    // If the mode is set to ptr, then free all the elements
+    // but if it is not, then we do not need to free it
+    if (heap->data_mode == HEAP_PTR)
     {
-        if (NULL != heap->destroy)
+        for(size_t i = 0; i < heap->length; i++)
         {
-            heap->destroy(heap->heap_array[i]);
+            if (NULL != heap->destroy)
+            {
+                heap->destroy(heap->heap_array[i]);
+            }
         }
     }
+
     free(heap->heap_array);
     free(heap);
 }
@@ -197,25 +228,6 @@ bool heap_is_empty(heap_t * heap)
     return (heap->length == 0);
 }
 
-/*!
- * @brief Insert a payload into the heap
- * @param heap[in] heap_t
- * @param payload[in] heap_payload_t
- */
-void heap_insert(heap_t * heap, void * payload)
-{
-    // checks to make sure we have enough space
-    ensure_space(heap);
-
-    // adds the payload to the array
-
-    heap->heap_array[heap->length] = payload;
-    heap->length++;
-
-
-    // perform bubble up
-    bubble_up(heap);
-}
 
 /*!
  * @brief Pop the next node in the heap, this should be the current highest node. The

@@ -6,12 +6,28 @@ void print_test(void * payload)
     printf("%d\n", *(int *)payload);
 }
 
-/*!
- * Mandatory function to use the DST, a function that compares the
- * null pointers.
- *
- * @return Heap compare enum
- */
+
+// Mandatory function for comparing the data mode payloads
+heap_compare_t array_compare(void * payload, void * payload2)
+{
+    int val1 = *(int*)payload;
+    int val2 = *(int*)payload2;
+
+    if (val1 > val2)
+    {
+        return HEAP_GT;
+    }
+    else if (val1 < val2)
+    {
+        return HEAP_LT;
+    }
+    else
+    {
+        return HEAP_EQ;
+    }
+}
+
+// Mandatory function for comparing the ptr payloads
 heap_compare_t heap_compare(void * payload, void * payload2)
 {
     int payload_1 = *(int *)payload;
@@ -59,6 +75,7 @@ class HeapTestFixture :public ::testing::Test
  public:
     heap_t * max_heap = nullptr;
     heap_t * min_heap = nullptr;
+    heap_t * data_heap = nullptr;
     int highest_value = 16;
     int lowest_value = 2;
 
@@ -70,6 +87,7 @@ class HeapTestFixture :public ::testing::Test
                              0,
                              payload_destroy,
                              heap_compare);
+        ASSERT_NE(max_heap, nullptr);
 
         heap_insert(max_heap, create_heap_payload(16));
         heap_insert(max_heap, create_heap_payload(14));
@@ -87,17 +105,34 @@ class HeapTestFixture :public ::testing::Test
                              0,
                              payload_destroy,
                              heap_compare);
+        ASSERT_NE(min_heap, nullptr);
         heap_insert(min_heap, create_heap_payload(5));
         heap_insert(min_heap, create_heap_payload(19));
         heap_insert(min_heap, create_heap_payload(6));
         heap_insert(min_heap, create_heap_payload(2));
         heap_insert(min_heap, create_heap_payload(2));
         heap_insert(min_heap, create_heap_payload(6));
+
+        int array_count = 3;
+        int my_array[] = {5, 3, 2};
+        data_heap = heap_init(MAX_HEAP,
+                              HEAP_MEM,
+                              sizeof(int),
+                              payload_destroy,
+                              heap_compare);
+        for (int i = 0; i < array_count; i++)
+        {
+            heap_insert(data_heap, &my_array[i]);
+        }
+
+        ASSERT_NE(data_heap, nullptr);
+
     }
     void TearDown() override
     {
         heap_destroy(max_heap);
         heap_destroy(min_heap);
+        heap_destroy(data_heap);
     }
 };
 
@@ -145,26 +180,6 @@ TEST_F(HeapTestFixture, DumpHeap)
 }
 
 
-
-heap_compare_t array_compare(void * payload, void * payload2)
-{
-    int val1 = *(int*)payload;
-    int val2 = *(int*)payload2;
-
-    if (val1 > val2)
-    {
-        return HEAP_GT;
-    }
-    else if (val1 < val2)
-    {
-        return HEAP_LT;
-    }
-    else
-    {
-        return HEAP_EQ;
-    }
-
-}
 
 //TEST(HeapSort, HeapSortTest)
 //{
