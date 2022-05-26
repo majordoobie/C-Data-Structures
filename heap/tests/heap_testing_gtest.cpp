@@ -67,7 +67,7 @@ class HeapTestFixture :public ::testing::Test
     {
         max_heap = heap_init(MAX_HEAP,
                              HEAP_PTR,
-                             NULL,
+                             0,
                              payload_destroy,
                              heap_compare);
 
@@ -84,7 +84,7 @@ class HeapTestFixture :public ::testing::Test
 
         min_heap = heap_init(MIN_HEAP,
                              HEAP_PTR,
-                             NULL,
+                             0,
                              payload_destroy,
                              heap_compare);
         heap_insert(min_heap, create_heap_payload(5));

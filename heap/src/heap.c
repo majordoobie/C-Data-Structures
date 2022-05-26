@@ -67,10 +67,20 @@ void heap_print(heap_t * heap, void (*print_test)(void *payload))
 }
 
 /*!
- * @brief Create the basic heap structure with default array size of 10 blocks
- * @param compare[in] Compare function used on each heap payload
- * @param destroy[in] Function called on each payload when freeing
- * @return Heap pointer
+ * @brief Create the initial data structure for the heap.
+ *
+ * The heap data structure is an array that follows the rules of a binary tree.
+ * But the data itself is stored in a array. The array can either be an array
+ * of void pointers or an array of data.
+ *
+ * The mode is selected by the data_mode parameter. HEAP_PTR creates an array
+ * of void pointers while HEAP_MEM creates an array of the memory blocks
+ * @param type Heap type, max heap or min heap
+ * @param data_mode Data storage strategy
+ * @param payload_size The size of the payload. This can be 0 if using HEAP_PTR
+ * @param destroy Pointer to function that frees the block of memory
+ * @param compare Pointer to function that compares the nodes
+ * @return Pointer to heap or NULL
  */
 heap_t * heap_init(heap_type_t type,
                    heap_data_mode_t data_mode,
@@ -78,16 +88,10 @@ heap_t * heap_init(heap_type_t type,
                    void (* destroy)(void *),
                    heap_compare_t (* compare)(void *, void *))
 {
-    if (data_mode == HEAP_MEM)
-    {
-        abort();
-    }
-
     // Allocate the space needed for creating the base structure
     heap_t * heap = (heap_t *)malloc(sizeof(heap_t));
     if (INVALID_PTR == verify_alloc((void *)heap))
     {
-        free(heap);
         return NULL;
     }
 
@@ -110,10 +114,24 @@ heap_t * heap_init(heap_type_t type,
         .destroy        = destroy
     };
 
+    if (heap->data_mode == HEAP_PTR)
+    {
+        // if mode is pointer, then just create an array to hold the pointers
+        heap->heap_array = calloc(heap->heap_size, sizeof(void *));
+    }
+    else
+    {
+        // If in data mode, then create the space for the data itself
+        heap->heap_array = calloc(heap->heap_size, heap->payload_size);
+    }
 
-    // Set the data array with base size
-    heap->heap_array = calloc(heap->heap_size, sizeof(void *));
-    verify_alloc(heap->heap_array);
+    // Verify that the array was created successfully
+    if (INVALID_PTR == verify_alloc(heap->heap_array))
+    {
+        free(heap);
+        return NULL;
+    }
+
 
     return heap;
 }
@@ -137,7 +155,7 @@ void heap_destroy(heap_t * heap)
 
 void heap_sort(void ** array, size_t item_count, heap_compare_t (*compare)(void *, void *), heap_type_t type)
 {
-    heap_t * heap = heap_init(type, HEAP_PTR, NULL, NULL, compare);
+    heap_t * heap = heap_init(type, HEAP_PTR, 0, NULL, compare);
 
     // heapify the array given
     for (size_t i = 0; i < item_count; i++)
