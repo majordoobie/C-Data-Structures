@@ -16,19 +16,30 @@ typedef enum
     HEAP_EQ = 0
 } heap_compare_t;
 
+// Type of heap
 typedef enum
 {
     MAX_HEAP,
     MIN_HEAP
 } heap_type_t;
 
+// Type def for controlling how data is saved into the cells
+typedef enum
+{
+    HEAP_PTR,
+    HEAP_MEM
+} heap_data_mode_t;
+
+// Mapping to internal structure that manages the heap
 typedef struct heap_t heap_t;
 
 void heap_print(heap_t * heap, void (* print_test)(void * payload));
 
-heap_t * heap_init(heap_compare_t (* compare)(void *, void *),
+heap_t * heap_init(heap_type_t type,
+                   heap_data_mode_t data_mode,
+                   size_t payload_size,
                    void (* destroy)(void *),
-                   heap_type_t type);
+                   heap_compare_t (* compare)(void *, void *));
 
 void heap_destroy(heap_t * heap);
 void heap_insert(heap_t * heap, void * payload);

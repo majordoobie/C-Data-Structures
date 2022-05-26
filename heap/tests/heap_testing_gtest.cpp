@@ -65,7 +65,11 @@ class HeapTestFixture :public ::testing::Test
  protected:
     void SetUp() override
     {
-        max_heap = heap_init(heap_compare, payload_destroy, MAX_HEAP);
+        max_heap = heap_init(MAX_HEAP,
+                             HEAP_PTR,
+                             NULL,
+                             payload_destroy,
+                             heap_compare);
 
         heap_insert(max_heap, create_heap_payload(16));
         heap_insert(max_heap, create_heap_payload(14));
@@ -78,7 +82,11 @@ class HeapTestFixture :public ::testing::Test
         heap_insert(max_heap, create_heap_payload(4));
         heap_insert(max_heap, create_heap_payload(1));
 
-        min_heap = heap_init(heap_compare, payload_destroy, MIN_HEAP);
+        min_heap = heap_init(MIN_HEAP,
+                             HEAP_PTR,
+                             NULL,
+                             payload_destroy,
+                             heap_compare);
         heap_insert(min_heap, create_heap_payload(5));
         heap_insert(min_heap, create_heap_payload(19));
         heap_insert(min_heap, create_heap_payload(6));
@@ -158,17 +166,17 @@ heap_compare_t array_compare(void * payload, void * payload2)
 
 }
 
-TEST(HeapSort, HeapSortTest)
-{
-    int array_count = 3;
-    int my_array[] = {5, 3, 2};
-    int * array = get_int_array(my_array,  array_count);
-
-    heap_sort((void**)array, array_count, array_compare, MAX_HEAP);
-
-    for (int i = 0; i < array_count; i++)
-    {
-        printf("xx-> %d\n", array[i]);
-    }
-    free(array);
-}
+//TEST(HeapSort, HeapSortTest)
+//{
+//    int array_count = 3;
+//    int my_array[] = {5, 3, 2};
+//    int * array = get_int_array(my_array,  array_count);
+//
+//    heap_sort((void**)array, array_count, array_compare, MAX_HEAP);
+//
+//    for (int i = 0; i < array_count; i++)
+//    {
+//        printf("xx-> %d\n", array[i]);
+//    }
+//    free(array);
+//}

@@ -8,11 +8,20 @@ typedef enum
     BASE_SIZE = 5,
 } heap_default_t;
 
+// Enum for determining if malloc calls were valid
+typedef enum
+{
+    VALID_PTR = 1,
+    INVALID_PTR = 0
+} heap_pointer_t;
+
 
 typedef struct heap_t
 {
     size_t length;
     size_t heap_size;
+    size_t payload_size;
+    heap_data_mode_t data_mode;
 
     heap_compare_t heap_type;
     void ** heap_array;
@@ -40,7 +49,7 @@ static size_t get_largest_child_index(heap_t * heap, size_t index);
 static void * get_left_child(heap_t * heap, size_t index);
 static void * get_right_child(heap_t * heap, size_t index);
 
-static void verify_alloc(void * ptr);
+static heap_pointer_t verify_alloc(void * ptr);
 
 
 
@@ -63,20 +72,35 @@ void heap_print(heap_t * heap, void (*print_test)(void *payload))
  * @param destroy[in] Function called on each payload when freeing
  * @return Heap pointer
  */
-heap_t * heap_init(heap_compare_t (* compare)(void *, void *),
+heap_t * heap_init(heap_type_t type,
+                   heap_data_mode_t data_mode,
+                   size_t payload_size,
                    void (* destroy)(void *),
-                   heap_type_t type)
+                   heap_compare_t (* compare)(void *, void *))
 {
+    if (data_mode == HEAP_MEM)
+    {
+        abort();
+    }
+
+    // Allocate the space needed for creating the base structure
     heap_t * heap = (heap_t *)malloc(sizeof(heap_t));
-    verify_alloc((void *)heap);
+    if (INVALID_PTR == verify_alloc((void *)heap))
+    {
+        free(heap);
+        return NULL;
+    }
+
 
     *heap = (heap_t){
         // Set sizes
         .length         = 0,
         .heap_size      = BASE_SIZE,
+        .payload_size   = payload_size,
 
         // Set heap type
         .heap_type      = type ? HEAP_LT : HEAP_GT,
+        .data_mode      = data_mode,
 
         // Set heap array
         .heap_array     = NULL,
@@ -113,7 +137,7 @@ void heap_destroy(heap_t * heap)
 
 void heap_sort(void ** array, size_t item_count, heap_compare_t (*compare)(void *, void *), heap_type_t type)
 {
-    heap_t * heap = heap_init(compare, NULL, type);
+    heap_t * heap = heap_init(type, HEAP_PTR, NULL, NULL, compare);
 
     // heapify the array given
     for (size_t i = 0; i < item_count; i++)
@@ -458,11 +482,12 @@ static void * get_right_child(heap_t * heap, size_t index)
  *
  * @param ptr Any allocated pointer
  */
-static void verify_alloc(void * ptr)
+static heap_pointer_t verify_alloc(void * ptr)
 {
     if (NULL == ptr)
     {
         fprintf(stderr, "[!] Could not allocate memory!\n");
-        abort();
+        return INVALID_PTR;
     }
+    return VALID_PTR;
 }
