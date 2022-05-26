@@ -18,10 +18,10 @@ typedef enum
 
 typedef struct heap_t
 {
-    size_t length;
-    size_t heap_size;
-    size_t payload_size;
-    heap_data_mode_t data_mode;
+    size_t array_length;            // Number of active nodes in the array
+    size_t array_size;              // Physical size of the array
+    size_t node_size;               // Size of each node in the array
+    heap_data_mode_t data_mode;     // Mode being pointer mode or data mode
 
     heap_compare_t heap_type;
     void ** heap_array;
@@ -60,7 +60,7 @@ static heap_pointer_t verify_alloc(void * ptr);
  */
 void heap_print(heap_t * heap, void (*print_test)(void *payload))
 {
-    for (size_t i = 0; i < heap->length; i++)
+    for (size_t i = 0; i < heap->array_length; i++)
     {
         print_test(heap->heap_array[i]);
     }
@@ -98,31 +98,31 @@ heap_t * heap_init(heap_type_t type,
 
     *heap = (heap_t){
         // Set sizes
-        .length         = 0,
-        .heap_size      = BASE_SIZE,
-        .payload_size   = payload_size,
+        .array_length       = 0,
+        .array_size         = BASE_SIZE,
+        .node_size          = payload_size,
 
         // Set heap type
-        .heap_type      = type ? HEAP_LT : HEAP_GT,
-        .data_mode      = data_mode,
+        .heap_type          = type ? HEAP_LT : HEAP_GT,
+        .data_mode          = data_mode,
 
         // Set heap array
-        .heap_array     = NULL,
+        .heap_array         = NULL,
 
         // Set callback functions
-        .compare        = compare,
-        .destroy        = destroy
+        .compare            = compare,
+        .destroy            = destroy
     };
 
     if (heap->data_mode == HEAP_PTR)
     {
         // if mode is pointer, then just create an array to hold the pointers
-        heap->heap_array = calloc(heap->heap_size, sizeof(void *));
+        heap->heap_array = calloc(heap->array_size, sizeof(void *));
     }
     else
     {
         // If in data mode, then create the space for the data itself
-        heap->heap_array = calloc(heap->heap_size, heap->payload_size);
+        heap->heap_array = calloc(heap->array_size, heap->node_size);
     }
 
     // Verify that the array was created successfully
@@ -147,15 +147,15 @@ void heap_insert(heap_t * heap, void * payload)
     if (heap->data_mode == HEAP_PTR)
     {
         // adds the payload to the array
-        heap->heap_array[heap->length] = payload;
+        heap->heap_array[heap->array_length] = payload;
     }
     else
     {
-        memcpy(heap->heap_array[heap->length], payload, heap->payload_size);
+        memcpy(heap->heap_array[heap->array_length], payload, heap->node_size);
     }
 
-    // increment the length of the array
-    heap->length++;
+    // increment the array_length of the array
+    heap->array_length++;
 
     // perform bubble up
     bubble_up(heap);
@@ -171,7 +171,7 @@ void heap_destroy(heap_t * heap)
     // but if it is not, then we do not need to free it
     if (heap->data_mode == HEAP_PTR)
     {
-        for(size_t i = 0; i < heap->length; i++)
+        for(size_t i = 0; i < heap->array_length; i++)
         {
             if (NULL != heap->destroy)
             {
@@ -209,11 +209,11 @@ void heap_sort(void ** array, size_t item_count, heap_compare_t (*compare)(void 
 
 void heap_dump(heap_t * heap)
 {
-    for (size_t i = 0; i < heap->length; i++)
+    for (size_t i = 0; i < heap->array_length; i++)
     {
         heap->destroy(heap->heap_array[i]);
     }
-    heap->length = 0;
+    heap->array_length = 0;
     ensure_downgrade_size(heap);
 }
 
@@ -225,7 +225,7 @@ void heap_dump(heap_t * heap)
  */
 bool heap_is_empty(heap_t * heap)
 {
-    return (heap->length == 0);
+    return (heap->array_length == 0);
 }
 
 
@@ -247,10 +247,10 @@ void * heap_pop(heap_t * heap)
         return NULL;
     }
 
-    // pop the root node and decrement our length size
+    // pop the root node and decrement our array_length size
     void * removal_payload = heap->heap_array[0];
-    heap->length--;
-    heap->heap_array[0] = heap->heap_array[heap->length];
+    heap->array_length--;
+    heap->heap_array[0] = heap->heap_array[heap->array_length];
 
     // perform the bubble down algorithm
     bubble_down(heap);
@@ -268,9 +268,9 @@ void * heap_pop(heap_t * heap)
  */
 static void ensure_space(heap_t * heap)
 {
-    if (heap->length == heap->heap_size)
+    if (heap->array_length == heap->array_size)
     {
-        heap->heap_size = heap->heap_size * 2;
+        heap->array_size = heap->array_size * 2;
         resize_heap(heap);
     }
 }
@@ -281,25 +281,25 @@ static void ensure_space(heap_t * heap)
  */
 static void ensure_downgrade_size(heap_t * heap)
 {
-    if ((heap->length == (heap->heap_size / 2)) & (heap->heap_size > BASE_SIZE))
+    if ((heap->array_length == (heap->array_size / 2)) & (heap->array_size > BASE_SIZE))
     {
-        heap->heap_size = heap->heap_size / 2;
+        heap->array_size = heap->array_size / 2;
         resize_heap(heap);
     }
-    if ((heap->length == 0) & (heap->heap_size == BASE_SIZE))
+    if ((heap->array_length == 0) & (heap->array_size == BASE_SIZE))
     {
         resize_heap(heap);
     }
 }
 
 /*!
- * @brief Resizes heap based on the new heap_size value
+ * @brief Resizes heap based on the new array_size value
  * @param heap[in] heap_t
  */
 static void resize_heap(heap_t *heap)
 {
     void ** re_alloc = realloc(heap->heap_array, sizeof(heap->heap_array) *
-    heap->heap_size);
+    heap->array_size);
     if (NULL == re_alloc)
     {
         fprintf(stderr, "Could not reallocate memory for heap!");
@@ -320,7 +320,7 @@ static void resize_heap(heap_t *heap)
 static void bubble_up(heap_t * heap)
 {
     // get the last index
-    size_t index = heap->length - 1;
+    size_t index = heap->array_length - 1;
 
     // make sure that it's in the correct position
     while ((index > 0) && (heap->compare(heap->heap_array[index], heap->heap_array[parent_index(index)]) == heap->heap_type))
@@ -343,7 +343,7 @@ static void bubble_up(heap_t * heap)
 static void bubble_down(heap_t * heap)
 {
     size_t index = 0;
-    while ((index <= heap->length) && (!(is_valid_parent(heap, index))))
+    while ((index <= heap->array_length) && (!(is_valid_parent(heap, index))))
     {
         size_t largest_index = get_largest_child_index(heap, index);
         swap(heap, index, largest_index);
@@ -445,11 +445,11 @@ static bool is_valid_parent(heap_t * heap, size_t index)
 
 static bool has_left_child(heap_t * heap, size_t index)
 {
-    return left_child_index(index) <= heap->length;
+    return left_child_index(index) <= heap->array_length;
 }
 static bool has_right_child(heap_t * heap, size_t index)
 {
-    return right_child_index(index) <= heap->length;
+    return right_child_index(index) <= heap->array_length;
 }
 
 /*!
