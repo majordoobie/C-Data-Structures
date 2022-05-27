@@ -113,19 +113,6 @@ class HeapTestFixture :public ::testing::Test
         heap_insert(min_heap, create_heap_payload(2));
         heap_insert(min_heap, create_heap_payload(6));
 
-        int array_count = 3;
-        int my_array[] = {5, 3, 2};
-        data_heap = heap_init(MAX_HEAP,
-                              HEAP_MEM,
-                              sizeof(int),
-                              payload_destroy,
-                              heap_compare);
-        for (int i = 0; i < array_count; i++)
-        {
-            heap_insert(data_heap, &my_array[i]);
-        }
-
-        ASSERT_NE(data_heap, nullptr);
 
     }
     void TearDown() override
@@ -181,17 +168,24 @@ TEST_F(HeapTestFixture, DumpHeap)
 
 
 
-//TEST(HeapSort, HeapSortTest)
-//{
-//    int array_count = 3;
-//    int my_array[] = {5, 3, 2};
-//    int * array = get_int_array(my_array,  array_count);
-//
-//    heap_sort((void**)array, array_count, array_compare, MAX_HEAP);
-//
-//    for (int i = 0; i < array_count; i++)
-//    {
-//        printf("xx-> %d\n", array[i]);
-//    }
-//    free(array);
-//}
+TEST(HeapSort, HeapSortTest)
+{
+    int array_count = 3;
+    int my_array[] = {5, 8, 2};
+    heap_t * data_heap = heap_init(MAX_HEAP,
+                          HEAP_MEM,
+                          sizeof(int),
+                          payload_destroy,
+                          heap_compare);
+    ASSERT_NE(data_heap, nullptr);
+
+    for (int i = 0; i < array_count; i++)
+    {
+        heap_insert(data_heap, &my_array[i]);
+    }
+
+    heap_destroy(data_heap);
+
+
+//    fuck_with_it();
+}
