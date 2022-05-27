@@ -210,7 +210,7 @@ TEST_F(HeapTestFixture, DumpHeap)
 
 //Test the ability to have a user pass an array of continues block of memory
 // and sort it based on the compare function that they pass.
-TEST(HeapSort, HeapSortTestMemMode)
+TEST(HeapSort, HeapSortTestMemModeMin)
 {
     int array_length = 10;
     int my_array[] = {5, 8, 2, 8, 9, 2, 3, 40, 1, 78};
@@ -221,6 +221,21 @@ TEST(HeapSort, HeapSortTestMemMode)
     for (int i = 0; i < array_length; i++)
     {
         EXPECT_EQ(my_array[i], my_array_order[i]);
+    }
+}
+//Test the ability to have a user pass an array of continues block of memory
+// and sort it based on the compare function that they pass.
+TEST(HeapSort, HeapSortTestMemModeMax)
+{
+    int array_length = 10;
+    int my_array[] = {5, 8, 2, 8, 9, 2, 3, 40, 1, 78};
+    int my_array_order[] = {1, 2, 2, 3, 5, 8, 8, 9, 40, 78};
+    heap_sort(&my_array, array_length, sizeof(int), HEAP_MEM, MAX_HEAP,
+              heap_ptr_cmp);
+
+    for (int i = 0; i < array_length; i++)
+    {
+        EXPECT_EQ(my_array[i], my_array_order[array_length - ( 1 + i)]);
     }
 }
 
@@ -240,11 +255,30 @@ TEST(HeapSort, HeapSortTestPtrModeMin)
 
     for (int i = 0; i < array_length; i++)
     {
-        printf("%d\n", *int_ptr_array[i]);
         EXPECT_EQ(*int_ptr_array[i], my_array_order[i]);
         free(int_ptr_array[i]);
     }
     free(int_ptr_array);
 }
 
-//TODO: need to test the max it failed
+TEST(HeapSort, HeapSortTestPtrModeMax)
+{
+    int array_length = 10;
+    int my_array[] = {5, 8, 2, 8, 9, 2, 3, 40, 1, 78};
+    int my_array_order[] = {1, 2, 2, 3, 5, 8, 8, 9, 40, 78};
+
+    int ** int_ptr_array = (int **)calloc(array_length, sizeof(void *));
+    for (int i = 0; i < array_length; i++)
+    {
+        int_ptr_array[i] = create_heap_payload(my_array[i]);
+    }
+
+    heap_sort(int_ptr_array, array_length, 0, HEAP_PTR, MAX_HEAP, heap_ptr_cmp);
+
+    for (int i = 0; i < array_length; i++)
+    {
+        EXPECT_EQ(*int_ptr_array[i], my_array_order[array_length - (i + 1)]);
+        free(int_ptr_array[i]);
+    }
+    free(int_ptr_array);
+}
