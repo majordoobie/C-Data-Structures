@@ -80,7 +80,8 @@ class HeapTestFixture : public ::testing::Test
     heap_t * max_heap_data = nullptr;
     heap_t * min_heap_data = nullptr;
 
-    std::vector<int32_t> test_values = {1, 3, 4, 5, 7, 8, 9, 10, 14, 16};
+    std::vector<int32_t> test_values = {1, 3, 4, 5, 7, 8, 9, 10, 14, 16, 20,
+                                        23, 34, 56, 78, 90, 100, 121, 144};
 
     int get_min()
     {
@@ -142,12 +143,11 @@ class HeapTestFixture : public ::testing::Test
     }
 };
 
-// Test that the printing callback works. This is a visual test
-TEST_F(HeapTestFixture, PrintFixtures)
-{
-    heap_print(max_heap_ptr, print_test);
-
-}
+//// Test that the printing callback works. This is a visual test
+//TEST_F(HeapTestFixture, PrintFixtures)
+//{
+//    heap_print(max_heap_ptr, print_test);
+//}
 
 // Ensure that popping will present the highest, or least value depending
 // on the heap type.
@@ -181,23 +181,21 @@ TEST_F(HeapTestFixture, TestAllPopAndOrder)
     int count = 0;
     while (!heap_is_empty(max_heap_ptr))
     {
-        // Extract the values and compare them to the already sorted test
-        // values list
-//        ptr_payload = (int *)heap_pop(min_heap_ptr);
-//        EXPECT_EQ(* ptr_payload, test_values[count]);
-//        payload_destroy(ptr_payload);
-//
-//        ptr_payload = (int *)heap_pop(max_heap_ptr);
-//        EXPECT_EQ(* ptr_payload, test_values[(test_values.size() - 1) - count]);
-//        payload_destroy(ptr_payload);
+        ptr_payload = (int *)heap_pop(min_heap_ptr);
+        EXPECT_EQ(* ptr_payload, test_values[count]);
+        payload_destroy(ptr_payload);
+
+        ptr_payload = (int *)heap_pop(max_heap_ptr);
+        EXPECT_EQ(* ptr_payload, test_values[(test_values.size() - 1) - count]);
+        payload_destroy(ptr_payload);
 
         ptr_payload = (int *)heap_pop(min_heap_data);
         EXPECT_EQ(* ptr_payload, test_values[count]);
         payload_destroy(ptr_payload);
 
-//        ptr_payload = (int *)heap_pop(max_heap_data);
-//        EXPECT_EQ(* ptr_payload, test_values[(test_values.size() - 1) - count]);
-//        payload_destroy(ptr_payload);
+        ptr_payload = (int *)heap_pop(max_heap_data);
+        EXPECT_EQ(* ptr_payload, test_values[(test_values.size() - 1) - count]);
+        payload_destroy(ptr_payload);
 
         count++;
     }
@@ -210,25 +208,15 @@ TEST_F(HeapTestFixture, DumpHeap)
 }
 
 
-//
-//TEST(HeapSort, HeapSortTest)
-//{
-//    int array_count = 3;
-//    int my_array[] = {5, 8, 2};
-//    heap_t * data_heap = heap_init(MAX_HEAP,
-//                                   HEAP_MEM,
-//                                   sizeof(int),
-//                                   payload_destroy,
-//                                   heap_ptr_cmp);
-//    ASSERT_NE(data_heap, nullptr);
-//
-//    for (int i = 0; i < array_count; i++)
-//    {
-//        heap_insert(data_heap, &my_array[i]);
-//    }
-//
-//    heap_destroy(data_heap);
-//
-//
-////    fuck_with_it();
-//}
+
+TEST(HeapSort, HeapSortTest)
+{
+    int array_length = 10;
+    int my_array[] = {5, 8, 2, 8, 9, 2, 3, 40, 1, 78};
+    heap_sort(&my_array, array_length, sizeof(int), HEAP_MEM, MIN_HEAP,
+              heap_ptr_cmp);
+    for (int i = 0; i < array_length; i++)
+    {
+        printf("-> %d\n", my_array[i]);
+    }
+}
