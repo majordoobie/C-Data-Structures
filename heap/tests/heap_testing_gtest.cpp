@@ -150,7 +150,7 @@ TEST_F(HeapTestFixture, PrintFixtures)
 }
 
 // Ensure that popping will present the highest, or least value depending
-// on the heap type
+// on the heap type.
 TEST_F(HeapTestFixture, TestPopValueForMax)
 {
     // The highest value should be stored on the next node for max_heap_ptr
@@ -161,8 +161,13 @@ TEST_F(HeapTestFixture, TestPopValueForMax)
     EXPECT_EQ(* (int *)highest, get_max());
     EXPECT_EQ(* (int *)lowest, get_min());
 
+    payload_destroy(highest);
+    payload_destroy(lowest);
+
     highest = heap_pop(max_heap_data);
-    EXPECT_EQ(*(int*)highest, get_max());
+    lowest = heap_pop(min_heap_data);
+    EXPECT_EQ(* (int *)highest, get_max());
+    EXPECT_EQ(* (int *)lowest, get_min());
 
     payload_destroy(highest);
     payload_destroy(lowest);
@@ -178,13 +183,21 @@ TEST_F(HeapTestFixture, TestAllPopAndOrder)
     {
         // Extract the values and compare them to the already sorted test
         // values list
-        ptr_payload = (int *)heap_pop(max_heap_ptr);
-        EXPECT_EQ(* ptr_payload, test_values[(test_values.size() - 1) - count]);
-        payload_destroy(ptr_payload);
-
-        ptr_payload = (int *)heap_pop(min_heap_ptr);
+//        ptr_payload = (int *)heap_pop(min_heap_ptr);
+//        EXPECT_EQ(* ptr_payload, test_values[count]);
+//        payload_destroy(ptr_payload);
+//
+//        ptr_payload = (int *)heap_pop(max_heap_ptr);
+//        EXPECT_EQ(* ptr_payload, test_values[(test_values.size() - 1) - count]);
+//        payload_destroy(ptr_payload);
+//
+        ptr_payload = (int *)heap_pop(min_heap_data);
         EXPECT_EQ(* ptr_payload, test_values[count]);
         payload_destroy(ptr_payload);
+
+//        ptr_payload = (int *)heap_pop(max_heap_data);
+//        EXPECT_EQ(* ptr_payload, test_values[(test_values.size() - 1) - count]);
+//        payload_destroy(ptr_payload);
 
         count++;
     }

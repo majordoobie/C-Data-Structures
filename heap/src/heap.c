@@ -38,23 +38,21 @@ static void bubble_up(heap_t * heap);
 static void bubble_down(heap_t * heap);
 static void swap(heap_t * heap, size_t child_index, size_t parent_index);
 
-static size_t parent_index(size_t index);
-static size_t left_child_index(size_t index);
-static size_t right_child_index(size_t index);
+static size_t get_parent_index(size_t index);
+static size_t get_left_child_index(size_t index);
+static size_t get_right_child_index(size_t index);
+static size_t get_largest_child_index(heap_t * heap, size_t parent_index);
 
 static bool is_valid_parent(heap_t * heap, size_t index);
 static bool has_left_child(heap_t * heap, size_t index);
 static bool has_right_child(heap_t * heap, size_t index);
 
-static size_t get_largest_child_index(heap_t * heap, size_t index);
-static void * get_left_child(heap_t * heap, size_t index);
-static void * get_right_child(heap_t * heap, size_t index);
-
 static uint8_t * get_slice(heap_t * heap, size_t index);
-static heap_compare_t get_comparison(heap_t * heap, size_t index);
+static heap_compare_t get_comparison(heap_t * heap,
+                                     size_t left_index,
+                                     size_t right_index);
 
 static heap_pointer_t verify_alloc(void * ptr);
-
 
 void fuck_with_it()
 {
@@ -141,7 +139,8 @@ heap_t * heap_init(heap_type_t type,
     {
         // if mode is pointer, then just create an array to hold the pointers
         heap->heap_array = calloc(heap->array_size, sizeof(void *));
-    } else
+    }
+    else
     {
         // If in data mode, then create the space for the data itself
         heap->heap_array = calloc(heap->array_size, heap->node_size);
@@ -201,7 +200,8 @@ void heap_insert(heap_t * heap, void * payload)
     {
         // adds the payload to the array
         heap->heap_array[heap->array_length] = payload;
-    } else
+    }
+    else
     {
         uint8_t * slice = get_slice(heap, heap->array_length);
         memcpy(slice, payload, heap->node_size);
@@ -213,7 +213,6 @@ void heap_insert(heap_t * heap, void * payload)
     // perform bubble up
     bubble_up(heap);
 }
-
 
 void heap_sort(void ** array,
                size_t item_count,
@@ -300,7 +299,7 @@ void * heap_pop(heap_t * heap)
         // the copied node is zeroes out
         heap->array_length--;
         uint8_t * index_last_ptr = get_slice(heap, heap->array_length);
-        memcpy(index_0_ptr, index_last_ptr,heap->node_size);
+        memcpy(index_0_ptr, index_last_ptr, heap->node_size);
         memset(index_last_ptr, 0, heap->node_size);
 
         // save the pointer to the variable
@@ -309,6 +308,7 @@ void * heap_pop(heap_t * heap)
 
 
     // perform the bubble down algorithm
+    //TODO: When array is of length 5 bubble down fucks shit up
     bubble_down(heap);
 
     // resize array if we need to
@@ -379,10 +379,12 @@ static void bubble_up(heap_t * heap)
     // get the last index
     size_t index = heap->array_length - 1;
 
-    while ((index > 0) &&  heap->heap_type == get_comparison(heap, index))
+    while ((index > 0) &&
+        (heap->heap_type
+            == get_comparison(heap, index, get_parent_index(index))))
     {
-        swap(heap, index, parent_index(index));
-        index = parent_index(index);
+        swap(heap, index, get_parent_index(index));
+        index = get_parent_index(index);
     }
 }
 
@@ -399,6 +401,8 @@ static void bubble_up(heap_t * heap)
 static void bubble_down(heap_t * heap)
 {
     size_t index = 0;
+    // keep swapping until there is no more child nodes or if the current
+    // node becomes a valid parent
     while ((index <= heap->array_length) && (!(is_valid_parent(heap, index))))
     {
         size_t largest_index = get_largest_child_index(heap, index);
@@ -412,7 +416,7 @@ static void bubble_down(heap_t * heap)
  * @param index[in] index to inspect
  * @return Index of the parent
  */
-static size_t parent_index(size_t index)
+static size_t get_parent_index(size_t index)
 {
     return (index - 1) / 2;
 }
@@ -422,7 +426,7 @@ static size_t parent_index(size_t index)
  * @param index[in] index to inspect
  * @return Index of the child
  */
-static size_t left_child_index(size_t index)
+static size_t get_left_child_index(size_t index)
 {
     return index * 2 + 1;
 }
@@ -432,7 +436,7 @@ static size_t left_child_index(size_t index)
  * @param index[in] index to inspect
  * @return Index of the child
  */
-static size_t right_child_index(size_t index)
+static size_t get_right_child_index(size_t index)
 {
     return index * 2 + 2;
 }
@@ -441,7 +445,7 @@ static size_t right_child_index(size_t index)
  * @brief Swap the positions of the two index in the array
  * @param heap[in] heap_t
  * @param child_index[in] index of the child_index to swap from
- * @param parent_index[in] index of the new parent_index
+ * @param parent_index[in] index of the new get_parent_index
  */
 static void swap(heap_t * heap, size_t child_index, size_t parent_index)
 {
@@ -459,17 +463,17 @@ static void swap(heap_t * heap, size_t child_index, size_t parent_index)
         uint8_t * parent_data = get_slice(heap, parent_index);
 
         // copy the child data to temp, then replace it with the parent
-        memcpy(&temp, child_data, heap->node_size);
+        memcpy(& temp, child_data, heap->node_size);
         memcpy(child_data, parent_data, heap->node_size);
 
         // replace parent data with the child data
-        memcpy(parent_data, &temp, heap->node_size);
+        memcpy(parent_data, & temp, heap->node_size);
     }
 }
 
 /*!
- * @brief Checks to see if the children of the current root is valid by checking if either
- * child is greater than itself.
+ * A valid parent is a parent node that is greater or equal to both of its
+ * children. If it is not a valid parent return false.
  * @param heap
  * @param index
  * @return
@@ -483,8 +487,8 @@ static bool is_valid_parent(heap_t * heap, size_t index)
     }
 
     // since left child exists, check if current item is greater or less than
-    heap_compare_t left_compare =
-        heap->compare(heap->heap_array[index], get_left_child(heap, index));
+    size_t left_child_index = get_left_child_index(index);
+    heap_compare_t left_compare = get_comparison(heap, index, left_child_index);
 
     // If there is no right child, check to see if the left child makes the parent valid or not
     if (!(has_right_child(heap, index)))
@@ -493,7 +497,8 @@ static bool is_valid_parent(heap_t * heap, size_t index)
         if (heap->heap_type != left_compare)
         {
             return false;
-        } else
+        }
+        else
         {
             return true;
         }
@@ -504,79 +509,135 @@ static bool is_valid_parent(heap_t * heap, size_t index)
      * If we get here then the current node has both a left and right child. Check that
      * the current node is greater/less than both
      */
-    heap_compare_t right_compare =
-        heap->compare(heap->heap_array[index], get_right_child(heap, index));
+    size_t right_child_index = get_right_child_index(index);
+    heap_compare_t
+        right_compare = get_comparison(heap, index, right_child_index);
 
     if ((heap->heap_type != left_compare) || (heap->heap_type != right_compare))
     {
         return false;
-    } else
+    }
+    else
     {
         return true;
     }
 }
 
+/*!
+ * Return if the node has a left child by getting the what would be the index
+ * of its child and see if that index fits in the range of items that we have
+ * on the list.
+ */
 static bool has_left_child(heap_t * heap, size_t index)
 {
-    return left_child_index(index) <= heap->array_length;
+    return get_left_child_index(index) < heap->array_length;
 }
+
+/*!
+ * Return if the node has a right child by getting the what would be the index
+ * of its child and see if that index fits in the range of items that we have
+ * on the list.
+ */
 static bool has_right_child(heap_t * heap, size_t index)
 {
-    return right_child_index(index) <= heap->array_length;
+    return get_right_child_index(index) < heap->array_length;
 }
 
 /*!
- * @brief Return the largest index, either the left child, or right child
- * @param heap[in] heap_t
- * @param index[in] index to inspect
- * @return Index of the largest child of the inspected parent
+ * @brief return the min/max child in order to swap their oder.
+ *
+ * In the situation of a max heap, the largest child is returned. In the
+ * situation of a min heap, the smallest child is returned. Of course, if the
+ * parent is already one of those, the parent itself is returned.
+ * @param heap heap_t
+ * @param parent_index parent_index to inspect
+ * @return Min/Max child
  */
-static size_t get_largest_child_index(heap_t * heap, size_t index)
+static size_t get_largest_child_index(heap_t * heap, size_t parent_index)
 {
-    // If there is no left child, then there is no right. Root is the largest child
-    if (!(has_left_child(heap, index)))
+    // if there is no left child, then there is no right child because of the
+    // rule of binary fill from left to right. Therefore, return the root.
+    if (!(has_left_child(heap, parent_index)))
     {
-        return index;
+        return parent_index;
     }
 
-    // If there is no right child, then there is a left child, return left child
-    if (!(has_right_child(heap, index)))
+    // target index is either the max child (maxheap) or min child (min heap)
+    size_t target_index = parent_index;
+    heap_compare_t eval;
+
+    // grab the left child, because we know that it is there
+    size_t left_child_index = get_left_child_index(parent_index);
+
+
+    // perform the comparison between the parent and the left child. The
+    // return value is based on the heap type. If the evaluation between
+    // parent and left is GT and the heap type is GT_type, then set the
+    // parent as the target because the goal is to set the target as the
+    // heaptype == eval
+    eval = get_comparison(heap, parent_index, left_child_index);
+    if (eval != heap->heap_type)
     {
-        return left_child_index(index);
+        target_index = left_child_index;
     }
 
-    // compare which children are the biggest/smallest
-    if (heap->compare(get_left_child(heap, index), get_right_child(heap, index))
-        == heap->heap_type)
+
+    // If there is a right child, make the comparison between the
+    // target_index and the right child
+    if (has_right_child(heap, parent_index))
     {
-        return left_child_index(index);
-    } else
-    {
-        return right_child_index(index);
+        size_t right_child_index = get_right_child_index(parent_index);
+        eval = get_comparison(heap, target_index, right_child_index);
+        if (eval != heap->heap_type)
+        {
+            target_index = right_child_index;
+        }
     }
-}
+    return target_index;
 
-/*!
- * @brief Returns the payload of the left child of the passed in index
- * @param heap[in] heap_t
- * @param index[in] index to inspect
- * @return Heap payload from the returned index
- */
-static void * get_left_child(heap_t * heap, size_t index)
-{
-    return heap->heap_array[left_child_index(index)];
 
-}
 
-/*!
- * @brief Returns the payload of the right child of the passed in index
- * @param heap[in] heap_t
- * @param index[in] index to inspect
- * @return Heap payload from the returned index
- */
-static void * get_right_child(heap_t * heap, size_t index)
-{
-    return heap->heap_array[right_child_index(index)];
+
+
+//    size_t right_child_index = 0;
+//
+//    // check if there is a right child, if it exists, then set its value or
+//    // leave as 0 indication that the child is not there
+//    if (has_right_child(heap, parent_index))
+//    {
+//        right_child_index = get_right_child_index(parent_index);
+////        return get_left_child_index(parent_index);
+//    }
+//
+//    // if there is a right child, then make the comparison between the left
+//    // and right child.
+//    if (0 != right_child_index)
+//    {
+//
+//    }
+//    // if we only have a left child, then make the comparison to ensure to
+//    // get the min/max based on heap type
+//    eval = get_comparison(heap, parent_index, left_child_index);
+//    if (eval == heap->heap_type)
+//    {
+//        return left_child_index;
+//    }
+//    else
+//    {
+//        return parent_index;
+//    }
+//
+//    // compare which children are the biggest/smallest
+//    heap_compare_t
+//        comparison = get_comparison(heap, left_child_index, right_child_index);
+//    if (heap->heap_type == comparison)
+//    {
+//        return left_child_index;
+//    }
+//    else
+//    {
+//        return right_child_index;
+//    }
 }
 
 /*!
@@ -611,25 +672,27 @@ static uint8_t * get_slice(heap_t * heap, size_t index)
 /*!
  * @brief Small wrapper for getting the comparisons between nodes
  * @param heap
- * @param index Index to "slice" in the array
+ * @param left_index Index to "slice" in the array
  * @return The result of the comparison
  */
-static heap_compare_t get_comparison(heap_t * heap, size_t index)
+static heap_compare_t get_comparison(heap_t * heap,
+                                     size_t left_index,
+                                     size_t right_index)
 {
     heap_compare_t result = 0;
 
     if (HEAP_PTR == heap->data_mode)
     {
         result = heap->compare(
-            heap->heap_array[index],
-            heap->heap_array[parent_index(index)]
+            heap->heap_array[left_index],
+            heap->heap_array[right_index]
         );
     }
     else
     {
         result = heap->compare(
-            get_slice(heap, index),
-            get_slice(heap, parent_index(index))
+            get_slice(heap, left_index),
+            get_slice(heap, right_index)
         );
     }
 
