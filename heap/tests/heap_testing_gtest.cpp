@@ -201,22 +201,50 @@ TEST_F(HeapTestFixture, TestAllPopAndOrder)
     }
 }
 
+// take a dump
 TEST_F(HeapTestFixture, DumpHeap)
 {
     heap_dump(max_heap_ptr);
     EXPECT_TRUE(heap_is_empty(max_heap_ptr));
 }
 
-
-
-TEST(HeapSort, HeapSortTest)
+//Test the ability to have a user pass an array of continues block of memory
+// and sort it based on the compare function that they pass.
+TEST(HeapSort, HeapSortTestMemMode)
 {
     int array_length = 10;
     int my_array[] = {5, 8, 2, 8, 9, 2, 3, 40, 1, 78};
+    int my_array_order[] = {1, 2, 2, 3, 5, 8, 8, 9, 40, 78};
     heap_sort(&my_array, array_length, sizeof(int), HEAP_MEM, MIN_HEAP,
               heap_ptr_cmp);
+
     for (int i = 0; i < array_length; i++)
     {
-        printf("-> %d\n", my_array[i]);
+        EXPECT_EQ(my_array[i], my_array_order[i]);
     }
 }
+
+TEST(HeapSort, HeapSortTestPtrModeMin)
+{
+    int array_length = 10;
+    int my_array[] = {5, 8, 2, 8, 9, 2, 3, 40, 1, 78};
+    int my_array_order[] = {1, 2, 2, 3, 5, 8, 8, 9, 40, 78};
+
+    int ** int_ptr_array = (int **)calloc(array_length, sizeof(void *));
+    for (int i = 0; i < array_length; i++)
+    {
+        int_ptr_array[i] = create_heap_payload(my_array[i]);
+    }
+
+    heap_sort(int_ptr_array, array_length, 0, HEAP_PTR, MIN_HEAP, heap_ptr_cmp);
+
+    for (int i = 0; i < array_length; i++)
+    {
+        printf("%d\n", *int_ptr_array[i]);
+        EXPECT_EQ(*int_ptr_array[i], my_array_order[i]);
+        free(int_ptr_array[i]);
+    }
+    free(int_ptr_array);
+}
+
+//TODO: need to test the max it failed

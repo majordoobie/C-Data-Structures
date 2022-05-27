@@ -203,14 +203,20 @@ void heap_sort(void * array,
                heap_compare_t (* compare)(void *, void *))
 {
     heap_t * heap = heap_init(type, data_mode, item_size, NULL, compare);
+    if (NULL == heap)
+    {
+        return;
+    }
 
     if (HEAP_PTR == heap->data_mode)
     {
-        int count = 0;
-        while (!heap_is_empty(heap))
+        for (size_t item = 0; item < item_count; item++)
         {
-            ((void **)array)[count] = heap_pop(heap);
-            count++;
+            heap_insert(heap, * ((void **)array + item));
+        }
+        for (size_t item = 0; item < item_count; item++)
+        {
+            * ((void **)array + item) = heap_pop(heap);
         }
     }
     else
@@ -218,14 +224,14 @@ void heap_sort(void * array,
         // Insert each item into the heap then pop
         for (size_t item = 0; item < item_count; item++)
         {
-            heap_insert(heap, (uint8_t*)array + get_index(item, item_size));
+            heap_insert(heap, (uint8_t *)array + get_index(item, item_size));
         }
 
         uint8_t * index_ptr = NULL;
         void * pop_item = NULL;
         for (size_t item = 0; item < item_count; item++)
         {
-            index_ptr = (uint8_t * )array + get_index(item, item_size);
+            index_ptr = (uint8_t *)array + get_index(item, item_size);
             pop_item = heap_pop(heap);
             memcpy(index_ptr, pop_item, item_size);
             free(pop_item);
@@ -234,19 +240,10 @@ void heap_sort(void * array,
     }
 
 
+    // set the mode to mem so that we do not free the pointers incase we are
+    // in pointer mode or else the user will not have their data
+    heap->data_mode = HEAP_MEM;
     heap_destroy(heap);
-
-//    // heapify the array given
-//    for (size_t i = 0; i < item_count; i++)
-//    {
-//        heap_insert(heap, array[i]);
-//    }
-//
-//    // modify the array given in place with heapsort
-//    for (size_t i = 0; i < item_count; i++)
-//    {
-//        array[i] = heap_pop(heap);
-//    }
 }
 
 //heap_payload_t * heap_peek(heap_t * heap, int index)
