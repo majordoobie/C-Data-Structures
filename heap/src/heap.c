@@ -43,7 +43,7 @@ static size_t get_left_child_index(size_t index);
 static size_t get_right_child_index(size_t index);
 static size_t get_target_index(heap_t * heap, size_t parent_index);
 
-static bool is_valid_parent(heap_t * heap, size_t index);
+static bool is_valid_parent(heap_t * heap, size_t parent_index);
 static bool has_left_child(heap_t * heap, size_t index);
 static bool has_right_child(heap_t * heap, size_t index);
 
@@ -403,9 +403,15 @@ static void bubble_down(heap_t * heap)
     size_t index = 0;
     // keep swapping until there is no more child nodes or if the current
     // node becomes a valid parent
-    while ((index <= heap->array_length) && (!(is_valid_parent(heap, index))))
+    // TODO: you need to set a break where if the index is the same as the
+    //  current or some shit
+    while ((index < heap->array_length) && (!(is_valid_parent(heap, index))))
     {
         size_t largest_index = get_target_index(heap, index);
+        if (largest_index == index)
+        {
+            break;
+        }
         swap(heap, index, largest_index);
         index = largest_index;
     }
@@ -472,55 +478,47 @@ static void swap(heap_t * heap, size_t child_index, size_t parent_index)
 }
 
 /*!
- * A valid parent is a parent node that is greater or equal to both of its
- * children. If it is not a valid parent return false.
+ * @brief Return bool indicating that the parent is either greater or equal
+ * to its children for a max heap or if the parent is less than or equal to
+ * both of its children in the case of a min heap
  * @param heap
- * @param index
+ * @param parent_index
  * @return
  */
-static bool is_valid_parent(heap_t * heap, size_t index)
+static bool is_valid_parent(heap_t * heap, size_t parent_index)
 {
-    // If there is no left child, then the parent IS left_compare because there are no other children
-    if (!(has_left_child(heap, index)))
+    // Heaps will only have a right child if there is a left child because of
+    // the binary tree rule. Therefore, if there is no left, then just return
+    // the root which means that the node is a valid parent, a lonely parent.
+    if (!(has_left_child(heap, parent_index)))
     {
         return true;
     }
 
     // since left child exists, check if current item is greater or less than
-    size_t left_child_index = get_left_child_index(index);
-    heap_compare_t left_compare = get_comparison(heap, index, left_child_index);
+    size_t left_child_index = get_left_child_index(parent_index);
+    heap_compare_t eval = get_comparison(heap, parent_index, left_child_index);
 
-    // If there is no right child, check to see if the left child makes the parent valid or not
-    if (!(has_right_child(heap, index)))
-    {
-        // if compare DOES NOT equal the type set return false. This will return true for EQ
-        if (heap->heap_type != left_compare)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-
-    /*
-     * If we get here then the current node has both a left and right child. Check that
-     * the current node is greater/less than both
-     */
-    size_t right_child_index = get_right_child_index(index);
-    heap_compare_t
-        right_compare = get_comparison(heap, index, right_child_index);
-
-    if ((heap->heap_type != left_compare) || (heap->heap_type != right_compare))
+    // if the parent is GT the left_child in a GT heap, or it is equal, then
+    // the parent is valid. Otherwise, it is not. Same goes for min
+    if ((eval != heap->heap_type) || (eval != HEAP_EQ))
     {
         return false;
     }
-    else
+
+    // if there is a right child, and we get to here then do the same
+    // comparison for the right child
+    if (has_right_child(heap, parent_index))
     {
-        return true;
+        size_t right_child_index = get_right_child_index(parent_index);
+        eval = get_comparison(heap, parent_index, right_child_index);
+        if ((eval != heap->heap_type) || (eval != HEAP_EQ))
+        {
+            return false;
+        }
     }
+
+    return true;
 }
 
 /*!
@@ -594,50 +592,6 @@ static size_t get_target_index(heap_t * heap, size_t parent_index)
         }
     }
     return target_index;
-
-
-
-
-
-//    size_t right_child_index = 0;
-//
-//    // check if there is a right child, if it exists, then set its value or
-//    // leave as 0 indication that the child is not there
-//    if (has_right_child(heap, parent_index))
-//    {
-//        right_child_index = get_right_child_index(parent_index);
-////        return get_left_child_index(parent_index);
-//    }
-//
-//    // if there is a right child, then make the comparison between the left
-//    // and right child.
-//    if (0 != right_child_index)
-//    {
-//
-//    }
-//    // if we only have a left child, then make the comparison to ensure to
-//    // get the min/max based on heap type
-//    eval = get_comparison(heap, parent_index, left_child_index);
-//    if (eval == heap->heap_type)
-//    {
-//        return left_child_index;
-//    }
-//    else
-//    {
-//        return parent_index;
-//    }
-//
-//    // compare which children are the biggest/smallest
-//    heap_compare_t
-//        comparison = get_comparison(heap, left_child_index, right_child_index);
-//    if (heap->heap_type == comparison)
-//    {
-//        return left_child_index;
-//    }
-//    else
-//    {
-//        return right_child_index;
-//    }
 }
 
 /*!

@@ -190,7 +190,7 @@ TEST_F(HeapTestFixture, TestAllPopAndOrder)
 //        ptr_payload = (int *)heap_pop(max_heap_ptr);
 //        EXPECT_EQ(* ptr_payload, test_values[(test_values.size() - 1) - count]);
 //        payload_destroy(ptr_payload);
-//
+
         ptr_payload = (int *)heap_pop(min_heap_data);
         EXPECT_EQ(* ptr_payload, test_values[count]);
         payload_destroy(ptr_payload);
