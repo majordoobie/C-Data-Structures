@@ -41,7 +41,7 @@ static void swap(heap_t * heap, size_t child_index, size_t parent_index);
 static size_t get_parent_index(size_t index);
 static size_t get_left_child_index(size_t index);
 static size_t get_right_child_index(size_t index);
-static size_t get_largest_child_index(heap_t * heap, size_t parent_index);
+static size_t get_target_index(heap_t * heap, size_t parent_index);
 
 static bool is_valid_parent(heap_t * heap, size_t index);
 static bool has_left_child(heap_t * heap, size_t index);
@@ -405,7 +405,7 @@ static void bubble_down(heap_t * heap)
     // node becomes a valid parent
     while ((index <= heap->array_length) && (!(is_valid_parent(heap, index))))
     {
-        size_t largest_index = get_largest_child_index(heap, index);
+        size_t largest_index = get_target_index(heap, index);
         swap(heap, index, largest_index);
         index = largest_index;
     }
@@ -553,7 +553,7 @@ static bool has_right_child(heap_t * heap, size_t index)
  * @param parent_index parent_index to inspect
  * @return Min/Max child
  */
-static size_t get_largest_child_index(heap_t * heap, size_t parent_index)
+static size_t get_target_index(heap_t * heap, size_t parent_index)
 {
     // if there is no left child, then there is no right child because of the
     // rule of binary fill from left to right. Therefore, return the root.
