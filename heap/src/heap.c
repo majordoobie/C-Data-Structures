@@ -195,6 +195,20 @@ void heap_insert(heap_t * heap, void * payload)
     bubble_up(heap);
 }
 
+/*!
+ * @brief Heap sort the array passed in
+ *
+ * Heap sort function is used to sort the array passed in. The array can be
+ * an array of pointers using the HEAP_PTR mode or an array of contiguous
+ * data blocks in HEAP_MEM mode. Either way, the array passed in will be
+ * sorted in place using the provided compare function
+ * @param array
+ * @param item_count
+ * @param item_size
+ * @param data_mode
+ * @param type
+ * @param compare
+ */
 void heap_sort(void * array,
                size_t item_count,
                size_t item_size,
@@ -238,7 +252,6 @@ void heap_sort(void * array,
         }
 
     }
-
 
     // set the mode to mem so that we do not free the pointers incase we are
     // in pointer mode or else the user will not have their data
