@@ -1,4 +1,4 @@
-add_library(heap SHARED heap.c)
+add_library(heap SHARED heap.c heap_utils.c)
 
 # Test to public so that gtest can have access
 target_include_directories(

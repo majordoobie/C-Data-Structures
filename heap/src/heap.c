@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <assert.h>
 
 typedef enum
 {
@@ -54,46 +55,7 @@ static heap_compare_t get_comparison(heap_t * heap, size_t index);
 
 static heap_pointer_t verify_alloc(void * ptr);
 
-/*!
- * @brief performs the pointer arithmetic for indexing the correct location
- * of the array.
- *
- * @param heap
- * @return Pointer the to next location that is open
- */
-static uint8_t * get_slice(heap_t * heap, size_t index)
-{
-    return (uint8_t *)heap->heap_array + (index * heap->node_size);
 
-}
-
-/*!
- * @brief Small wrapper for getting the comparisons between nodes
- * @param heap
- * @param index Index to "slice" in the array
- * @return The result of the comparison
- */
-static heap_compare_t get_comparison(heap_t * heap, size_t index)
-{
-    heap_compare_t result = 0;
-
-    if (HEAP_PTR == heap->data_mode)
-    {
-        result = heap->compare(
-            heap->heap_array[index],
-            heap->heap_array[parent_index(index)]
-        );
-    }
-    else
-    {
-        result = heap->compare(
-            get_slice(heap, index),
-            get_slice(heap, parent_index(index))
-            );
-    }
-
-    return result;
-}
 void fuck_with_it()
 {
     // proof of concept saving pointers into the array
@@ -195,12 +157,43 @@ heap_t * heap_init(heap_type_t type,
 }
 
 /*!
- * @brief Insert a payload into the heap
- * @param heap[in] heap_t
- * @param payload[in] heap_payload_t
+ * @brief Destroy the data structure. If in PTR mode then
+ * free the pointers as well
+ * @param heap self
+ */
+void heap_destroy(heap_t * heap)
+{
+    // ensure that a valid pointer was passed in
+    assert(heap);
+
+    // If the mode is set to ptr, then free all the elements
+    // bt if it is not, then we do not need to free it
+    if (heap->data_mode == HEAP_PTR)
+    {
+        for (size_t i = 0; i < heap->array_length; i++)
+        {
+            if (NULL != heap->destroy)
+            {
+                heap->destroy(heap->heap_array[i]);
+            }
+        }
+    }
+
+    free(heap->heap_array);
+    free(heap);
+}
+
+/*!
+ * @brief insert payload into the heap
+ *
+ * @param heap heap data structure
+ * @param payload Pointer to the payload passed in
  */
 void heap_insert(heap_t * heap, void * payload)
 {
+    // ensure heap is a valid pointer
+    assert(heap);
+
     // checks to make sure we have enough space
     ensure_space(heap);
 
@@ -221,28 +214,6 @@ void heap_insert(heap_t * heap, void * payload)
     bubble_up(heap);
 }
 
-/*!
- * @brief Free the heap structure
- * @param heap[in] Allocated heap pointer
- */
-void heap_destroy(heap_t * heap)
-{
-    // If the mode is set to ptr, then free all the elements
-    // bt if it is not, then we do not need to free it
-    if (heap->data_mode == HEAP_PTR)
-    {
-        for (size_t i = 0; i < heap->array_length; i++)
-        {
-            if (NULL != heap->destroy)
-            {
-                heap->destroy(heap->heap_array[i]);
-            }
-        }
-    }
-
-    free(heap->heap_array);
-    free(heap);
-}
 
 void heap_sort(void ** array,
                size_t item_count,
@@ -325,8 +296,8 @@ void * heap_pop(heap_t * heap)
 }
 
 /*!
- * @brief Checks to see if the array needs to be increased
- * @param heap[in] heap_t
+ * @brief Dynamically increase the size of the heap
+ * @param heap
  */
 static void ensure_space(heap_t * heap)
 {
@@ -599,4 +570,45 @@ static heap_pointer_t verify_alloc(void * ptr)
         return INVALID_PTR;
     }
     return VALID_PTR;
+}
+
+/*!
+ * @brief performs the pointer arithmetic for indexing the correct location
+ * of the array.
+ *
+ * @param heap
+ * @return Pointer the to next location that is open
+ */
+static uint8_t * get_slice(heap_t * heap, size_t index)
+{
+    return (uint8_t *)heap->heap_array + (index * heap->node_size);
+
+}
+
+/*!
+ * @brief Small wrapper for getting the comparisons between nodes
+ * @param heap
+ * @param index Index to "slice" in the array
+ * @return The result of the comparison
+ */
+static heap_compare_t get_comparison(heap_t * heap, size_t index)
+{
+    heap_compare_t result = 0;
+
+    if (HEAP_PTR == heap->data_mode)
+    {
+        result = heap->compare(
+            heap->heap_array[index],
+            heap->heap_array[parent_index(index)]
+        );
+    }
+    else
+    {
+        result = heap->compare(
+            get_slice(heap, index),
+            get_slice(heap, parent_index(index))
+        );
+    }
+
+    return result;
 }
