@@ -1,47 +1,50 @@
 #include <gtest/gtest.h>
 #include <heap.h>
 
+/*
+ * Heap structure supports printing your data by passing a callback to a
+ * print function
+ */
 void print_test(void * payload)
 {
-    printf("%d\n", *(int *)payload);
+    printf("%d\n", * (int *)payload);
 }
 
-
-// Mandatory function for comparing the data mode payloads
-heap_compare_t array_compare(void * payload, void * payload2)
+/*
+ * Compare function for DATA mode
+ */
+heap_compare_t heap_data_cmp(void * payload, void * payload2)
 {
-    int val1 = *(int*)payload;
-    int val2 = *(int*)payload2;
+    int val1 = * (int32_t *)payload;
+    int val2 = * (int32_t *)payload2;
 
     if (val1 > val2)
     {
         return HEAP_GT;
-    }
-    else if (val1 < val2)
+    } else if (val1 < val2)
     {
         return HEAP_LT;
-    }
-    else
+    } else
     {
         return HEAP_EQ;
     }
 }
 
-// Mandatory function for comparing the ptr payloads
-heap_compare_t heap_compare(void * payload, void * payload2)
+/*
+ * Compare function for PTR mode
+ */
+heap_compare_t heap_ptr_cmp(void * payload, void * payload2)
 {
-    int payload_1 = *(int *)payload;
-    int payload_2 = *(int *)payload2;
+    int payload_1 = * (int *)payload;
+    int payload_2 = * (int *)payload2;
 
     if (payload_1 > payload_2)
     {
         return HEAP_GT;
-    }
-    else if (payload_1 < payload_2)
+    } else if (payload_1 < payload_2)
     {
         return HEAP_LT;
-    }
-    else
+    } else
     {
         return HEAP_EQ;
     }
@@ -50,7 +53,7 @@ heap_compare_t heap_compare(void * payload, void * payload2)
 int * create_heap_payload(int value)
 {
     int * payload = (int *)malloc(sizeof(value));
-    *payload = value;
+    * payload = value;
     return payload;
 }
 
@@ -69,123 +72,150 @@ int * get_int_array(const int item_array[], size_t item_count)
     return new_array;
 }
 
-
-class HeapTestFixture :public ::testing::Test
+class HeapTestFixture : public ::testing::Test
 {
  public:
-    heap_t * max_heap = nullptr;
-    heap_t * min_heap = nullptr;
-    heap_t * data_heap = nullptr;
-    int highest_value = 16;
-    int lowest_value = 2;
+    heap_t * max_heap_ptr = nullptr;
+    heap_t * min_heap_ptr = nullptr;
+    heap_t * max_heap_data = nullptr;
+    heap_t * min_heap_data = nullptr;
+
+    std::vector<int32_t> test_values = {1, 3, 4, 5, 7, 8, 9, 10, 14, 16};
+
+    int get_min()
+    {
+        return test_values.front();
+    }
+    int get_max()
+    {
+        return test_values.back();
+    }
 
  protected:
     void SetUp() override
     {
-        max_heap = heap_init(MAX_HEAP,
-                             HEAP_PTR,
-                             0,
-                             payload_destroy,
-                             heap_compare);
-        ASSERT_NE(max_heap, nullptr);
+        // Create the two ptr mode heaps and insert the values into it
+        max_heap_ptr = heap_init(MAX_HEAP,
+                                 HEAP_PTR,
+                                 0,
+                                 payload_destroy,
+                                 heap_ptr_cmp);
 
-        heap_insert(max_heap, create_heap_payload(16));
-        heap_insert(max_heap, create_heap_payload(14));
-        heap_insert(max_heap, create_heap_payload(10));
-        heap_insert(max_heap, create_heap_payload(8));
-        heap_insert(max_heap, create_heap_payload(7));
-        heap_insert(max_heap, create_heap_payload(9));
-        heap_insert(max_heap, create_heap_payload(3));
-        heap_insert(max_heap, create_heap_payload(2));
-        heap_insert(max_heap, create_heap_payload(4));
-        heap_insert(max_heap, create_heap_payload(1));
+        min_heap_ptr = heap_init(MIN_HEAP,
+                                 HEAP_PTR,
+                                 0,
+                                 payload_destroy,
+                                 heap_ptr_cmp);
 
-        min_heap = heap_init(MIN_HEAP,
-                             HEAP_PTR,
-                             0,
-                             payload_destroy,
-                             heap_compare);
-        ASSERT_NE(min_heap, nullptr);
-        heap_insert(min_heap, create_heap_payload(5));
-        heap_insert(min_heap, create_heap_payload(19));
-        heap_insert(min_heap, create_heap_payload(6));
-        heap_insert(min_heap, create_heap_payload(2));
-        heap_insert(min_heap, create_heap_payload(2));
-        heap_insert(min_heap, create_heap_payload(6));
+        max_heap_data = heap_init(MAX_HEAP,
+                                  HEAP_MEM,
+                                  sizeof(int32_t),
+                                  nullptr,
+                                  heap_data_cmp
+        );
+        min_heap_data = heap_init(MIN_HEAP,
+                                  HEAP_MEM,
+                                  sizeof(int32_t),
+                                  nullptr,
+                                  heap_data_cmp
+        );
+        ASSERT_NE(max_heap_ptr, nullptr);
+        ASSERT_NE(min_heap_ptr, nullptr);
+        ASSERT_NE(min_heap_data, nullptr);
+        ASSERT_NE(max_heap_data, nullptr);
 
+        for (const int32_t &num: test_values)
+        {
+            heap_insert(max_heap_ptr, create_heap_payload(num));
+            heap_insert(min_heap_ptr, create_heap_payload(num));
+            heap_insert(min_heap_data, (void *)& num);
+            heap_insert(max_heap_data, (void *)& num);
+        }
 
     }
     void TearDown() override
     {
-        heap_destroy(max_heap);
-        heap_destroy(min_heap);
-        heap_destroy(data_heap);
+        heap_destroy(max_heap_ptr);
+        heap_destroy(min_heap_ptr);
+        heap_destroy(max_heap_data);
+        heap_destroy(min_heap_data);
     }
 };
 
+// Test that the printing callback works. This is a visual test
 TEST_F(HeapTestFixture, PrintFixtures)
 {
-    heap_print(max_heap, print_test);
+    heap_print(max_heap_ptr, print_test);
 
 }
+
+// Ensure that popping will present the highest, or least value depending
+// on the heap type
 TEST_F(HeapTestFixture, TestPopValueForMax)
 {
-    // The highest value should be stored on the next node for max_heap
+    // The highest value should be stored on the next node for max_heap_ptr
     // while lowest should be stored for a min heap
-    void * highest = heap_pop(max_heap);
-    void * lowest = heap_pop(min_heap);
+    void * highest = heap_pop(max_heap_ptr);
+    void * lowest = heap_pop(min_heap_ptr);
 
-    EXPECT_EQ(*(int *)highest, highest_value);
-    EXPECT_EQ(*(int *)lowest, lowest_value);
+    EXPECT_EQ(* (int *)highest, get_max());
+    EXPECT_EQ(* (int *)lowest, get_min());
+
+    highest = heap_pop(max_heap_data);
+    EXPECT_EQ(*(int*)highest, get_max());
 
     payload_destroy(highest);
     payload_destroy(lowest);
 }
 
-TEST_F(HeapTestFixture, TestAllPop)
+// Ensure that popping all elements does not cause a crash
+// While at it, make sure that the order is correct
+TEST_F(HeapTestFixture, TestAllPopAndOrder)
 {
-    int * payload;
-    while (!heap_is_empty(max_heap))
+    int * ptr_payload;
+    int count = 0;
+    while (!heap_is_empty(max_heap_ptr))
     {
-        payload = (int*)heap_pop(max_heap);
-        printf("-> %d\n", *payload);
-        payload_destroy(payload);
-    }
-    printf("\n\n");
-    while (!heap_is_empty(min_heap))
-    {
-        payload = (int*)heap_pop(min_heap);
-        printf("-> %d\n", *payload);
-        payload_destroy(payload);
+        // Extract the values and compare them to the already sorted test
+        // values list
+        ptr_payload = (int *)heap_pop(max_heap_ptr);
+        EXPECT_EQ(* ptr_payload, test_values[(test_values.size() - 1) - count]);
+        payload_destroy(ptr_payload);
+
+        ptr_payload = (int *)heap_pop(min_heap_ptr);
+        EXPECT_EQ(* ptr_payload, test_values[count]);
+        payload_destroy(ptr_payload);
+
+        count++;
     }
 }
 
 TEST_F(HeapTestFixture, DumpHeap)
 {
-    heap_dump(max_heap);
-    EXPECT_TRUE(heap_is_empty(max_heap));
+    heap_dump(max_heap_ptr);
+    EXPECT_TRUE(heap_is_empty(max_heap_ptr));
 }
 
 
-
-TEST(HeapSort, HeapSortTest)
-{
-    int array_count = 3;
-    int my_array[] = {5, 8, 2};
-    heap_t * data_heap = heap_init(MAX_HEAP,
-                          HEAP_MEM,
-                          sizeof(int),
-                          payload_destroy,
-                          heap_compare);
-    ASSERT_NE(data_heap, nullptr);
-
-    for (int i = 0; i < array_count; i++)
-    {
-        heap_insert(data_heap, &my_array[i]);
-    }
-
-    heap_destroy(data_heap);
-
-
-//    fuck_with_it();
-}
+//
+//TEST(HeapSort, HeapSortTest)
+//{
+//    int array_count = 3;
+//    int my_array[] = {5, 8, 2};
+//    heap_t * data_heap = heap_init(MAX_HEAP,
+//                                   HEAP_MEM,
+//                                   sizeof(int),
+//                                   payload_destroy,
+//                                   heap_ptr_cmp);
+//    ASSERT_NE(data_heap, nullptr);
+//
+//    for (int i = 0; i < array_count; i++)
+//    {
+//        heap_insert(data_heap, &my_array[i]);
+//    }
+//
+//    heap_destroy(data_heap);
+//
+//
+////    fuck_with_it();
+//}

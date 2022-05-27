@@ -263,27 +263,50 @@ bool heap_is_empty(heap_t * heap)
 }
 
 /*!
- * @brief Pop the next node in the heap, this should be the current highest node. The
- * array is resized if it needs to be to avoid taking up unnecessary space.
+ * @brief Pop the root value of the tree. Always returns a
+ * pointer that must be freed
  *
- * This operation runs at O(lon n) because it relies on the bubble operations
- * to restructure the tree
- *
- * @param heap[in] heap_t
- * @return heap_payload_t
+ * @param heap
+ * @return Pointer that must be freed
  */
 void * heap_pop(heap_t * heap)
 {
+    // ensure that the pointer is valid
+    assert(heap);
+
     // check if heap is empty, if so, return
     if (heap_is_empty(heap))
     {
         return NULL;
     }
 
-    // pop the root node and decrement our array_length size
-    void * removal_payload = heap->heap_array[0];
-    heap->array_length--;
-    heap->heap_array[0] = heap->heap_array[heap->array_length];
+    void * payload;
+
+    if (HEAP_PTR == heap->data_mode)
+    {
+        // pop the root node and decrement our array_length size
+        payload = heap->heap_array[0];
+        heap->array_length--;
+        heap->heap_array[0] = heap->heap_array[heap->array_length];
+    }
+    else
+    {
+        // Extract the current data at index 0
+        uint8_t * temp = (uint8_t *)calloc(1, sizeof(heap->node_size));
+        uint8_t * index_0_ptr = get_slice(heap, 0);
+        memcpy(temp, index_0_ptr, heap->node_size);
+
+        // Place the last node at index 0 to start the bubble algorithm
+        // the copied node is zeroes out
+        heap->array_length--;
+        uint8_t * index_last_ptr = get_slice(heap, heap->array_length);
+        memcpy(index_0_ptr, index_last_ptr,heap->node_size);
+        memset(index_last_ptr, 0, heap->node_size);
+
+        // save the pointer to the variable
+        payload = (void *)temp;
+    }
+
 
     // perform the bubble down algorithm
     bubble_down(heap);
@@ -292,7 +315,7 @@ void * heap_pop(heap_t * heap)
     ensure_downgrade_size(heap);
 
     // return pop value
-    return removal_payload;
+    return payload;
 }
 
 /*!
