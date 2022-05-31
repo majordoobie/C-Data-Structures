@@ -62,8 +62,8 @@ void test_func(void * data, size_t n_items, size_t n_size)
     {
         void ** int_ptr = NULL;
         uint8_t val[n_size];
-        memcpy(int_ptr, (uint8_t*)data + (n_size * i), n_size);
-        int_ptr = *(void **)val;
+        memcpy(val, (uint8_t*)data + (n_size * i), n_size);
+        int_ptr = (void **)val;
         printf("Int? %d\n", *(int *)int_ptr);
     }
 
@@ -231,12 +231,15 @@ void heap_sort(void * array,
                heap_type_t type,
                heap_compare_t (* compare)(void *, void *))
 {
+    assert(array);
+
     heap_t * heap = heap_init(type, data_mode, item_size, NULL, compare);
     if (NULL == heap)
     {
         return;
     }
 
+    // Create the heap structure if in data mode
     if (HEAP_PTR == heap->data_mode)
     {
         for (size_t item = 0; item < item_count; item++)
@@ -265,13 +268,80 @@ void heap_sort(void * array,
             memcpy(index_ptr, pop_item, item_size);
             free(pop_item);
         }
-
     }
 
     // set the mode to mem so that we do not free the pointers incase we are
     // in pointer mode or else the user will not have their data
     heap->data_mode = HEAP_MEM;
     heap_destroy(heap);
+}
+
+
+void * heap_find_nth_item(void * array,
+                          size_t item_count,
+                          size_t item_size,
+                          size_t nth_item,
+                          heap_data_mode_t data_mode,
+                          heap_type_t type,
+                          heap_compare_t (* compare)(void *, void *))
+{
+    assert(array);
+
+    heap_t * heap = heap_init(type, data_mode, item_size, NULL, compare);
+    if (NULL == heap)
+    {
+        return NULL;
+    }
+
+    void * target_item = NULL;
+
+    // Create the heap structure if in data mode
+    if (HEAP_PTR == heap->data_mode)
+    {
+        for (size_t item = 0; item < item_count; item++)
+        {
+            heap_insert(heap, * ((void **)array + item));
+        }
+
+        if ((nth_item < 1) || (nth_item > heap->array_length))
+        {
+            heap_destroy(heap);
+            return NULL;
+        }
+
+        for (size_t item = 0; item < nth_item; item++)
+        {
+            target_item = heap_pop(heap);
+        }
+    }
+    else
+    {
+        // Insert each item into the heap then pop
+        for (size_t item = 0; item < item_count; item++)
+        {
+            heap_insert(heap, (uint8_t *)array + get_index(item, item_size));
+        }
+
+        if ((nth_item < 1) || (nth_item > heap->array_length))
+        {
+            heap_destroy(heap);
+            return NULL;
+        }
+
+        uint8_t * index_ptr = NULL;
+        void * pop_item = NULL;
+        for (size_t item = 0; item < nth_item - 1; item++)
+        {
+            index_ptr = (uint8_t *)array + get_index(item, item_size);
+            pop_item = heap_pop(heap);
+            memcpy(index_ptr, pop_item, item_size);
+            free(pop_item);
+        }
+        target_item = heap_pop(heap);
+    }
+
+    heap_destroy(heap);
+    return target_item;
 }
 
 //heap_payload_t * heap_peek(heap_t * heap, int index)

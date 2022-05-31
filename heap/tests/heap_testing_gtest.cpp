@@ -50,6 +50,9 @@ heap_compare_t heap_ptr_cmp(void * payload, void * payload2)
     }
 }
 
+/*
+ * Function is used to create the pointers for the test data in ptr mode
+ */
 int * create_heap_payload(int value)
 {
     int * payload = (int *)malloc(sizeof(value));
@@ -57,6 +60,11 @@ int * create_heap_payload(int value)
     return payload;
 }
 
+
+/*
+ * Works with "create_heap_payload" to free the data. This function is also
+ * used as a pointer parameter
+ */
 void payload_destroy(void * payload)
 {
     free(payload);
@@ -72,6 +80,11 @@ int * get_int_array(const int item_array[], size_t item_count)
     return new_array;
 }
 
+/*!
+ * Main test fixture class used to create the four test heaps. The four heaps
+ * are broken into two groups, each containing a min and a max heap version.
+ * The first group is a pointer mode heap while the second is a data mode heap.
+ */
 class HeapTestFixture : public ::testing::Test
 {
  public:
@@ -283,11 +296,42 @@ TEST(HeapSort, HeapSortTestPtrModeMax)
     free(int_ptr_array);
 }
 
-TEST(HeapSort, HeapSortOneMode)
+/*
+ * Test the ability to find the nth item in the heap. The array passed in is
+ * first heapafied
+ */
+TEST(HeapSortFind, HeapFindTestPtrModeMax)
 {
     int array_length = 10;
+    int target_val = 8;
     int my_array[] = {5, 8, 2, 8, 9, 2, 3, 40, 1, 78};
-//    int my_array_order[] = {1, 2, 2, 3, 5, 8, 8, 9, 40, 78};
+
+    int ** int_ptr_array = (int **)calloc(array_length, sizeof(void *));
+    for (int i = 0; i < array_length; i++)
+    {
+        int_ptr_array[i] = create_heap_payload(my_array[i]);
+    }
+
+    int * val = (int *)heap_find_nth_item(int_ptr_array, array_length, 0, 5,
+                                          HEAP_PTR, MAX_HEAP,
+                                          heap_ptr_cmp);
+    ASSERT_NE(val, nullptr);
+    EXPECT_EQ(target_val, *val);
+
+    for (int i = 0; i < array_length; i++)
+    {
+        free(int_ptr_array[i]);
+    }
+    free(int_ptr_array);
+}
+
+TEST(HeapSort, HeapSortOneMode)
+{
+    testing::internal::CaptureStdout();
+    std::cout << "My test" << std::endl;
+    std::string output = testing::internal::GetCapturedStdout();
+    int array_length = 10;
+    int my_array[] = {5, 8, 2, 8, 9, 2, 3, 40, 1, 78};
     int ** int_array = (int**)calloc(array_length, sizeof(int *));
 
     for (int i = 0; i < array_length; i++)

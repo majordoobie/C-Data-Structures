@@ -58,6 +58,14 @@ void heap_dump(heap_t * heap);
 bool heap_is_empty(heap_t * heap);
 void test_func(void * data, size_t n_items, size_t n_size);
 
+void * heap_find_nth_item(void * array,
+                          size_t item_count,
+                          size_t item_size,
+                          size_t nth_item,
+                          heap_data_mode_t data_mode,
+                          heap_type_t type,
+                          heap_compare_t (* compare)(void *, void *));
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
