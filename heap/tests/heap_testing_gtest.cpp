@@ -325,6 +325,13 @@ TEST(HeapSortFind, HeapFindTestPtrModeMax)
     free(int_ptr_array);
 }
 
+TEST_F(HeapTestFixture, TestFindValue)
+{
+    int val = 90;
+    EXPECT_EQ(heap_in_heap(max_heap_data, (void*)&val), true);
+
+}
+
 TEST(HeapSort, HeapSortOneMode)
 {
     testing::internal::CaptureStdout();

@@ -344,10 +344,24 @@ void * heap_find_nth_item(void * array,
     return target_item;
 }
 
-//heap_payload_t * heap_peek(heap_t * heap, int index)
-//{
-//    ;;
-//}
+bool heap_in_heap(heap_t * heap, void * data)
+{
+    assert(heap);
+
+    bool found = false;
+    heap_compare_t comparison;
+    size_t start_index = 0;
+    while ((!found) && (start_index <= heap->array_length))
+    {
+        comparison = heap->compare(get_slice(heap, start_index), data);
+        if (HEAP_EQ == comparison)
+        {
+            return true;
+        }
+        start_index++;
+    }
+    return false;
+}
 
 void heap_dump(heap_t * heap)
 {

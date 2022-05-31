@@ -52,7 +52,8 @@ void heap_sort(void * array,
                heap_type_t type,
                heap_compare_t (* compare)(void *, void *));
 
-void * heap_peek(heap_t * heap, int index);
+bool heap_in_heap(heap_t * heap, void * data);
+
 void heap_dump(heap_t * heap);
 
 bool heap_is_empty(heap_t * heap);
