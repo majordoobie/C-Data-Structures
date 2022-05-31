@@ -356,6 +356,10 @@ bool heap_in_heap(heap_t * heap, void * data)
     return false;
 }
 
+/*!
+ * Dump all the items in the heap without destroying the heap
+ * @param heap
+ */
 void heap_dump(heap_t * heap)
 {
     for (size_t i = 0; i < heap->array_length; i++)
