@@ -55,6 +55,21 @@ static heap_compare_t get_comparison(heap_t * heap,
 
 static heap_pointer_t verify_alloc(void * ptr);
 
+void test_func(void * data, size_t n_items, size_t n_size)
+{
+
+    for (size_t i = 0; i < n_items; i++)
+    {
+        void ** int_ptr = NULL;
+        uint8_t val[n_size];
+        memcpy(int_ptr, (uint8_t*)data + (n_size * i), n_size);
+        int_ptr = *(void **)val;
+        printf("Int? %d\n", *(int *)int_ptr);
+    }
+
+}
+
+
 /*!
  * @brief Test function for printing out the arrays in order
  * @param heap[in] heap_t

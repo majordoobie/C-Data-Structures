@@ -282,3 +282,24 @@ TEST(HeapSort, HeapSortTestPtrModeMax)
     }
     free(int_ptr_array);
 }
+
+TEST(HeapSort, HeapSortOneMode)
+{
+    int array_length = 10;
+    int my_array[] = {5, 8, 2, 8, 9, 2, 3, 40, 1, 78};
+//    int my_array_order[] = {1, 2, 2, 3, 5, 8, 8, 9, 40, 78};
+    int ** int_array = (int**)calloc(array_length, sizeof(int *));
+
+    for (int i = 0; i < array_length; i++)
+    {
+        int_array[i] = create_heap_payload(my_array[i]);
+    }
+    test_func(int_array, sizeof(int *), array_length);
+
+
+    for (int i = 0; i < array_length; i++)
+    {
+        free(int_array[i]);
+    }
+    free(int_array);
+}

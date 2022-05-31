@@ -56,7 +56,7 @@ void * heap_peek(heap_t * heap, int index);
 void heap_dump(heap_t * heap);
 
 bool heap_is_empty(heap_t * heap);
-void fuck_with_it();
+void test_func(void * data, size_t n_items, size_t n_size);
 
 #ifdef __cplusplus
 }
