@@ -344,6 +344,12 @@ void * heap_find_nth_item(void * array,
     return target_item;
 }
 
+/*!
+ * @brief Check to see if the data provided is already in the heap
+ * @param heap
+ * @param data
+ * @return bool
+ */
 bool heap_in_heap(heap_t * heap, void * data)
 {
     assert(heap);
