@@ -156,11 +156,11 @@ class HeapTestFixture : public ::testing::Test
     }
 };
 
-//// Test that the printing callback works. This is a visual test
-//TEST_F(HeapTestFixture, PrintFixtures)
-//{
-//    heap_print(max_heap_ptr, print_test);
-//}
+// Test that the printing callback works. This is a visual test
+TEST_F(HeapTestFixture, PrintFixtures)
+{
+    heap_print(max_heap_ptr, print_test);
+}
 
 // Ensure that popping will present the highest, or least value depending
 // on the heap type.
@@ -325,6 +325,9 @@ TEST(HeapSortFind, HeapFindTestPtrModeMax)
     free(int_ptr_array);
 }
 
+/*!
+ * Find if the value specified is in the heap
+ */
 TEST_F(HeapTestFixture, TestFindValue)
 {
     int val = 90;
@@ -332,11 +335,9 @@ TEST_F(HeapTestFixture, TestFindValue)
 
 }
 
+// Test if it is possible to combine the ptr mode and mem mode
 TEST(HeapSort, HeapSortOneMode)
 {
-    testing::internal::CaptureStdout();
-    std::cout << "My test" << std::endl;
-    std::string output = testing::internal::GetCapturedStdout();
     int array_length = 10;
     int my_array[] = {5, 8, 2, 8, 9, 2, 3, 40, 1, 78};
     int ** int_array = (int**)calloc(array_length, sizeof(int *));
