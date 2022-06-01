@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(linked_list_adt C CXX)
+project(doubly_linked_list_adt C CXX)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_STANDARD 11)
