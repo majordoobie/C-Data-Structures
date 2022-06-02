@@ -12,21 +12,25 @@ typedef enum
 
 typedef struct dlist_t dlist_t;
 typedef struct dlist_iter_t dlist_iter_t;
+
+// constructors and descriptors
 dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *));
 void dlist_destroy(dlist_t * dlist);
-void dlist_append(dlist_t * dlist, void * data);
 void dlist_destroy_free(dlist_t * dlist, void (* free_func)(void *));
 
-// Fetching values
+// inserting methods
+void dlist_append(dlist_t * dlist, void * data);
+void dlist_prepend(dlist_t * dlist, void * data);
+
+// manipulation methods
 void * dlist_pop_tail(dlist_t * dlist);
 void * dlist_pop_head(dlist_t * dlist);
 void * dlist_get_value(dlist_t * dlist, void * data);
 void * dlist_remove_value(dlist_t * dlist, void * data);
+
+// metadata methods
 bool dlist_is_empty(dlist_t * dlist);
 size_t dlist_length(dlist_t * dlist);
-
-
-// Find values
 dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data);
 
 // iterables

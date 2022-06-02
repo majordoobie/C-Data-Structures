@@ -13,7 +13,9 @@ typedef enum
 typedef enum
 {
     FREE_NODES,
-    NO_FREE_NODES
+    NO_FREE_NODES,
+    APPEND,
+    PREPEND
 } dlist_settings_t;
 
 
@@ -47,6 +49,7 @@ static dnode_t * get_iter_next(dlist_iter_t * dlist_iter);
 static dnode_t * get_value(dlist_t * dlist, void * data);
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
 static void * remove_node(dlist_t * dlist, dnode_t * node);
+static void add_node(dlist_t * dlist, void * data, dlist_settings_t add_mode);
 
 
 
@@ -63,7 +66,9 @@ bool dlist_is_empty(dlist_t * dlist)
 }
 
 /*!
- * @brief Initialize the base linked list structure
+ * @brief Initialize the dlist with a function to perform the comparisons
+ *
+ * @param compare_func
  * @return
  */
 dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
@@ -74,13 +79,35 @@ dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
     return dlist;
 }
 
+/*!
+ * @brief Return the number of items in the linked list
+ *
+ * @param dlist
+ * @return
+ */
 size_t dlist_length(dlist_t * dlist)
 {
     return dlist->length;
 }
 
 /*!
+ * @brief Prepend a object to the end of the linked list
+ *
+ * @param dlist
+ * @param data
+ */
+void dlist_prepend(dlist_t * dlist, void * data)
+{
+    // make sure that the pointers are valid
+    assert(dlist);
+    assert(data);
+
+    add_node(dlist, data, PREPEND);
+}
+
+/*!
  * @brief Append an item to the end of the linked list
+ *
  * @param dlist
  * @param data
  */
@@ -90,29 +117,7 @@ void dlist_append(dlist_t * dlist, void * data)
     assert(dlist);
     assert(data);
 
-    dnode_t * node = init_node(data);
-    if (NULL == node)
-    {
-        // if we get here, then something terrible has happened to memory
-        // allocation. Clean up as much as possible and abort
-        dlist_destroy(dlist);
-        abort();
-    }
-
-    // If tail is None, then we know that there is no items in the linked
-    // list. So this item will be the very first item appended
-    if (NULL == dlist->tail)
-    {
-        dlist->head = node;
-        dlist->tail = node;
-    }
-    else
-    {
-        dlist->tail->next = node;
-        node->prev = dlist->tail;
-        dlist->tail = node;
-    }
-    dlist->length++;
+    add_node(dlist, data, APPEND);
 }
 
 /*!
@@ -420,4 +425,50 @@ static void * remove_node(dlist_t * dlist, dnode_t * node)
     // free the node and return the actual data
     free(node);
     return node_data;
+}
+
+/*!
+ * @brief Private function that handles the appending or prepending of nodes
+ * to the linked list.
+ *
+ * @param dlist
+ * @param data
+ * @param add_mode
+ */
+static void add_node(dlist_t * dlist, void * data, dlist_settings_t add_mode)
+{
+    // make sure that the pointers are valid
+    assert(dlist);
+    assert(data);
+
+    dnode_t * node = init_node(data);
+    if (NULL == node)
+    {
+        // if we get here, then something terrible has happened to memory
+        // allocation. Clean up as much as possible and abort
+        dlist_destroy(dlist);
+        abort();
+    }
+    node->data = data;
+
+    // If tail is None, then we know that there is no items in the linked
+    // list. So this item will be the very first item appended
+    if (0 == dlist->length)
+    {
+        dlist->head = node;
+        dlist->tail = node;
+    }
+    else if (PREPEND == add_mode)
+    {
+        node->next = dlist->head;
+        node->next->prev = node;
+        dlist->head = node;
+    }
+    else
+    {
+        node->prev = dlist->tail;
+        node->prev->next = node;
+        dlist->tail = node;
+    }
+    dlist->length++;
 }

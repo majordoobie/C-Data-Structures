@@ -167,7 +167,7 @@ TEST_F(DListTestFixture, TestGetInDList)
     free(to_match);
 }
 
-// Test ability to fetch an item from the linked list
+// Test ability to properly remove a value by searching for it
 TEST_F(DListTestFixture, TestRemoveValue)
 {
     // iter to test if this works
@@ -188,4 +188,26 @@ TEST_F(DListTestFixture, TestRemoveValue)
     free(to_match);
     free(the_match);
     dlist_destroy_iter(iter);
+}
+
+// Test ability to prepend nodes by popping from the tail
+// prepending it
+TEST_F(DListTestFixture, TestPrepend)
+{
+    // pop from the tail
+    char * value = (char *)dlist_pop_tail(dlist);
+    ASSERT_NE(value, nullptr);
+    EXPECT_EQ(dlist_length(dlist), length - 1);
+    EXPECT_EQ(value, payload_last);
+
+    // prepend the tail value to the head
+    dlist_prepend(dlist, value);
+    EXPECT_EQ(dlist_length(dlist), length);
+
+    // pop the head value, and it should still be the "payload_last:
+    value = (char *)dlist_pop_head(dlist);
+    EXPECT_EQ(dlist_length(dlist), length - 1);
+    EXPECT_EQ(value, payload_last);
+
+    free(value);
 }
