@@ -23,6 +23,7 @@ void * dlist_pop_head(dlist_t * dlist);
 void * dlist_get_value(dlist_t * dlist, void * data);
 void * dlist_remove_value(dlist_t * dlist, void * data);
 bool dlist_is_empty(dlist_t * dlist);
+size_t dlist_length(dlist_t * dlist);
 
 
 // Find values

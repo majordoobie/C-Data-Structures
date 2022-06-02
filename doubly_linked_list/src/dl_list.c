@@ -74,6 +74,11 @@ dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
     return dlist;
 }
 
+size_t dlist_length(dlist_t * dlist)
+{
+    return dlist->length;
+}
+
 /*!
  * @brief Append an item to the end of the linked list
  * @param dlist
