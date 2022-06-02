@@ -263,13 +263,11 @@ void * dlist_pop_head(dlist_t * dlist)
     return data;
 }
 
-dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
+void * dlist_find_value(dlist_t * dlist, void * data)
 {
-    assert(dlist);
-    assert(data);
     if (NULL == dlist->compare_func)
     {
-        return DLIST_MISS_MATCH;
+        return NULL;
     }
 
     dlist_iter_t * iter = dlist_get_iterable(dlist);
@@ -284,8 +282,77 @@ dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
         }
     }
 
+    // destroy the iter and return the value if found
     dlist_destroy_iter(iter);
-    return found;
+    if (DLIST_MISS_MATCH == found)
+    {
+        return NULL;
+    }
+    else
+    {
+        return node;
+    }
+}
+void * dlist_get_value(dlist_t * dlist, void * data)
+{
+    assert(dlist);
+    assert(data);
+    return dlist_find_value(dlist, data);
+}
+
+void * dlist_remove_value(dlist_t * dlist, void * data)
+{
+    assert(dlist);
+    assert(data);
+    dnode_t * node = dlist_find_value(dlist, data);
+    if (NULL == node)
+    {
+        return NULL;
+    }
+
+    // preserve the node data before removing
+    void * node_data = node->data;
+
+    // check if node is the head, if so, update
+    if (dlist->head == node)
+    {
+        dlist->head = node->next;
+        if (NULL != dlist->head)
+        {
+            dlist->head->prev = NULL;
+        }
+    }
+    if (dlist->tail == node)
+    {
+        dlist->tail = node->prev;
+        if (NULL != dlist->tail)
+        {
+            dlist->tail->next = NULL;
+        }
+    }
+    if (NULL != node->prev)
+    {
+        node->prev->next = node->next;
+    }
+    if (NULL != node->next)
+    {
+        node->next->prev = node->prev;
+    }
+
+    free(node);
+    return node_data;
+}
+
+dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
+{
+    assert(dlist);
+    assert(data);
+    dnode_t * node = dlist_find_value(dlist, data);
+    if (NULL == node)
+    {
+        return DLIST_MISS_MATCH;
+    }
+    return DLIST_MATCH;
 }
 
 /*!

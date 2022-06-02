@@ -147,3 +147,27 @@ TEST_F(DListTestFixture, TestFindInDlist)
     free(no_match_payload);
 }
 
+// Test ability to fetch an item from the linked list
+TEST_F(DListTestFixture, TestGetInDList)
+{
+    void * to_match = get_payload(5);
+    void * the_match = dlist_get_value(dlist, to_match);
+
+    EXPECT_EQ(strcmp((char *)to_match, (char *)the_match), 0);
+
+    free(to_match);
+}
+
+// Test ability to fetch an item from the linked list
+TEST_F(DListTestFixture, TestRemoveValue)
+{
+    // iter to test if this works
+
+    void * to_match = get_payload(5);
+    void * the_match = dlist_remove_value(dlist, to_match);
+
+    EXPECT_EQ(strcmp((char *)to_match, (char *)the_match), 0);
+
+    free(to_match);
+    free(the_match);
+}
