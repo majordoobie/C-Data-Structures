@@ -33,6 +33,13 @@ typedef struct dlist_t
     size_t length;
 } dlist_t;
 
+typedef struct dlist_iter_t
+{
+    dnode_t * node;
+    size_t index;
+    size_t length;
+} dlist_iter_t;
+
 static dnode_t * init_node(void * data);
 static valid_ptr_t verify_alloc(void * ptr);
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
@@ -75,6 +82,68 @@ void dlist_append(dlist_t * dlist, void * data)
         dlist->tail = node;
     }
     dlist->length++;
+}
+
+/*!
+ * @brief create an iter object to efficiently iterate over the linked list
+ * of objects
+ *
+ * @param dlist
+ * @return
+ */
+dlist_iter_t * dlist_get_iterable(dlist_t * dlist)
+{
+    // verify that the dlist is a valid pointer
+    assert(dlist);
+    dlist_iter_t * iter = (dlist_iter_t *)malloc(sizeof(dlist_iter_t));
+    if (INVALID_PTR == verify_alloc(iter))
+    {
+        return NULL;
+    }
+
+    // Init the iter structure and return the pointer to it
+    *iter = (dlist_iter_t){
+        .length     = dlist->length,
+        .index      = 0,
+        .node       = dlist->head
+    };
+    return iter;
+}
+
+/*!
+ * @brief Check if the end of the linked list has been reached
+ *
+ * @param dlist_iter
+ * @return
+ */
+bool dlist_iter_is_empty(dlist_iter_t * dlist_iter)
+{
+    // verify that the dlist is a valid pointer
+    assert(dlist_iter);
+
+    return NULL == dlist_iter->node->next;
+}
+
+/*!
+ * @brief Iterates over the iterable and returns the next node. A NULL is
+ * returned if the next node is NULL
+ * @param dlist_iter
+ * @return
+ */
+void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
+{
+    if (NULL == dlist_iter->node)
+    {
+        return NULL;
+    }
+    dnode_t * node = dlist_iter->node;
+    dlist_iter->node = dlist_iter->node->next;
+    return node->data;
+}
+
+void dlist_destroy_iter(dlist_iter_t * dlist_iter)
+{
+    free(dlist_iter);
 }
 
 
