@@ -8,6 +8,7 @@ typedef struct dlist_t dlist_t;
 dlist_t * dlist_init();
 //void * get_value(dlist_t * dlist, int32_t index);
 void dlist_destroy(dlist_t * dlist);
+void dlist_append(dlist_t * dlist, void * data);
 void dlist_destroy_free(dlist_t * dlist, void (* free_func)(void *));
 
 #ifdef __cplusplus

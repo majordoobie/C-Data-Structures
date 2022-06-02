@@ -33,8 +33,11 @@ typedef struct dlist_t
     size_t length;
 } dlist_t;
 
+static dnode_t * init_node(void * data);
 static valid_ptr_t verify_alloc(void * ptr);
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
+
+
 
 dlist_t * dlist_init()
 {
@@ -43,11 +46,38 @@ dlist_t * dlist_init()
     return dlist;
 }
 
-//void * get_value(dlist_t * dlist, int32_t index)
-//{
-//    ;;
-//}
-//
+void dlist_append(dlist_t * dlist, void * data)
+{
+    // make sure that the pointers are valid
+    assert(dlist);
+    assert(data);
+
+    dnode_t * node = init_node(data);
+    if (NULL == node)
+    {
+        // if we get here, then something terrible has happened to memory
+        // allocation. Clean up as much as possible and abort
+        dlist_destroy(dlist);
+        abort();
+    }
+
+    // If tail is None, then we know that there is no items in the linked
+    // list. So this item will be the very first item appended
+    if (NULL == dlist->tail)
+    {
+        dlist->head = node;
+        dlist->tail = node;
+    }
+    else
+    {
+        dlist->tail->next = node;
+        node->prev = dlist->tail;
+        dlist->tail = node;
+    }
+    dlist->length++;
+}
+
+
 
 /*!
  * Static function that handles the actual deletion. If free of the nodes is
@@ -115,4 +145,20 @@ static valid_ptr_t verify_alloc(void * ptr)
         return INVALID_PTR;
     }
     return VALID_PTR;
+}
+
+/*!
+ * @brief Create the structure that is stored on each item in the linked list
+ * @param data
+ * @return
+ */
+static dnode_t * init_node(void * data)
+{
+    dnode_t * node = (dnode_t *)calloc(1, sizeof(dnode_t));
+    if (INVALID_PTR == verify_alloc(node))
+    {
+        return NULL;
+    }
+    node->data = data;
+    return node;
 }
