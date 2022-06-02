@@ -162,12 +162,20 @@ TEST_F(DListTestFixture, TestGetInDList)
 TEST_F(DListTestFixture, TestRemoveValue)
 {
     // iter to test if this works
+    dlist_iter_t * iter = dlist_get_iterable(dlist);
+    void * node;
 
     void * to_match = get_payload(5);
     void * the_match = dlist_remove_value(dlist, to_match);
 
     EXPECT_EQ(strcmp((char *)to_match, (char *)the_match), 0);
 
+    while (NULL != (node = dlist_get_iter_next(iter)))
+    {
+        printf("%s", (char*)node);
+    }
+
     free(to_match);
     free(the_match);
+    dlist_destroy_iter(iter);
 }

@@ -43,7 +43,11 @@ typedef struct dlist_iter_t
 
 static dnode_t * init_node(void * data);
 static valid_ptr_t verify_alloc(void * ptr);
+static dnode_t * get_iter_next(dlist_iter_t * dlist_iter);
+static dnode_t * get_value(dlist_t * dlist, void * data);
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
+static void * remove_node(dlist_t * dlist, dnode_t * node);
+
 
 
 
@@ -140,14 +144,12 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist)
  */
 void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
 {
-    if (NULL == dlist_iter->node)
+    dnode_t * data = get_iter_next(dlist_iter);
+    if (NULL != data)
     {
-        return NULL;
+        return data->data;
     }
-    dnode_t * node = dlist_iter->node;
-    dlist_iter->node = dlist_iter->node->next;
-    dlist_iter->index++;
-    return node->data;
+    return NULL;
 }
 
 /*!
@@ -227,15 +229,7 @@ void * dlist_pop_tail(dlist_t * dlist)
     }
 
     dnode_t * node = dlist->tail;
-
-    // update the child parent node
-    dlist->tail = node->prev;
-    dlist->tail->next = NULL;
-    dlist->length--;
-
-    void * data = node->data;
-    free(node);
-    return data;
+    return remove_node(dlist, node);
 }
 
 /*!
@@ -252,102 +246,35 @@ void * dlist_pop_head(dlist_t * dlist)
     }
 
     dnode_t * node = dlist->head;
-
-    // update the child parent node
-    dlist->head = node->next;
-    dlist->head->prev = NULL;
-    dlist->length--;
-
-    void * data = node->data;
-    free(node);
-    return data;
+    return remove_node(dlist, node);
 }
 
-void * dlist_find_value(dlist_t * dlist, void * data)
-{
-    if (NULL == dlist->compare_func)
-    {
-        return NULL;
-    }
 
-    dlist_iter_t * iter = dlist_get_iterable(dlist);
-    dnode_t * node;
-    dlist_match_t found = DLIST_MISS_MATCH;
-    while (NULL != (node = dlist_get_iter_next(iter)))
-    {
-        if (DLIST_MATCH == dlist->compare_func(node, data))
-        {
-            found = DLIST_MATCH;
-            break;
-        }
-    }
-
-    // destroy the iter and return the value if found
-    dlist_destroy_iter(iter);
-    if (DLIST_MISS_MATCH == found)
-    {
-        return NULL;
-    }
-    else
-    {
-        return node;
-    }
-}
 void * dlist_get_value(dlist_t * dlist, void * data)
 {
     assert(dlist);
     assert(data);
-    return dlist_find_value(dlist, data);
+    return (get_value(dlist, data))->data;
 }
 
 void * dlist_remove_value(dlist_t * dlist, void * data)
 {
     assert(dlist);
     assert(data);
-    dnode_t * node = dlist_find_value(dlist, data);
+    dnode_t * node = get_value(dlist, data);
     if (NULL == node)
     {
         return NULL;
     }
 
-    // preserve the node data before removing
-    void * node_data = node->data;
-
-    // check if node is the head, if so, update
-    if (dlist->head == node)
-    {
-        dlist->head = node->next;
-        if (NULL != dlist->head)
-        {
-            dlist->head->prev = NULL;
-        }
-    }
-    if (dlist->tail == node)
-    {
-        dlist->tail = node->prev;
-        if (NULL != dlist->tail)
-        {
-            dlist->tail->next = NULL;
-        }
-    }
-    if (NULL != node->prev)
-    {
-        node->prev->next = node->next;
-    }
-    if (NULL != node->next)
-    {
-        node->next->prev = node->prev;
-    }
-
-    free(node);
-    return node_data;
+    return remove_node(dlist, node);
 }
 
 dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
 {
     assert(dlist);
     assert(data);
-    dnode_t * node = dlist_find_value(dlist, data);
+    dnode_t * node = get_value(dlist, data);
     if (NULL == node)
     {
         return DLIST_MISS_MATCH;
@@ -386,3 +313,106 @@ static dnode_t * init_node(void * data)
     return node;
 }
 
+/*!
+ * @brief Internal function that returns the next iterable node
+ * @param dlist_iter
+ * @return
+ */
+static dnode_t * get_iter_next(dlist_iter_t * dlist_iter)
+{
+    if (NULL == dlist_iter->node)
+    {
+        return NULL;
+    }
+    dnode_t * node = dlist_iter->node;
+    dlist_iter->node = dlist_iter->node->next;
+    dlist_iter->index++;
+    return node;
+
+}
+
+/*!
+ * @brief Handles finding the node in the linked list by comparing it with
+ * the values passed in and using the comparison callback function. If found,
+ * return the dnode_t else, NULL
+ * @param dlist
+ * @param data
+ * @return
+ */
+static dnode_t * get_value(dlist_t * dlist, void * data)
+{
+    if (NULL == dlist->compare_func)
+    {
+        return NULL;
+    }
+
+    dlist_iter_t * iter = dlist_get_iterable(dlist);
+    dnode_t * node;
+    dlist_match_t found = DLIST_MISS_MATCH;
+    while (NULL != (node = get_iter_next(iter)))
+    {
+        if (DLIST_MATCH == dlist->compare_func(node->data, data))
+        {
+            found = DLIST_MATCH;
+            break;
+        }
+    }
+
+    // destroy the iter and return the value if found
+    dlist_destroy_iter(iter);
+    if (DLIST_MISS_MATCH == found)
+    {
+        return NULL;
+    }
+    else
+    {
+        return node;
+    }
+}
+
+/*!
+ * @brief Private function handles the removal of the identified node
+ * @param dlist
+ * @param node
+ * @return
+ */
+static void * remove_node(dlist_t * dlist, dnode_t * node)
+{
+    // preserve the node data before removing
+    void * node_data = node->data;
+    dlist->length--;
+
+    // check if node is the head, if so, update
+    if (dlist->head == node)
+    {
+        dlist->head = node->next;
+        if (NULL != dlist->head)
+        {
+            dlist->head->prev = NULL;
+        }
+    }
+
+    // Check if node is the tail, if so, update
+    if (dlist->tail == node)
+    {
+        dlist->tail = node->prev;
+        if (NULL != dlist->tail)
+        {
+            dlist->tail->next = NULL;
+        }
+    }
+
+    // Update the poiters for left and right
+    if (NULL != node->prev)
+    {
+        node->prev->next = node->next;
+    }
+    if (NULL != node->next)
+    {
+        node->next->prev = node->prev;
+    }
+
+    // free the node and return the actual data
+    free(node);
+    return node_data;
+}
