@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <queue.h>
+#include <dl_queue.h>
 
 TEST(QueueTest, TestRun)
 {

@@ -5,7 +5,7 @@ add_executable(
 
 target_link_libraries(
         queue_testing_gtest
-        queue
+        dl_queue
         gtest
         gtest_main
 )
