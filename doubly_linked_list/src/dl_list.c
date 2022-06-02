@@ -31,12 +31,13 @@ typedef struct dlist_t
     dnode_t * head;
     dnode_t * tail;
     size_t length;
+    dlist_match_t (* compare_func)(void *, void *);
 } dlist_t;
 
 typedef struct dlist_iter_t
 {
     dnode_t * node;
-    size_t index;
+    int index;
     size_t length;
 } dlist_iter_t;
 
@@ -46,13 +47,34 @@ static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_
 
 
 
-dlist_t * dlist_init()
+/*!
+ * @brief Public function to check if the dlist is empty
+ * @param dlist
+ * @return
+ */
+bool dlist_is_empty(dlist_t * dlist)
+{
+    assert(dlist);
+    return dlist->length == 0;
+}
+
+/*!
+ * @brief Initialize the base linked list structure
+ * @return
+ */
+dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
 {
     dlist_t * dlist = (dlist_t *)calloc(1, sizeof(dlist_t));
     verify_alloc(dlist);
+    dlist->compare_func = compare_func;
     return dlist;
 }
 
+/*!
+ * @brief Append an item to the end of the linked list
+ * @param dlist
+ * @param data
+ */
 void dlist_append(dlist_t * dlist, void * data)
 {
     // make sure that the pointers are valid
@@ -104,24 +126,10 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist)
     // Init the iter structure and return the pointer to it
     *iter = (dlist_iter_t){
         .length     = dlist->length,
-        .index      = 0,
+        .index      = -1,
         .node       = dlist->head
     };
     return iter;
-}
-
-/*!
- * @brief Check if the end of the linked list has been reached
- *
- * @param dlist_iter
- * @return
- */
-bool dlist_iter_is_empty(dlist_iter_t * dlist_iter)
-{
-    // verify that the dlist is a valid pointer
-    assert(dlist_iter);
-
-    return NULL == dlist_iter->node->next;
 }
 
 /*!
@@ -138,14 +146,18 @@ void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
     }
     dnode_t * node = dlist_iter->node;
     dlist_iter->node = dlist_iter->node->next;
+    dlist_iter->index++;
     return node->data;
 }
 
+/*!
+ * @brief Destroy the iterable
+ * @param dlist_iter
+ */
 void dlist_destroy_iter(dlist_iter_t * dlist_iter)
 {
     free(dlist_iter);
 }
-
 
 
 /*!
@@ -202,6 +214,81 @@ void dlist_destroy_free(dlist_t * dlist, void (* free_func)(void *))
 }
 
 /*!
+ * @brief Function to pop values from the tail
+ * @param dlist
+ * @return
+ */
+void * dlist_pop_tail(dlist_t * dlist)
+{
+    assert(dlist);
+    if (dlist_is_empty(dlist))
+    {
+        return NULL;
+    }
+
+    dnode_t * node = dlist->tail;
+
+    // update the child parent node
+    dlist->tail = node->prev;
+    dlist->tail->next = NULL;
+    dlist->length--;
+
+    void * data = node->data;
+    free(node);
+    return data;
+}
+
+/*!
+ * @brief Function to pop values from the head
+ * @param dlist
+ * @return
+ */
+void * dlist_pop_head(dlist_t * dlist)
+{
+    assert(dlist);
+    if (dlist_is_empty(dlist))
+    {
+        return NULL;
+    }
+
+    dnode_t * node = dlist->head;
+
+    // update the child parent node
+    dlist->head = node->next;
+    dlist->head->prev = NULL;
+    dlist->length--;
+
+    void * data = node->data;
+    free(node);
+    return data;
+}
+
+dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
+{
+    assert(dlist);
+    assert(data);
+    if (NULL == dlist->compare_func)
+    {
+        return DLIST_MISS_MATCH;
+    }
+
+    dlist_iter_t * iter = dlist_get_iterable(dlist);
+    dnode_t * node;
+    dlist_match_t found = DLIST_MISS_MATCH;
+    while (NULL != (node = dlist_get_iter_next(iter)))
+    {
+        if (DLIST_MATCH == dlist->compare_func(node, data))
+        {
+            found = DLIST_MATCH;
+            break;
+        }
+    }
+
+    dlist_destroy_iter(iter);
+    return found;
+}
+
+/*!
  * @brief Check if allocation is valid
  * @param ptr Any pointer
  * @return valid_ptr_t
@@ -231,3 +318,4 @@ static dnode_t * init_node(void * data)
     node->data = data;
     return node;
 }
+
