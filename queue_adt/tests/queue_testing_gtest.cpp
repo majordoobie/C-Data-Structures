@@ -77,12 +77,40 @@ class DQueueTestFixture : public ::testing::Test
 };
 
 
+// Test ability to pop from the queue
 TEST_F(DQueueTestFixture, TestPopQueue)
 {
-    EXPECT_EQ(length, queue_length(queue));
-    int * value = (int * )queue_dequeue(queue);
-    EXPECT_EQ(*value, *(int * )payload_first);
+    EXPECT_EQ(this->length, queue_length(this->queue));
+    int * value = (int * )queue_dequeue(this->queue);
+    EXPECT_EQ(*value, *(int * )this->payload_first);
 
-    EXPECT_EQ(length - 1, queue_length(queue));
+    EXPECT_EQ(this->length - 1, queue_length(this->queue));
     free(value);
+}
+
+// Test if the queue successfully stops dequeue when it is empty
+TEST_F(DQueueTestFixture, TestPopOverRun)
+{
+    EXPECT_EQ(this->length, queue_length(this->queue));
+
+    for (int i = 0; i < this->length; i++)
+    {
+        free(queue_dequeue(this->queue));
+    }
+
+    EXPECT_EQ(0, queue_length(this->queue));
+    ASSERT_EQ(queue_dequeue(this->queue), nullptr);
+}
+
+// Test the inability to enqueue when the queue is full
+TEST_F(DQueueTestFixture, TestEnqueueLimit)
+{
+    EXPECT_EQ(this->length, queue_length(this->queue));
+
+    void * payload = get_payload(20);
+    queue_status_t status = queue_enqueue(queue, payload);
+
+    EXPECT_EQ(status, Q_FAILURE);
+    EXPECT_EQ(this->length, queue_length(this->queue));
+    free(payload);
 }
