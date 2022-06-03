@@ -66,3 +66,8 @@ void queue_destroy_free(queue_t * queue, void (* free_func)(void * data))
     }
     free(queue);
 }
+
+size_t queue_length(queue_t * queue)
+{
+    return dlist_length(queue->dlist);
+}
