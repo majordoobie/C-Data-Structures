@@ -29,7 +29,7 @@ void * queue_dequeue(queue_t * queue);
 
 queue_t * queue_get_by_index(queue_t * queue, size_t index);
 queue_t * queue_get_by_value(queue_t * queue, void * data);
-queue_status_t queue_remove(queue_t * queue, void * data);
+void * queue_remove(queue_t * queue, void * data);
 void queue_clear(queue_t * queue);
 
 

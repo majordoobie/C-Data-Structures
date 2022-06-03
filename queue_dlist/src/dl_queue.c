@@ -144,3 +144,17 @@ queue_t * queue_get_by_index(queue_t * queue, size_t index)
     return dlist_get_by_index(queue->dlist, (int)index);
 }
 
+/*!
+ * @brief Remove the specified node from the queue
+ * @param queue
+ * @param data
+ * @return NULL if node does not exist. Otherwise, the pointer to the node
+ * data is returned.
+ */
+void * queue_remove(queue_t * queue, void * data)
+{
+    assert(queue);
+    assert(data);
+
+    return dlist_remove_value(queue->dlist, data);
+}

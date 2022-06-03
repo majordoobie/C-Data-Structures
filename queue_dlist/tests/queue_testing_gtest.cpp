@@ -139,3 +139,17 @@ TEST_F(DQueueTestFixture, TestFindIndexMethod)
     // Payloads are the same as their index so index should equal the queue_node
     EXPECT_EQ(*(int*)queue_node, index);
 }
+
+// Test ability to delete an item from the queue without dequeue
+TEST_F(DQueueTestFixture, TestDeleteItem)
+{
+    void * payload = get_payload((this->length / 2));
+    void * queue_node = queue_remove(this->queue, payload);
+    ASSERT_NE(queue_node, nullptr);
+
+    queue_status_t status = compare_payloads(payload, queue_node);
+    EXPECT_EQ(status, Q_MATCH);
+
+    free(payload);
+    free(queue_node);
+}

@@ -82,8 +82,8 @@ int * get_int_array(const int item_array[], size_t item_count)
 
 /*!
  * Main test fixture class used to create the four test heaps. The four heaps
- * are broken into two groups, each containing a min and a max heap version.
- * The first group is a pointer mode heap while the second is a data mode heap.
+ * are broken into two groups, each containing a min and a max heap_adt version.
+ * The first group is a pointer mode heap_adt while the second is a data mode heap_adt.
  */
 class HeapTestFixture : public ::testing::Test
 {
@@ -163,11 +163,11 @@ TEST_F(HeapTestFixture, PrintFixtures)
 }
 
 // Ensure that popping will present the highest, or least value depending
-// on the heap type.
+// on the heap_adt type.
 TEST_F(HeapTestFixture, TestPopValueForMax)
 {
     // The highest value should be stored on the next node for max_heap_ptr
-    // while lowest should be stored for a min heap
+    // while lowest should be stored for a min heap_adt
     void * highest = heap_pop(max_heap_ptr);
     void * lowest = heap_pop(min_heap_ptr);
 
@@ -297,7 +297,7 @@ TEST(HeapSort, HeapSortTestPtrModeMax)
 }
 
 /*
- * Test the ability to find the nth item in the heap. The array passed in is
+ * Test the ability to find the nth item in the heap_adt. The array passed in is
  * first heapafied
  */
 TEST(HeapSortFind, HeapFindTestPtrModeMax)
@@ -326,7 +326,7 @@ TEST(HeapSortFind, HeapFindTestPtrModeMax)
 }
 
 /*!
- * Find if the value specified is in the heap
+ * Find if the value specified is in the heap_adt
  */
 TEST_F(HeapTestFixture, TestFindValue)
 {

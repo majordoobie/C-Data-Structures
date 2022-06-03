@@ -286,7 +286,8 @@ void * dlist_get_by_value(dlist_t * dlist, void * data)
  * @brief Remove node from the dlist using the value passed in
  * @param dlist
  * @param data
- * @return
+ * @return NULL if item it not found. Otherwise, the pointer to the data is
+ * returned.
  */
 void * dlist_remove_value(dlist_t * dlist, void * data)
 {
