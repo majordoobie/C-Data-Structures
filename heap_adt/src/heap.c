@@ -72,20 +72,20 @@ void heap_print(heap_t * heap, void (* print_test)(void * payload))
 }
 
 /*!
- * @brief Create the initial data structure for the heap.
+ * @brief Create the initial data structure for the heap_adt.
  *
- * The heap data structure is an array that follows the rules of a binary tree.
+ * The heap_adt data structure is an array that follows the rules of a binary tree.
  * But the data itself is stored in a array. The array can either be an array
  * of void pointers or an array of data.
  *
  * The mode is selected by the data_mode parameter. HEAP_PTR creates an array
  * of void pointers while HEAP_MEM creates an array of the memory blocks
- * @param type Heap type, max heap or min heap
+ * @param type Heap type, max heap_adt or min heap_adt
  * @param data_mode Data storage strategy
  * @param payload_size The size of the payload. This can be 0 if using HEAP_PTR
  * @param destroy Pointer to function that frees the block of memory
  * @param compare Pointer to function that compares the nodes
- * @return Pointer to heap or NULL
+ * @return Pointer to heap_adt or NULL
  */
 heap_t * heap_init(heap_type_t type,
                    heap_data_mode_t data_mode,
@@ -106,11 +106,11 @@ heap_t * heap_init(heap_type_t type,
         .array_size         = BASE_SIZE,
         .node_size          = payload_size,
 
-        // Set heap type
+        // Set heap_adt type
         .heap_type          = type ? HEAP_LT : HEAP_GT,
         .data_mode          = data_mode,
 
-        // Set heap array
+        // Set heap_adt array
         .heap_array         = NULL,
 
         // Set callback functions
@@ -166,14 +166,14 @@ void heap_destroy(heap_t * heap)
 }
 
 /*!
- * @brief insert payload into the heap
+ * @brief insert payload into the heap_adt
  *
- * @param heap heap data structure
+ * @param heap heap_adt data structure
  * @param payload Pointer to the payload passed in
  */
 void heap_insert(heap_t * heap, void * payload)
 {
-    // ensure heap is a valid pointer
+    // ensure heap_adt is a valid pointer
     assert(heap);
 
     // checks to make sure we have enough space
@@ -226,7 +226,7 @@ void heap_sort(void * array,
         return;
     }
 
-    // Create the heap structure if in data mode
+    // Create the heap_adt structure if in data mode
     if (HEAP_PTR == heap->data_mode)
     {
         for (size_t item = 0; item < item_count; item++)
@@ -240,7 +240,7 @@ void heap_sort(void * array,
     }
     else
     {
-        // Insert each item into the heap then pop
+        // Insert each item into the heap_adt then pop
         for (size_t item = 0; item < item_count; item++)
         {
             heap_insert(heap, (uint8_t *)array + get_index(item, item_size));
@@ -282,7 +282,7 @@ void * heap_find_nth_item(void * array,
 
     void * target_item = NULL;
 
-    // Create the heap structure if in data mode
+    // Create the heap_adt structure if in data mode
     if (HEAP_PTR == heap->data_mode)
     {
         for (size_t item = 0; item < item_count; item++)
@@ -303,7 +303,7 @@ void * heap_find_nth_item(void * array,
     }
     else
     {
-        // Insert each item into the heap then pop
+        // Insert each item into the heap_adt then pop
         for (size_t item = 0; item < item_count; item++)
         {
             heap_insert(heap, (uint8_t *)array + get_index(item, item_size));
@@ -332,7 +332,7 @@ void * heap_find_nth_item(void * array,
 }
 
 /*!
- * @brief Check to see if the data provided is already in the heap
+ * @brief Check to see if the data provided is already in the heap_adt
  * @param heap
  * @param data
  * @return bool
@@ -357,7 +357,7 @@ bool heap_in_heap(heap_t * heap, void * data)
 }
 
 /*!
- * Dump all the items in the heap without destroying the heap
+ * Dump all the items in the heap_adt without destroying the heap_adt
  * @param heap
  */
 void heap_dump(heap_t * heap)
@@ -372,7 +372,7 @@ void heap_dump(heap_t * heap)
 
 
 /*!
- * @brief Check if the heap is currently empty
+ * @brief Check if the heap_adt is currently empty
  * @param heap[in]
  * @return
  */
@@ -393,7 +393,7 @@ void * heap_pop(heap_t * heap)
     // ensure that the pointer is valid
     assert(heap);
 
-    // check if heap is empty, if so, return
+    // check if heap_adt is empty, if so, return
     if (heap_is_empty(heap))
     {
         return NULL;
@@ -441,7 +441,7 @@ void * heap_pop(heap_t * heap)
 }
 
 /*!
- * @brief Dynamically increase the size of the heap
+ * @brief Dynamically increase the size of the heap_adt
  * @param heap
  */
 static void ensure_space(heap_t * heap)
@@ -489,7 +489,7 @@ static void resize_heap(heap_t * heap)
     }
     if (INVALID_PTR == verify_alloc(re_alloc))
     {
-        fprintf(stderr, "[!] Could not reallocate memory for heap!\n");
+        fprintf(stderr, "[!] Could not reallocate memory for heap_adt!\n");
         heap_destroy(heap);
         abort();
     }
@@ -611,8 +611,8 @@ static void swap(heap_t * heap, size_t child_index, size_t parent_index)
 
 /*!
  * @brief Return bool indicating that the parent is either greater or equal
- * to its children for a max heap or if the parent is less than or equal to
- * both of its children in the case of a min heap
+ * to its children for a max heap_adt or if the parent is less than or equal to
+ * both of its children in the case of a min heap_adt
  * @param heap
  * @param parent_index
  * @return
@@ -631,7 +631,7 @@ static bool is_valid_parent(heap_t * heap, size_t parent_index)
     size_t left_child_index = get_left_child_index(parent_index);
     heap_compare_t eval = get_comparison(heap, parent_index, left_child_index);
 
-    // if the parent is GT the left_child in a GT heap, or it is equal, then
+    // if the parent is GT the left_child in a GT heap_adt, or it is equal, then
     // the parent is valid. Otherwise, it is not. Same goes for min
     if ((eval != heap->heap_type) || (eval != HEAP_EQ))
     {
@@ -676,8 +676,8 @@ static bool has_right_child(heap_t * heap, size_t index)
 /*!
  * @brief return the min/max child in order to swap their oder.
  *
- * In the situation of a max heap, the largest child is returned. In the
- * situation of a min heap, the smallest child is returned. Of course, if the
+ * In the situation of a max heap_adt, the largest child is returned. In the
+ * situation of a min heap_adt, the smallest child is returned. Of course, if the
  * parent is already one of those, the parent itself is returned.
  * @param heap heap_t
  * @param parent_index parent_index to inspect
@@ -692,7 +692,7 @@ static size_t get_target_index(heap_t * heap, size_t parent_index)
         return parent_index;
     }
 
-    // target index is either the max child (maxheap) or min child (min heap)
+    // target index is either the max child (maxheap) or min child (min heap_adt)
     size_t target_index = parent_index;
     heap_compare_t eval;
 
@@ -701,8 +701,8 @@ static size_t get_target_index(heap_t * heap, size_t parent_index)
 
 
     // perform the comparison between the parent and the left child. The
-    // return value is based on the heap type. If the evaluation between
-    // parent and left is GT and the heap type is GT_type, then set the
+    // return value is based on the heap_adt type. If the evaluation between
+    // parent and left is GT and the heap_adt type is GT_type, then set the
     // parent as the target because the goal is to set the target as the
     // heaptype == eval
     eval = get_comparison(heap, parent_index, left_child_index);
@@ -797,15 +797,3 @@ static heap_compare_t get_comparison(heap_t * heap,
     return result;
 }
 
-void test_func(void * data, size_t n_items, size_t n_size)
-{
-
-    for (size_t i = 0; i < n_items; i++)
-    {
-        void ** int_ptr = NULL;
-        uint8_t val[n_size];
-        memcpy(val, (uint8_t*)data + (n_size * i), n_size);
-        int_ptr = (void **)val;
-        printf("Int? %d\n", *(int *)int_ptr);
-    }
-}

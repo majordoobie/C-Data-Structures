@@ -16,7 +16,7 @@ typedef enum
     HEAP_EQ = 0
 } heap_compare_t;
 
-// Type of heap
+// Type of heap_adt
 typedef enum
 {
     MAX_HEAP,
@@ -30,7 +30,7 @@ typedef enum
     HEAP_MEM
 } heap_data_mode_t;
 
-// Mapping to internal structure that manages the heap
+// Mapping to internal structure that manages the heap_adt
 typedef struct heap_t heap_t;
 
 void heap_print(heap_t * heap, void (* print_test)(void * payload));

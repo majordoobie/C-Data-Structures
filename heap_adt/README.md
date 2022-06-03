@@ -19,20 +19,20 @@ or "store by value (mem)". If using `HEAP_PTR` you will need to provide a callba
 
 ```c
 /*!
- * @brief Create the initial data structure for the heap.
+ * @brief Create the initial data structure for the heap_adt.
  *
- * The heap data structure is an array that follows the rules of a binary tree.
+ * The heap_adt data structure is an array that follows the rules of a binary tree.
  * But the data itself is stored in a array. The array can either be an array
  * of void pointers or an array of data.
  *
  * The mode is selected by the data_mode parameter. HEAP_PTR creates an array
  * of void pointers while HEAP_MEM creates an array of the memory blocks
- * @param type Heap type, max heap or min heap
+ * @param type Heap type, max heap_adt or min heap_adt
  * @param data_mode Data storage strategy
  * @param payload_size The size of the payload. This can be 0 if using HEAP_PTR
  * @param destroy Pointer to function that frees the block of memory
  * @param compare Pointer to function that compares the nodes
- * @return Pointer to heap or NULL
+ * @return Pointer to heap_adt or NULL
  */
 heap_t * heap_init(heap_type_t type,
 heap_data_mode_t data_mode,
