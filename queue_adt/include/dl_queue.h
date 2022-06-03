@@ -5,6 +5,7 @@
 extern "C" {
 #endif // __cplusplus
 #include <stddef.h>
+#include <stdbool.h>
 typedef struct queue_t queue_t;
 typedef enum
 {
@@ -19,9 +20,13 @@ queue_t * queue_init(size_t queue_size, queue_status_t (* compare_func)(void*, v
 void queue_destroy(queue_t * queue);
 void queue_destroy_free(queue_t * queue, void (* free_func)(void * data));
 
+// Queue info
 size_t queue_length(queue_t * queue);
+bool queue_is_empty(queue_t * queue);
+
 queue_status_t queue_enqueue(queue_t * queue, void * data);
 void * queue_dequeue(queue_t * queue);
+
 queue_t * queue_get(queue_t * queue, size_t index);
 queue_t * queue_find(queue_t * queue, void * data);
 queue_status_t queue_remove(queue_t * queue, void * data);

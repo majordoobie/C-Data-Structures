@@ -67,7 +67,55 @@ void queue_destroy_free(queue_t * queue, void (* free_func)(void * data))
     free(queue);
 }
 
+/*!
+ * @brief Return the amount of items in the queue
+ * @param queue
+ * @return
+ */
 size_t queue_length(queue_t * queue)
 {
     return dlist_length(queue->dlist);
+}
+
+/*!
+ * @brief Return bool indicating if the queue is empty
+ * @param queue
+ * @return
+ */
+bool queue_is_empty(queue_t * queue)
+{
+    return (queue_length(queue) == 0);
+}
+
+/*!
+ * @brief Add an item to the queue and return a status indicating if it was
+ * successful or not. A failure indicates that the queue is already full and
+ * cannot enqueue anymore.
+ * @param queue
+ * @param data
+ * @return
+ */
+queue_status_t queue_enqueue(queue_t * queue, void * data)
+{
+    if (queue_length(queue) == queue->queue_size)
+    {
+        return Q_FAILURE;
+    }
+
+    dlist_append(queue->dlist, data);
+    return Q_SUCCESS;
+}
+
+/*!
+ * @brief Pop an item from the queue. If the queue is empty, return a NULL item.
+ * @param queue
+ * @return
+ */
+void * queue_dequeue(queue_t * queue)
+{
+    if (queue_is_empty(queue))
+    {
+        return NULL;
+    }
+    return dlist_pop_head(queue->dlist);
 }
