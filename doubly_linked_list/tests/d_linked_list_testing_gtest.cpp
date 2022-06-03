@@ -29,8 +29,6 @@ dlist_match_t compare_payloads(void * data1, void * data2)
     }
     return DLIST_MISS_MATCH;
 }
-
-
 /*
  * //end of Helper Functions for testing
  */

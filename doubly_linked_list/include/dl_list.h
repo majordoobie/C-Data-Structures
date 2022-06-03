@@ -6,8 +6,8 @@ extern "C" {
 #include <stdbool.h>
 typedef enum
 {
-    DLIST_MATCH,
-    DLIST_MISS_MATCH
+    DLIST_MATCH = 0,
+    DLIST_MISS_MATCH = 1
 } dlist_match_t;
 
 typedef struct dlist_t dlist_t;
