@@ -797,15 +797,3 @@ static heap_compare_t get_comparison(heap_t * heap,
     return result;
 }
 
-void test_func(void * data, size_t n_items, size_t n_size)
-{
-
-    for (size_t i = 0; i < n_items; i++)
-    {
-        void ** int_ptr = NULL;
-        uint8_t val[n_size];
-        memcpy(val, (uint8_t*)data + (n_size * i), n_size);
-        int_ptr = (void **)val;
-        printf("Int? %d\n", *(int *)int_ptr);
-    }
-}

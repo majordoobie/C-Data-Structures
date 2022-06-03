@@ -334,24 +334,3 @@ TEST_F(HeapTestFixture, TestFindValue)
     EXPECT_EQ(heap_in_heap(max_heap_data, (void*)&val), true);
 
 }
-
-// Test if it is possible to combine the ptr mode and mem mode
-TEST(HeapSort, HeapSortOneMode)
-{
-    int array_length = 10;
-    int my_array[] = {5, 8, 2, 8, 9, 2, 3, 40, 1, 78};
-    int ** int_array = (int**)calloc(array_length, sizeof(int *));
-
-    for (int i = 0; i < array_length; i++)
-    {
-        int_array[i] = create_heap_payload(my_array[i]);
-    }
-    test_func(int_array, sizeof(int *), array_length);
-
-
-    for (int i = 0; i < array_length; i++)
-    {
-        free(int_array[i]);
-    }
-    free(int_array);
-}
