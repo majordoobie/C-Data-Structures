@@ -21,7 +21,7 @@ void free_payload(void * data)
 // function for comparing nodes
 queue_status_t compare_payloads(void * data1, void * data2)
 {
-    if ((int*)data1 == (int*)data2)
+    if (*(int*)data1 == *(int*)data2)
     {
         return Q_MATCH;
     }
@@ -113,4 +113,29 @@ TEST_F(DQueueTestFixture, TestEnqueueLimit)
     EXPECT_EQ(status, Q_FAILURE);
     EXPECT_EQ(this->length, queue_length(this->queue));
     free(payload);
+}
+
+// Test the ability to find a node by its value
+TEST_F(DQueueTestFixture, TestFindMethod)
+{
+
+    void * payload = get_payload((this->length / 2));
+    void * queue_node = queue_get_by_value(this->queue, payload);
+    ASSERT_NE(queue_node, nullptr);
+
+    queue_status_t status = compare_payloads(payload, queue_node);
+    EXPECT_EQ(status, Q_MATCH);
+
+    free(payload);
+}
+
+// Test ability to find a node by its index
+TEST_F(DQueueTestFixture, TestFindIndexMethod)
+{
+    int index = this->length / 2;
+    void * queue_node = queue_get_by_index(this->queue, index);
+    ASSERT_NE(queue_node, nullptr);
+
+    // Payloads are the same as their index so index should equal the queue_node
+    EXPECT_EQ(*(int*)queue_node, index);
 }

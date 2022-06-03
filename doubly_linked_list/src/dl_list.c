@@ -260,13 +260,34 @@ void * dlist_pop_head(dlist_t * dlist)
 }
 
 
-void * dlist_get_value(dlist_t * dlist, void * data)
+/*!
+ * @brief Fetch the node in the dlist by matching the the value using the
+ * comparison function massed in.
+ * @param dlist
+ * @param data
+ * @return
+ */
+void * dlist_get_by_value(dlist_t * dlist, void * data)
 {
     assert(dlist);
     assert(data);
-    return (get_value(dlist, data))->data;
+    dnode_t * node = get_value(dlist, data);
+    if (NULL == node)
+    {
+        return NULL;
+    }
+    else
+    {
+        return node->data;
+    }
 }
 
+/*!
+ * @brief Remove node from the dlist using the value passed in
+ * @param dlist
+ * @param data
+ * @return
+ */
 void * dlist_remove_value(dlist_t * dlist, void * data)
 {
     assert(dlist);
@@ -280,6 +301,12 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
     return remove_node(dlist, node);
 }
 
+/*!
+ * @brief Check if value is in the dlist
+ * @param dlist
+ * @param data
+ * @return
+ */
 dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
 {
     assert(dlist);
@@ -339,6 +366,33 @@ static dnode_t * get_iter_next(dlist_iter_t * dlist_iter)
     dlist_iter->index++;
     return node;
 
+}
+
+/*!
+ * @brief Get a dlist value by its index in the linked list
+ * @param dlist
+ * @param index
+ * @return
+ */
+void * dlist_get_by_index(dlist_t * dlist, int index)
+{
+    // if index is not within our range, then return a NULL
+    if ((index < 0) || ((size_t)index > (dlist->length - 1)))
+    {
+        return NULL;
+    }
+
+    // create the iter object to start iterating
+    dlist_iter_t * iter = dlist_get_iterable(dlist);
+    dnode_t * node;
+
+    while (index != iter->index)
+    {
+        node = get_iter_next(iter);
+    }
+
+    dlist_destroy_iter(iter);
+    return node->data;
 }
 
 /*!

@@ -25,7 +25,8 @@ void dlist_prepend(dlist_t * dlist, void * data);
 // manipulation methods
 void * dlist_pop_tail(dlist_t * dlist);
 void * dlist_pop_head(dlist_t * dlist);
-void * dlist_get_value(dlist_t * dlist, void * data);
+void * dlist_get_by_value(dlist_t * dlist, void * data);
+void * dlist_get_by_index(dlist_t * dlist, int index);
 void * dlist_remove_value(dlist_t * dlist, void * data);
 
 // metadata methods

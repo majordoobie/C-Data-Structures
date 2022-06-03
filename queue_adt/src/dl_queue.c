@@ -1,8 +1,8 @@
 #include <dl_queue.h>
-#include <dl_list.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <dl_list.h>
 
 typedef struct queue_t
 {
@@ -119,3 +119,28 @@ void * queue_dequeue(queue_t * queue)
     }
     return dlist_pop_head(queue->dlist);
 }
+
+/*!
+ * @brief Fetch a value from the queue based on the data using the comparison
+ * function.
+ * @param queue
+ * @param data
+ * @return
+ */
+queue_t * queue_get_by_value(queue_t * queue, void * data)
+{
+    return dlist_get_by_value(queue->dlist, data);
+}
+
+
+/*!
+ * @brief Fetch a value from the queue based on its index
+ * @param queue
+ * @param index
+ * @return
+ */
+queue_t * queue_get_by_index(queue_t * queue, size_t index)
+{
+    return dlist_get_by_index(queue->dlist, (int)index);
+}
+

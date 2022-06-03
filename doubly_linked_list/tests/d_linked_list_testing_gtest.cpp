@@ -156,7 +156,7 @@ TEST_F(DListTestFixture, TestFindInDlist)
 TEST_F(DListTestFixture, TestGetInDList)
 {
     void * to_match = get_payload(5);
-    void * the_match = dlist_get_value(dlist, to_match);
+    void * the_match = dlist_get_by_value(dlist, to_match);
 
     EXPECT_EQ(strcmp((char *)to_match, (char *)the_match), 0);
 
