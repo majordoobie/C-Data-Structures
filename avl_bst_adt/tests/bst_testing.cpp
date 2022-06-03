@@ -274,8 +274,14 @@ TEST_F(TreeTestFixture, TraversalPostOrder)
     free(test_struct);
 }
 
-
-
+// Test ability to remove a node from the tree
+TEST_F(TreeTestFixture, TestNodeDeletion)
+{
+    bst_node_payload_t * payload = create_payload(5, nullptr);
+    bst_status_t  status = bst_remove(this->tree, payload, FREE_PAYLOAD_TRUE);
+    EXPECT_EQ(status, BST_REMOVE_SUCCESS);
+    free_payload(payload);
+}
 
 
 
