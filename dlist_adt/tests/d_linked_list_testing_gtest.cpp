@@ -215,70 +215,95 @@ TEST_F(DListTestFixture, TestPrepend)
 // Test that forward iteration is working properly
 TEST_F(DListTestFixture, TestIterForward)
 {
-    void * node = nullptr;
+    void * node = dlist_get_iter_value(this->iter);
     int count = 0;
     while (count < this->length)
     {
         // get the reference to avoid copying the string value
         const std::string& target_value = this->test_vector.at(count);
+        EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0)
+        << "index: " << count << "\nTarget value: " << target_value.c_str() <<
+        "\nExpected Value: " << (char *)node;
+
+        // get the next node
         node = (char * )dlist_get_iter_next(this->iter);
-        EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0);
         count++;
     }
+    EXPECT_EQ(count, 10);
 }
 
 // Test the reverse iteration is working properly
 TEST_F(DListTestFixture, TestIterReverse)
 {
-    void * node = nullptr;
+    // set the tail since our init is for head
+    dlist_set_iter_tail(this->iter);
+
+    void * node = dlist_get_iter_value(this->iter);
+
     int count = this->length - 1;
     while (count > -1)
     {
         // get the reference to avoid copying the string value
         const std::string& target_value = this->test_vector.at(count);
+        EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0)
+                        << "index: " << count << "\nTarget value: "
+                        << target_value.c_str() <<
+                        "\nExpected Value: " << (char *)node;
+
         node = (char *)dlist_get_iter_prev(this->iter);
-        EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0);
         count--;
     }
+    EXPECT_EQ(count, -1);
 }
 
 // Test ability to change the direction of the iter as we see fit
 TEST_F(DListTestFixture, TestForwardReverse)
 {
-    void * node = nullptr;
+    void * node = dlist_get_iter_value(this->iter);
     int count = 0;
     while (count < this->length)
     {
         // get the reference to avoid copying the string value
         const std::string& target_value = this->test_vector.at(count);
-        node = (char * )dlist_get_iter_next(this->iter);
         EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0);
+
+        node = (char * )dlist_get_iter_next(this->iter);
         count++;
     }
+    EXPECT_EQ(count, 10);
 
     // Reset to the tail
     dlist_set_iter_tail(this->iter);
     count = this->length - 1;
-
+    node = (char * )dlist_get_iter_value(this->iter);
     while (count > -1)
     {
         // get the reference to avoid copying the string value
         const std::string& target_value = this->test_vector.at(count);
+        EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0)
+                        << "index: " << count << "\nTarget value: "
+                        << target_value.c_str() <<
+                        "\nExpected Value: " << (char *)node;
         node = (char *)dlist_get_iter_prev(this->iter);
-        EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0);
         count--;
     }
+    EXPECT_EQ(count, -1);
 
-//    // reset back to head
-//    dlist_set_iter_head(this->iter);
-//    count = 0;
-//    while (count < this->length)
-//    {
-//        // get the reference to avoid copying the string value
-//        const std::string& target_value = this->test_vector.at(count);
-//        node = (char * )dlist_get_iter_next(this->iter);
-//        EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0);
-//        count++;
-//    }
+    // reset back to head
+    dlist_set_iter_head(this->iter);
+    node = (char * )dlist_get_iter_value(this->iter);
+
+    count = 0;
+    while (count < this->length)
+    {
+        // get the reference to avoid copying the string value
+        const std::string& target_value = this->test_vector.at(count);
+        EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0);
+
+        node = (char * )dlist_get_iter_next(this->iter);
+        count++;
+    }
+
+    EXPECT_EQ(count, 10);
 }
 

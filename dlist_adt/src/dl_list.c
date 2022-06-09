@@ -157,6 +157,31 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
 }
 
 /*!
+ * @brief Function returns the current value at the current index. For a
+ * newly created iter, this will either be the head or the tail based ont he
+ * end of the list that the iter object was created with.
+ *
+ * @param iter
+ * @return Pointer to the node data
+ */
+void * dlist_get_iter_value(dlist_iter_t * iter)
+{
+    assert(iter);
+    return iter->node->data;
+}
+
+/*!
+ * @brief Return the current index of the iter object
+ * @param iter
+ * @return int32_t index of the iterable
+ */
+int32_t dlist_get_iter_index(dlist_iter_t * iter)
+{
+    assert(iter);
+    return iter->index;
+}
+
+/*!
  * @brief Reset the iterable to start with the head of the dlist
  * @param iter
  */
@@ -175,16 +200,10 @@ void dlist_set_iter_tail(dlist_iter_t * iter)
 {
     assert(iter);
     iter->node = iter->dlist->tail;
+
     // length can never be less than 0. If length is already 0 then that
     // means that the tail IS the head. So we set the index to 0 here
-    if (0 == iter->length)
-    {
-        iter->index = 0;
-    }
-    else
-    {
-        iter->index = (int32_t)iter->length - 1;
-    }
+    iter->length = (0 == iter->length) ? 0 : iter->length - 1;
 }
 
 /*!
@@ -222,15 +241,6 @@ void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
     return NULL;
 }
 
-/*!
- * @brief Return the current index of the iter object
- * @param iter
- * @return int32_t index of the iterable
- */
-int32_t dlist_get_iter_index(dlist_iter_t * iter)
-{
-    return iter->index;
-}
 
 /*!
  * @brief Destroy the iterable
@@ -422,10 +432,8 @@ static dnode_t * init_node(void * data)
 }
 
 /*!
- * @brief Internal function that performs the actual iteration based on the
- * direction in iter_fetch_t. The function sets the initial node value when
- * the index is -1. After that the next dnode_t value is set in the
- * dlist_iter_t object and that object is then returned to the caller.
+ * @brief Internal function to iterate the iter object. After it updates the
+ * iter object it will then return that specific node incase it is needed.
  *
  * @param iter
  * @return Returns the dnode_t object that is on the dlist. This could be
@@ -433,43 +441,24 @@ static dnode_t * init_node(void * data)
  */
 static dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch)
 {
-    // Check to see if this is the first call to the iter next. The init
-    // function sets the index to -1 when it is a new object. This is the
-    // only time that this index is set to -1
-    if (-1 == iter->index)
-    {
-        if (NEXT == fetch)
-        {
-            iter->node = iter->dlist->head;
-            iter->index++;
-        }
-        else
-        {
-            iter->node = iter->dlist->tail;
-            iter->index--;
-        }
-    }
     // If this is not the initial, check if the iter node is already set to
     // NULL. If it is, then just return
-    else if (NULL == iter->node)
+    if (NULL == iter->node)
     {
         return NULL;
     }
 
-    // otherwise, this is not a new object so fetch the next value in the
-    // sequence
+    // iterate the value based on the direction
+    if (NEXT == fetch)
+    {
+        iter->node = iter->node->next;
+        iter->index++;
+    }
+
     else
     {
-        if (NEXT == fetch)
-        {
-            iter->node = iter->node->next;
-            iter->index++;
-        }
-        else
-        {
-            iter->node = iter->node->prev;
-            iter->index--;
-        }
+        iter->node = iter->node->prev;
+        iter->index--;
     }
     return iter->node;
 }
