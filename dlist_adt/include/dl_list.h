@@ -10,6 +10,13 @@ typedef enum
     DLIST_MATCH = 0,
     DLIST_MISS_MATCH = 1
 } dlist_match_t;
+typedef enum
+{
+    ITER_HEAD,
+    ITER_TAIL
+} iter_start_t;
+
+
 
 typedef struct dlist_t dlist_t;
 typedef struct dlist_iter_t dlist_iter_t;
@@ -36,7 +43,8 @@ size_t dlist_length(dlist_t * dlist);
 dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data);
 
 // iterables
-dlist_iter_t * dlist_get_iterable(dlist_t * dlist);
+dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos);
+void * dlist_get_iter_value(dlist_iter_t * dlist_iter);
 void * dlist_get_iter_next(dlist_iter_t * dlist_iter);
 void * dlist_get_iter_prev(dlist_iter_t * dlist_iter);
 void dlist_set_iter_head(dlist_iter_t * dlist_iter);

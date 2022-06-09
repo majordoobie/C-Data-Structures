@@ -128,18 +128,14 @@ void dlist_append(dlist_t * dlist, void * data)
 }
 
 /*!
- * @brief Creates an iterable object used to iterate over the linked list in
- * either direction using the iterable functions. The iter object starts at a
- * NULL value with an index of -1. This allows the initial iter function to
- * initialize the value with the correct side of the linked list.
- *
- * If the first function call is a previous then the last node is provided as
- * the first node.
+ * @brief Creates an iterable object with a start node value of either head
+ * or tail based on the iter_start_t position. The value is then extracted by
+ * using the dlist_get_iter_value and iterated with the iter call
  *
  * @param dlist
- * @return dlist_iter_t object
+ * @return dlist_iter_t object starting at head or tail
  */
-dlist_iter_t * dlist_get_iterable(dlist_t * dlist)
+dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
 {
     // verify that the dlist is a valid pointer
     assert(dlist);
@@ -151,10 +147,11 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist)
 
     // Init the iter structure and return the pointer to it
     *iter = (dlist_iter_t){
-        .node       = NULL,
+        .node       = (ITER_HEAD == pos) ? dlist->head : dlist->tail,
         .dlist      = dlist,
         .length     = dlist->length,
-        .index      = -1
+        .index      = (ITER_HEAD == pos || 0 == dlist->length ) ? 0 :
+                                                    (int32_t)dlist->length - 1
     };
     return iter;
 }
@@ -492,7 +489,7 @@ void * dlist_get_by_index(dlist_t * dlist, int index)
     }
 
     // create the iter object to start iterating
-    dlist_iter_t * iter = dlist_get_iterable(dlist);
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
     dnode_t * node;
 
     while (index != iter->index)
@@ -519,7 +516,7 @@ static dnode_t * get_value(dlist_t * dlist, void * data)
         return NULL;
     }
 
-    dlist_iter_t * iter = dlist_get_iterable(dlist);
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
     dnode_t * node;
     dlist_match_t found = DLIST_MISS_MATCH;
     while (NULL != (node = iterate(iter, NEXT)))
