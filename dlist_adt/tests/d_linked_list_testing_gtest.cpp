@@ -2,6 +2,10 @@
 #include <dl_list.h>
 #include <cstring>
 
+extern "C"
+{
+    extern int32_t get_inverse(int32_t value);
+}
 
 /*
  * Helper Functions for testing
@@ -305,5 +309,39 @@ TEST_F(DListTestFixture, TestForwardReverse)
     }
 
     EXPECT_EQ(count, 10);
+}
+
+// Test ability to inverse the length for iterating in reverse
+TEST_F(DListTestFixture, TesteInverseFunc)
+{
+    // get the inverse in cpp
+    int target_value = this->length;
+    target_value *= -1;
+
+    EXPECT_EQ(target_value, get_inverse(this->length));
+}
+
+
+// Test ability to fetch a value by its index even if it is negative
+TEST_F(DListTestFixture, TestFetchByIndex)
+{
+    // Fetch one higher than expected
+    void * data = dlist_get_by_index(this->dlist, this->length + 1);
+    EXPECT_EQ(data, nullptr);
+
+    // Get one lower than least
+    data = dlist_get_by_index(this->dlist, (-this->length) - 1);
+    EXPECT_EQ(data, nullptr);
+
+    data = dlist_get_by_index(this->dlist, -1);
+    EXPECT_EQ(data, this->payload_last);
+
+    data = dlist_get_by_index(this->dlist, -(this->length));
+    EXPECT_EQ(data, this->payload_first);
+
+
+    data = dlist_get_by_index(this->dlist, -(this->length) + 1);
+    std::string& target_val = this->test_vector.at(1);
+    EXPECT_EQ(std::strcmp(target_val.c_str(), (const char *)data), 0);
 }
 
