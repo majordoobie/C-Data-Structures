@@ -44,6 +44,7 @@ typedef struct dlist_t
 
 typedef struct dlist_iter_t
 {
+    dlist_t * dlist;
     dnode_t * node;
     int index;
     size_t length;
@@ -127,11 +128,16 @@ void dlist_append(dlist_t * dlist, void * data)
 }
 
 /*!
- * @brief create an iter object to efficiently iterate over the linked list
- * of objects
+ * @brief Creates an iterable object used to iterate over the linked list in
+ * either direction using the iterable functions. The iter object starts at a
+ * NULL value with an index of -1. This allows the initial iter function to
+ * initialize the value with the correct side of the linked list.
+ *
+ * If the first function call is a previous then the last node is provided as
+ * the first node.
  *
  * @param dlist
- * @return
+ * @return dlist_iter_t object
  */
 dlist_iter_t * dlist_get_iterable(dlist_t * dlist)
 {
@@ -145,9 +151,10 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist)
 
     // Init the iter structure and return the pointer to it
     *iter = (dlist_iter_t){
+        .node       = NULL,
+        .dlist      = dlist,
         .length     = dlist->length,
-        .index      = -1,
-        .node       = dlist->head
+        .index      = -1
     };
     return iter;
 }
