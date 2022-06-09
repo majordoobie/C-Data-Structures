@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <assert.h>
 
+typedef enum
+{
+    NEXT,
+    PREV
+} iter_fetch_t;
+
 // Enum for determining if malloc calls were valid
 typedef enum
 {
@@ -45,7 +51,7 @@ typedef struct dlist_iter_t
 
 static dnode_t * init_node(void * data);
 static valid_ptr_t verify_alloc(void * ptr);
-static dnode_t * get_iter_next(dlist_iter_t * dlist_iter);
+static dnode_t * get_iter_next(dlist_iter_t * dlist_iter, iter_fetch_t fetch);
 static dnode_t * get_value(dlist_t * dlist, void * data);
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
 static void * remove_node(dlist_t * dlist, dnode_t * node);
@@ -146,15 +152,30 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist)
     return iter;
 }
 
+void * dlist_get_iter_prev(dlist_iter_t * dlist_iter)
+{
+    dnode_t * data = get_iter_next(dlist_iter, NEXT);
+    if (NULL != data)
+    {
+        return data->data;
+    }
+    return NULL;
+
+}
+void * dlist_get_iter_index(dlist_iter_t * dlist_iter)
+{
+   ;
+}
 /*!
  * @brief Iterates over the iterable and returns the next node. A NULL is
  * returned if the next node is NULL
  * @param dlist_iter
- * @return
+ * @return Returns the data pointer for the node. If the end of the linked
+ * list is reached, then a NULL is returned.
  */
 void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
 {
-    dnode_t * data = get_iter_next(dlist_iter);
+    dnode_t * data = get_iter_next(dlist_iter, NEXT);
     if (NULL != data)
     {
         return data->data;
@@ -352,19 +373,34 @@ static dnode_t * init_node(void * data)
 }
 
 /*!
- * @brief Internal function that returns the next iterable node
+ * @brief Internal function that performs the actual iteration based on the
+ * iter_fetch_t direction. The function returns the current dnode_t which
+ * represents the "next node". But the function actually sets the next
+ * iteration value So this function is one step ahead of the action requried.
+ *
  * @param dlist_iter
- * @return
+ * @return Returns the dnode_t object that is on the dlist. This
  */
-static dnode_t * get_iter_next(dlist_iter_t * dlist_iter)
+static dnode_t * get_iter_next(dlist_iter_t * dlist_iter, iter_fetch_t fetch)
 {
     if (NULL == dlist_iter->node)
     {
         return NULL;
     }
+    // Get the current node that is being tracked
     dnode_t * node = dlist_iter->node;
-    dlist_iter->node = dlist_iter->node->next;
-    dlist_iter->index++;
+
+    // Fetch the next one based on the fetch value
+    if (NEXT == fetch)
+    {
+        dlist_iter->node = dlist_iter->node->next;
+        dlist_iter->index++;
+    }
+    else
+    {
+        dlist_iter->node = dlist_iter->node->prev;
+        dlist_iter->index--;
+    }
     return node;
 
 }
@@ -389,7 +425,7 @@ void * dlist_get_by_index(dlist_t * dlist, int index)
 
     while (index != iter->index)
     {
-        node = get_iter_next(iter);
+        node = get_iter_next(iter, NEXT);
     }
 
     dlist_destroy_iter(iter);
@@ -414,7 +450,7 @@ static dnode_t * get_value(dlist_t * dlist, void * data)
     dlist_iter_t * iter = dlist_get_iterable(dlist);
     dnode_t * node;
     dlist_match_t found = DLIST_MISS_MATCH;
-    while (NULL != (node = get_iter_next(iter)))
+    while (NULL != (node = get_iter_next(iter, NEXT)))
     {
         if (DLIST_MATCH == dlist->compare_func(node->data, data))
         {
