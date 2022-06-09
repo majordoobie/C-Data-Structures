@@ -70,7 +70,6 @@ TEST(dlist_test, IterableTest)
     {
         printf("%s", node);
         node = (char*)dlist_get_iter_next(iter);
-
     }
     dlist_destroy_iter(iter);
     dlist_destroy_free(dlist, free_payload);

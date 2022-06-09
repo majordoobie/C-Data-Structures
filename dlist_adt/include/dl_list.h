@@ -4,6 +4,7 @@
 extern "C" {
 #endif // __cplusplus
 #include <stdbool.h>
+#include <stdint-gcc.h>
 typedef enum
 {
     DLIST_MATCH = 0,
@@ -38,7 +39,9 @@ dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data);
 dlist_iter_t * dlist_get_iterable(dlist_t * dlist);
 void * dlist_get_iter_next(dlist_iter_t * dlist_iter);
 void * dlist_get_iter_prev(dlist_iter_t * dlist_iter);
-void * dlist_get_iter_index(dlist_iter_t * dlist_iter);
+void dlist_set_iter_head(dlist_iter_t * dlist_iter);
+void dlist_set_iter_tail(dlist_iter_t * dlist_iter);
+int32_t dlist_get_iter_index(dlist_iter_t * dlist_iter);
 void dlist_destroy_iter(dlist_iter_t * dlist_iter);
 
 

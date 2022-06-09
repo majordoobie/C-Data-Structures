@@ -46,13 +46,13 @@ typedef struct dlist_iter_t
 {
     dlist_t * dlist;
     dnode_t * node;
-    int index;
+    int32_t index;
     size_t length;
 } dlist_iter_t;
 
 static dnode_t * init_node(void * data);
 static valid_ptr_t verify_alloc(void * ptr);
-static dnode_t * get_iter_next(dlist_iter_t * dlist_iter, iter_fetch_t fetch);
+static dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch);
 static dnode_t * get_value(dlist_t * dlist, void * data);
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
 static void * remove_node(dlist_t * dlist, dnode_t * node);
@@ -159,9 +159,47 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist)
     return iter;
 }
 
+/*!
+ * @brief Reset the iterable to start with the head of the dlist
+ * @param iter
+ */
+void dlist_set_iter_head(dlist_iter_t * iter)
+{
+    assert(iter);
+    iter->node = iter->dlist->head;
+    iter->index = 0;
+}
+
+/*!
+ * @brief Reset the iterable to start with the tail of the dlist
+ * @param iter
+ */
+void dlist_set_iter_tail(dlist_iter_t * iter)
+{
+    assert(iter);
+    iter->node = iter->dlist->tail;
+    // length can never be less than 0. If length is already 0 then that
+    // means that the tail IS the head. So we set the index to 0 here
+    if (0 == iter->length)
+    {
+        iter->index = 0;
+    }
+    else
+    {
+        iter->index = (int32_t)iter->length - 1;
+    }
+}
+
+/*!
+ * @brief Iterates over the iterable and returns the prev node. A NULL is
+ * returned if the next node is NULL
+ * @param dlist_iter
+ * @return Returns the data pointer for the node. If the end of the linked
+ * list is reached, then a NULL is returned.
+ */
 void * dlist_get_iter_prev(dlist_iter_t * dlist_iter)
 {
-    dnode_t * data = get_iter_next(dlist_iter, NEXT);
+    dnode_t * data = iterate(dlist_iter, PREV);
     if (NULL != data)
     {
         return data->data;
@@ -169,10 +207,7 @@ void * dlist_get_iter_prev(dlist_iter_t * dlist_iter)
     return NULL;
 
 }
-void * dlist_get_iter_index(dlist_iter_t * dlist_iter)
-{
-   ;
-}
+
 /*!
  * @brief Iterates over the iterable and returns the next node. A NULL is
  * returned if the next node is NULL
@@ -182,12 +217,22 @@ void * dlist_get_iter_index(dlist_iter_t * dlist_iter)
  */
 void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
 {
-    dnode_t * data = get_iter_next(dlist_iter, NEXT);
+    dnode_t * data = iterate(dlist_iter, NEXT);
     if (NULL != data)
     {
         return data->data;
     }
     return NULL;
+}
+
+/*!
+ * @brief Return the current index of the iter object
+ * @param iter
+ * @return int32_t index of the iterable
+ */
+int32_t dlist_get_iter_index(dlist_iter_t * iter)
+{
+    return iter->index;
 }
 
 /*!
@@ -381,35 +426,55 @@ static dnode_t * init_node(void * data)
 
 /*!
  * @brief Internal function that performs the actual iteration based on the
- * iter_fetch_t direction. The function returns the current dnode_t which
- * represents the "next node". But the function actually sets the next
- * iteration value So this function is one step ahead of the action requried.
+ * direction in iter_fetch_t. The function sets the initial node value when
+ * the index is -1. After that the next dnode_t value is set in the
+ * dlist_iter_t object and that object is then returned to the caller.
  *
- * @param dlist_iter
- * @return Returns the dnode_t object that is on the dlist. This
+ * @param iter
+ * @return Returns the dnode_t object that is on the dlist. This could be
+ * NULL if the next node in the list is NULL.
  */
-static dnode_t * get_iter_next(dlist_iter_t * dlist_iter, iter_fetch_t fetch)
+static dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch)
 {
-    if (NULL == dlist_iter->node)
+    // Check to see if this is the first call to the iter next. The init
+    // function sets the index to -1 when it is a new object. This is the
+    // only time that this index is set to -1
+    if (-1 == iter->index)
+    {
+        if (NEXT == fetch)
+        {
+            iter->node = iter->dlist->head;
+            iter->index++;
+        }
+        else
+        {
+            iter->node = iter->dlist->tail;
+            iter->index--;
+        }
+    }
+    // If this is not the initial, check if the iter node is already set to
+    // NULL. If it is, then just return
+    else if (NULL == iter->node)
     {
         return NULL;
     }
-    // Get the current node that is being tracked
-    dnode_t * node = dlist_iter->node;
 
-    // Fetch the next one based on the fetch value
-    if (NEXT == fetch)
-    {
-        dlist_iter->node = dlist_iter->node->next;
-        dlist_iter->index++;
-    }
+    // otherwise, this is not a new object so fetch the next value in the
+    // sequence
     else
     {
-        dlist_iter->node = dlist_iter->node->prev;
-        dlist_iter->index--;
+        if (NEXT == fetch)
+        {
+            iter->node = iter->node->next;
+            iter->index++;
+        }
+        else
+        {
+            iter->node = iter->node->prev;
+            iter->index--;
+        }
     }
-    return node;
-
+    return iter->node;
 }
 
 /*!
@@ -432,7 +497,7 @@ void * dlist_get_by_index(dlist_t * dlist, int index)
 
     while (index != iter->index)
     {
-        node = get_iter_next(iter, NEXT);
+        node = iterate(iter, NEXT);
     }
 
     dlist_destroy_iter(iter);
@@ -457,7 +522,7 @@ static dnode_t * get_value(dlist_t * dlist, void * data)
     dlist_iter_t * iter = dlist_get_iterable(dlist);
     dnode_t * node;
     dlist_match_t found = DLIST_MISS_MATCH;
-    while (NULL != (node = get_iter_next(iter, NEXT)))
+    while (NULL != (node = iterate(iter, NEXT)))
     {
         if (DLIST_MATCH == dlist->compare_func(node->data, data))
         {
