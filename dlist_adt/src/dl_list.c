@@ -102,11 +102,11 @@ static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right)
     // When descending, we only want to swap when the compare is LT
     if (DESCENDING == sort->direction)
     {
-        return (DLIST_GT == compare) ? false : true;
+        return (DLIST_LT == compare) ? false : true;
     }
     else
     {
-        return (DLIST_LT == compare) ? false : true;
+        return (DLIST_GT == compare) ? false : true;
     }
 }
 /*!
@@ -131,25 +131,27 @@ static dnode_t * partition(quick_sort_t * sort, dnode_t * left, dnode_t * right)
         {
             // If a swap is to be called, increment the partition_node by one
             partition_node = (NULL == partition_node) ? left : partition_node->next;
-            swap_dnodes(partition_node, pivot);
+            swap_dnodes(partition_node, index);
         }
     }
     // Finally perform a final swap after the completed iteration
     partition_node = (NULL == partition_node) ? left : partition_node->next;
     swap_dnodes(partition_node, right);
+    return partition_node;
 }
 static void swap_dnodes(dnode_t * left, dnode_t * right)
 {
-    void * temp_data = left->data;
+    void * left_data = left->data;
     left->data = right->data;
-    right->data = temp_data;
+    right->data = left_data;
 }
 
 static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right)
 {
-    if (right != NULL && left != right && left != right->next)
+    if (right != NULL && left != NULL && left != right && left != right->next)
     {
         dnode_t * partition_node = partition(sort, left, right);
+
         quick_sort(sort, left, partition_node->prev);
         quick_sort(sort, partition_node->next, right);
     }
