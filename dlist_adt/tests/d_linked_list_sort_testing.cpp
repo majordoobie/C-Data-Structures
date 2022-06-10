@@ -57,12 +57,38 @@ class DListTestSortFixture : public ::testing::Test
 };
 
 
+// Test the ability to quick sort the double linked list
 TEST_F(DListTestSortFixture, SortAscending)
 {
     // sort the test array
     std::sort(this->test_array.begin(), this->test_array.end());
 
     dlist_quick_sort(this->dlist, ASCENDING, compare_int_payloads);
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
+
+    int count = 0;
+    int node = *(int *)dlist_get_iter_value(iter);
+
+    while (count < (int)this->test_array.size() - 1)
+    {
+        const int& target = this->test_array.at(count);
+        EXPECT_EQ(node, target);
+        node = *(int*)dlist_get_iter_next(iter);
+        count++;
+    }
+
+    dlist_destroy_iter(iter);
+}
+
+
+// Test ability to quick sort the double linked list
+TEST_F(DListTestSortFixture, SortDescending)
+{
+    // sort the test array
+    std::sort(this->test_array.begin(), this->test_array.end());
+    sort(this->test_array.begin(), this->test_array.end(), std::greater<int>());
+
+    dlist_quick_sort(this->dlist, DESCENDING, compare_int_payloads);
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
 
     int count = 0;

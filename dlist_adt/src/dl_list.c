@@ -74,89 +74,21 @@ TEST int32_t get_inverse(int32_t value);
 static dnode_t * get_at_index(dlist_t * dlist, int32_t index);
 
 static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right);
-
 static void swap_dnodes(dnode_t * left, dnode_t * right);
+static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right);
+
+
 /*!
- * @brief Perform a comparison between the two nodes using the function
- * pointer passed in by the caller. Using the result, and the sort direction,
- * return a bool indicating if the values should be swapped by the sort
- * function.
+ * @brief Perform a quick sort on the double linked list. The quick sort
+ * relies on the comparison function passed. The sort does not create any new
+ * data structures, the dnode_t data pointers are updated in place. The
+ * algorithm sorts in O(n log(n)) in most cases unless the list is already
+ * sorted in which case the algorithm will operate in O(n^2)
  *
- * When DESCENDING we only want to return true when the comparison is LT
- * (left is LT right) or EQ.
- *
- * When ASCENDING we only want to return true when the comparison is GT (left
- * is GT right) or EQ.
- *
- * @param sort
- * @param left
- * @param right
- * @return Bool indicating if the values should be swapped based on the
- * comparison pointer passed in
+ * @param dlist
+ * @param direction
+ * @param compare_func
  */
-static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right)
-{
-    // perform a comparison using the function passed in
-    dlist_compare_t compare = sort->compare_func(left->data, right->data);
-
-    // When descending, we only want to swap when the compare is LT
-    if (DESCENDING == sort->direction)
-    {
-        return (DLIST_LT == compare) ? false : true;
-    }
-    else
-    {
-        return (DLIST_GT == compare) ? false : true;
-    }
-}
-/*!
- * @brief Perform the partition algorithm by iterating from the left node up
- * to the pivot (right) and swap data pointers based on the sort->direction.
- *
- * @param sort
- * @param left
- * @param right
- * @return Return the partition pointer which is guaranteed to be sorted.
- */
-static dnode_t * partition(quick_sort_t * sort, dnode_t * left, dnode_t * right)
-{
-    dnode_t * pivot = right;
-    dnode_t * partition_node = left->prev;
-
-    // Index is the value that is iterating over the list upto the pivot
-    for (dnode_t * index = left; index != pivot; index = index->next)
-    {
-        // check if the values should be swapped based on ascending order
-        if (do_swap(sort, index, pivot))
-        {
-            // If a swap is to be called, increment the partition_node by one
-            partition_node = (NULL == partition_node) ? left : partition_node->next;
-            swap_dnodes(partition_node, index);
-        }
-    }
-    // Finally perform a final swap after the completed iteration
-    partition_node = (NULL == partition_node) ? left : partition_node->next;
-    swap_dnodes(partition_node, right);
-    return partition_node;
-}
-static void swap_dnodes(dnode_t * left, dnode_t * right)
-{
-    void * left_data = left->data;
-    left->data = right->data;
-    right->data = left_data;
-}
-
-static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right)
-{
-    if (right != NULL && left != NULL && left != right && left != right->next)
-    {
-        dnode_t * partition_node = partition(sort, left, right);
-
-        quick_sort(sort, left, partition_node->prev);
-        quick_sort(sort, partition_node->next, right);
-    }
-}
-
 void dlist_quick_sort(dlist_t * dlist,
                       sort_direction_t direction,
                       dlist_compare_t (* compare_func)(void *, void *))
@@ -827,4 +759,101 @@ static dnode_t * get_at_index(dlist_t * dlist, int32_t index)
     dnode_t * node = iter->node;
     dlist_destroy_iter(iter);
     return node;
+}
+
+/*
+ * Sort functions
+ */
+/*!
+ * @brief Perform a comparison between the two nodes using the function
+ * pointer passed in by the caller. Using the result, and the sort direction,
+ * return a bool indicating if the values should be swapped by the sort
+ * function.
+ *
+ * When DESCENDING we only want to return true when the comparison is LT
+ * (left is LT right) or EQ.
+ *
+ * When ASCENDING we only want to return true when the comparison is GT (left
+ * is GT right) or EQ.
+ *
+ * @param sort
+ * @param left
+ * @param right
+ * @return Bool indicating if the values should be swapped based on the
+ * comparison pointer passed in
+ */
+static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right)
+{
+    // perform a comparison using the function passed in
+    dlist_compare_t compare = sort->compare_func(left->data, right->data);
+
+    // When descending, we only want to swap when the compare is LT
+    if (DESCENDING == sort->direction)
+    {
+        return (DLIST_LT == compare) ? false : true;
+    }
+    else
+    {
+        return (DLIST_GT == compare) ? false : true;
+    }
+}
+/*!
+ * @brief Perform the partition algorithm by iterating from the left node up
+ * to the pivot (right) and swap data pointers based on the sort->direction.
+ *
+ * @param sort
+ * @param left
+ * @param right
+ * @return Return the partition pointer which is guaranteed to be sorted.
+ */
+static dnode_t * partition(quick_sort_t * sort, dnode_t * left, dnode_t * right)
+{
+    dnode_t * pivot = right;
+    dnode_t * partition_node = left->prev;
+
+    // Index is the value that is iterating over the list upto the pivot
+    for (dnode_t * index = left; index != pivot; index = index->next)
+    {
+        // check if the values should be swapped based on ascending order
+        if (do_swap(sort, index, pivot))
+        {
+            // If a swap is to be called, increment the partition_node by one
+            partition_node = (NULL == partition_node) ? left : partition_node->next;
+            swap_dnodes(partition_node, index);
+        }
+    }
+    // Finally perform a final swap after the completed iteration
+    partition_node = (NULL == partition_node) ? left : partition_node->next;
+    swap_dnodes(partition_node, right);
+    return partition_node;
+}
+
+/*!
+ * @brief Swap two dnode_t data pointers
+ * @param left
+ * @param right
+ */
+static void swap_dnodes(dnode_t * left, dnode_t * right)
+{
+    void * left_data = left->data;
+    left->data = right->data;
+    right->data = left_data;
+}
+
+
+/*!
+ * @brief Recursive algorithm to sort the linked list.
+ * @param sort
+ * @param left
+ * @param right
+ */
+static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right)
+{
+    if (right != NULL && left != right && left != right->next)
+    {
+        dnode_t * partition_node = partition(sort, left, right);
+
+        quick_sort(sort, left, partition_node->prev);
+        quick_sort(sort, partition_node->next, right);
+    }
 }
