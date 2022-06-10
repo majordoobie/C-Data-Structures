@@ -57,6 +57,12 @@ typedef struct dlist_iter_t
     size_t length;
 } dlist_iter_t;
 
+typedef struct
+{
+    sort_direction_t direction;
+    dlist_compare_t (* compare_func)(void *, void *);
+} quick_sort_t;
+
 static dnode_t * init_node(void * data);
 static valid_ptr_t verify_alloc(void * ptr);
 static dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch);
@@ -65,15 +71,116 @@ static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_
 static void * remove_node(dlist_t * dlist, dnode_t * node);
 static void add_node(dlist_t * dlist, void * data, dlist_settings_t add_mode);
 TEST int32_t get_inverse(int32_t value);
+static dnode_t * get_at_index(dlist_t * dlist, int32_t index);
 
+static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 
-void dlist_quick_sort(dlist_t * dlist, sort_direction_t direction)
+static void swap_dnodes(dnode_t * left, dnode_t * right);
+/*!
+ * @brief Perform a comparison between the two nodes using the function
+ * pointer passed in by the caller. Using the result, and the sort direction,
+ * return a bool indicating if the values should be swapped by the sort
+ * function.
+ *
+ * When DESCENDING we only want to return true when the comparison is LT
+ * (left is LT right) or EQ.
+ *
+ * When ASCENDING we only want to return true when the comparison is GT (left
+ * is GT right) or EQ.
+ *
+ * @param sort
+ * @param left
+ * @param right
+ * @return Bool indicating if the values should be swapped based on the
+ * comparison pointer passed in
+ */
+static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right)
 {
-    // Pick a middle pivot to start so that we do not rely on using the tail
-    size_t middle_index = dlist->length / 2;
-    dnode_t * node =
+    // perform a comparison using the function passed in
+    dlist_compare_t compare = sort->compare_func(left->data, right->data);
 
+    // When descending, we only want to swap when the compare is LT
+    if (DESCENDING == sort->direction)
+    {
+        return (DLIST_GT == compare) ? false : true;
+    }
+    else
+    {
+        return (DLIST_LT == compare) ? false : true;
+    }
+}
+/*!
+ * @brief Perform the partition algorithm by iterating from the left node up
+ * to the pivot (right) and swap data pointers based on the sort->direction.
+ *
+ * @param sort
+ * @param left
+ * @param right
+ * @return Return the partition pointer which is guaranteed to be sorted.
+ */
+static dnode_t * partition(quick_sort_t * sort, dnode_t * left, dnode_t * right)
+{
+    dnode_t * pivot = right;
+    dnode_t * partition_node = left->prev;
 
+    // Index is the value that is iterating over the list upto the pivot
+    for (dnode_t * index = left; index != pivot; index = index->next)
+    {
+        // check if the values should be swapped based on ascending order
+        if (do_swap(sort, index, pivot))
+        {
+            // If a swap is to be called, increment the partition_node by one
+            partition_node = (NULL == partition_node) ? left : partition_node->next;
+            swap_dnodes(partition_node, pivot);
+        }
+    }
+    // Finally perform a final swap after the completed iteration
+    partition_node = (NULL == partition_node) ? left : partition_node->next;
+    swap_dnodes(partition_node, right);
+}
+static void swap_dnodes(dnode_t * left, dnode_t * right)
+{
+    void * temp_data = left->data;
+    left->data = right->data;
+    right->data = temp_data;
+}
+
+static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right)
+{
+    if (right != NULL && left != right && left != right->next)
+    {
+        dnode_t * partition_node = partition(sort, left, right);
+        quick_sort(sort, left, partition_node->prev);
+        quick_sort(sort, partition_node->next, right);
+    }
+}
+
+void dlist_quick_sort(dlist_t * dlist,
+                      sort_direction_t direction,
+                      dlist_compare_t (* compare_func)(void *, void *))
+{
+    // Return if the is only one/none items in the linked list
+    if (2 > dlist->length)
+    {
+        return;
+    }
+
+    // Create the struct that will make it easier to manage the settings
+    quick_sort_t * sort = (quick_sort_t *)malloc(sizeof(quick_sort_t));
+    if (INVALID_PTR == verify_alloc(sort))
+    {
+        return;
+    }
+
+    // Initialize the sort structure with the comparison function and direction
+    * sort = (quick_sort_t) {
+        .compare_func = compare_func,
+        .direction    = direction
+    };
+    quick_sort(sort, dlist->head, dlist->tail);
+
+    // free the sort structure
+    free(sort);
 }
 
 /*!
@@ -418,7 +525,7 @@ dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
 /*!
  * @brief Check if allocation is valid
  * @param ptr Any pointer
- * @return valid_ptr_t
+ * @return valid_ptr_t : VALID_PTR or INVALID_PTR
  */
 static valid_ptr_t verify_alloc(void * ptr)
 {

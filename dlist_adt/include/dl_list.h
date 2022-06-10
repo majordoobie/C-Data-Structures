@@ -10,11 +10,20 @@ typedef enum
     DLIST_MATCH = 0,
     DLIST_MISS_MATCH = 1
 } dlist_match_t;
+
+typedef enum
+{
+    DLIST_LT,
+    DLIST_GT,
+    DLIST_EQ
+} dlist_compare_t;
+
 typedef enum
 {
     ITER_HEAD,
     ITER_TAIL
 } iter_start_t;
+
 typedef enum
 {
     ASCENDING,
@@ -59,7 +68,9 @@ int32_t dlist_get_iter_index(dlist_iter_t * dlist_iter);
 void dlist_destroy_iter(dlist_iter_t * dlist_iter);
 
 // Sorting
-void dlist_quick_sort(dlist_t * dlist, sort_direction_t direction);
+void dlist_quick_sort(dlist_t * dlist,
+                      sort_direction_t direction,
+                      dlist_compare_t (* compare_func)(void *, void *));
 
 #ifdef __cplusplus
 }
