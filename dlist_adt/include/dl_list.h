@@ -15,6 +15,12 @@ typedef enum
     ITER_HEAD,
     ITER_TAIL
 } iter_start_t;
+typedef enum
+{
+    ASCENDING,
+    DESCENDING
+} sort_direction_t;
+
 
 
 
@@ -52,6 +58,8 @@ void dlist_set_iter_tail(dlist_iter_t * dlist_iter);
 int32_t dlist_get_iter_index(dlist_iter_t * dlist_iter);
 void dlist_destroy_iter(dlist_iter_t * dlist_iter);
 
+// Sorting
+void dlist_quick_sort(dlist_t * dlist, sort_direction_t direction);
 
 #ifdef __cplusplus
 }
