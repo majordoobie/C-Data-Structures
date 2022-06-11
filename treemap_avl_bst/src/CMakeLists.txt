@@ -13,3 +13,7 @@ target_link_libraries(
         avl_map
         bst
 )
+
+# Add base flags
+include(BaseCompilerFlags)
+AddFlags(avl_map)

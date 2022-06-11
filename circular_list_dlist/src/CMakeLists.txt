@@ -11,3 +11,7 @@ target_link_libraries(
         circular_list
         dl_list
 )
+
+# Add base flags
+include(BaseCompilerFlags)
+AddFlags(circular_list)

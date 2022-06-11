@@ -596,16 +596,17 @@ static void swap(heap_t * heap, size_t child_index, size_t parent_index)
     else
     {
         // copy node to temp var
-        uint8_t temp[heap->node_size];
+        uint8_t * temp = calloc(1, sizeof(uint8_t) * heap->node_size);
         uint8_t * child_data = get_slice(heap, child_index);
         uint8_t * parent_data = get_slice(heap, parent_index);
 
         // copy the child data to temp, then replace it with the parent
-        memcpy(& temp, child_data, heap->node_size);
+        memcpy(temp, child_data, heap->node_size);
         memcpy(child_data, parent_data, heap->node_size);
 
         // replace parent data with the child data
-        memcpy(parent_data, & temp, heap->node_size);
+        memcpy(parent_data, temp, heap->node_size);
+        free(temp);
     }
 }
 

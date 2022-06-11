@@ -7,10 +7,9 @@ add_executable(
 
 target_link_libraries(
         avl_tree_map_testing_gtest
+        PUBLIC
         avl_map
-        gtest
-        gtest_main
 )
 
-include(GoogleTest)
-gtest_discover_tests(avl_tree_map_testing_gtest)
+include(GTestConfig)
+AddTest(avl_tree_map_testing_gtest)

@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.20)
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 project(binary_search_tree C CXX)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)

@@ -5,10 +5,9 @@ add_executable(
 
 target_link_libraries(
         stack_testing_gtest
+        PUBLIC
         stack
-        gtest
-        gtest_main
 )
 
-include(GoogleTest)
-gtest_discover_tests(stack_testing_gtest)
+include(GTestConfig)
+AddTest(stack_testing_gtest)

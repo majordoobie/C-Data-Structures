@@ -5,10 +5,9 @@ add_executable(
 
 target_link_libraries(
         circular_list_gtest
+        PUBLIC
         circular_list
-        gtest
-        gtest_main
 )
 
-include(GoogleTest)
-gtest_discover_tests(circular_list_gtest)
+include(GTestConfig)
+AddTest(circular_list_gtest)

@@ -5,10 +5,9 @@ add_executable(
 
 target_link_libraries(
         heap_testing_gtest
+        PUBLIC
         heap
-        gtest
-        gtest_main
 )
 
-include(GoogleTest)
-gtest_discover_tests(heap_testing_gtest)
+include(GTestConfig)
+AddTest(heap_testing_gtest)

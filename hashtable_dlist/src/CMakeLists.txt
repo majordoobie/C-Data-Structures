@@ -6,3 +6,7 @@ target_include_directories(
         PUBLIC
         ${PROJECT_SOURCE_DIR}/include
 )
+
+# Add base flags
+include(BaseCompilerFlags)
+AddFlags(hashtable)

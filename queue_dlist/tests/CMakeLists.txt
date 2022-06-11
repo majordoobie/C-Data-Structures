@@ -5,10 +5,9 @@ add_executable(
 
 target_link_libraries(
         queue_testing_gtest
+        PUBLIC
         dl_queue
-        gtest
-        gtest_main
 )
 
-include(GoogleTest)
-gtest_discover_tests(queue_testing_gtest)
+include(GTestConfig)
+AddTest(queue_testing_gtest)

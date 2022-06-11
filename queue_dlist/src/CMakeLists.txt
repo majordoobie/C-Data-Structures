@@ -11,3 +11,7 @@ target_link_libraries(
         dl_queue
         dl_list
 )
+
+# Add base flags
+include(BaseCompilerFlags)
+AddFlags(dl_queue)
