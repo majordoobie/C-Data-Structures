@@ -15,7 +15,10 @@ extern "C"{
  Destroying a circularly linked list
      */
 
-void clist_init();
+#include <stdint.h>
+typedef struct clist_t clist_t;
+clist_t * clist_init(uint32_t list_size);
+
 
 #ifdef __cplusplus
 };
