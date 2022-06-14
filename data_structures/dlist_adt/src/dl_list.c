@@ -132,12 +132,17 @@ bool dlist_is_empty(dlist_t * dlist)
  * @brief Initialize the dlist with a function to perform the comparisons
  *
  * @param compare_func
- * @return
+ * @return Null if INVALID_PTR is returned from init or dlist_t pointer
  */
 dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
 {
     dlist_t * dlist = (dlist_t *)calloc(1, sizeof(dlist_t));
-    verify_alloc(dlist);
+    valid_ptr_t result = verify_alloc(dlist);
+    if (result == INVALID_PTR)
+    {
+        return NULL;
+    }
+
     dlist->compare_func = compare_func;
     return dlist;
 }

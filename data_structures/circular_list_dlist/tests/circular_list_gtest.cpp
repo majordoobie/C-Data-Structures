@@ -3,5 +3,5 @@
 
 TEST(TestFunctioning, InitTest)
 {
-    clist_init();
+    clist_init(4);
 }
