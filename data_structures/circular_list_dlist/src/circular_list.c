@@ -87,7 +87,7 @@ int32_t clist_get_length(clist_t * clist)
     return dlist_length(clist->dlist);
 }
 
-void clist_insert(clist_t * clist, void * node, int32_t index, clist_location_t insert_at)
+clist_result_t clist_insert(clist_t * clist, void * node, int32_t index, clist_location_t insert_at)
 {
     if (HEAD == insert_at)
     {
@@ -99,7 +99,7 @@ void clist_insert(clist_t * clist, void * node, int32_t index, clist_location_t 
     }
     else
     {
-
+        dlist_insert(clist->dlist, node, index);
     }
 
 }

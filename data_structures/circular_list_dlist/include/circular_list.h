@@ -40,6 +40,13 @@ typedef enum
     CLIST_EQ = 2
 } clist_compare_t;
 
+typedef enum
+{
+    C_SUCCESS,
+    C_FAIL
+} clist_result_t;
+
+
 
 
 clist_t * clist_init(uint32_t list_size, clist_match_t (* compare_func)(void *, void *), void (* free_func)(void *));
@@ -50,7 +57,7 @@ void * clist_get_next(clist_t * clist);
 void * clist_find(clist_t * clist, void * node);
 void * clist_remove(clist_t * clist, void * node);
 void clist_quick_sort(clist_t * clist, sort_order_t order);
-void clist_insert(clist_t * clist, void * node, int32_t index, clist_location_t insert_at);
+clist_result_t clist_insert(clist_t * clist, void * node, int32_t index, clist_location_t insert_at);
 
 
 #ifdef __cplusplus
