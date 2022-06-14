@@ -9,8 +9,8 @@ extern "C"{
 typedef struct clist_t clist_t;
 typedef enum
 {
-    ASCENDING,
-    DESCENDING
+    C_ASCENDING,
+    C_DESCENDING
 } sort_order_t;
 
 typedef enum
@@ -33,9 +33,18 @@ typedef enum
     FREE_NODES_FALSE
 } clist_delete_t;
 
+typedef enum
+{
+    CLIST_LT = 0,
+    CLIST_GT = 1,
+    CLIST_EQ = 2
+} clist_compare_t;
+
+
 
 clist_t * clist_init(uint32_t list_size, clist_match_t (* compare_func)(void *, void *), void (* free_func)(void *));
-clist_t * clist_destroy(clist_t * clist, clist_delete_t remove_nodes);
+void clist_destroy(clist_t * clist, clist_delete_t remove_nodes);
+int32_t clist_get_length(clist_t * clist);
 void * clist_get_value(clist_t * clist);
 void * clist_get_next(clist_t * clist);
 void * clist_find(clist_t * clist, void * node);

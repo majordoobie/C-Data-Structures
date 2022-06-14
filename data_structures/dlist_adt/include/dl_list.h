@@ -5,6 +5,7 @@ extern "C" {
 #endif // __cplusplus
 #include <stdbool.h>
 #include <stdint-gcc.h>
+#include <stddef.h>
 typedef enum
 {
     DLIST_MATCH = 0,
@@ -13,9 +14,9 @@ typedef enum
 
 typedef enum
 {
-    DLIST_LT,
-    DLIST_GT,
-    DLIST_EQ
+    DLIST_LT = 0,
+    DLIST_GT = 1,
+    DLIST_EQ = 2
 } dlist_compare_t;
 
 typedef enum

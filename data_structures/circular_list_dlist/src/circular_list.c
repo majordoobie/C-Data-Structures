@@ -12,6 +12,14 @@ typedef struct clist_t
     void (* free_func)(void *);
 } clist_t;
 
+/*!
+ * @brief Initialize the circular linked list with a size limit. If any errors
+ * occur then a NULL is returned otherwise a pointer to the clist is retured.
+ * @param list_size
+ * @param compare_func
+ * @param free_func
+ * @return NULL or error or clist_t pointer
+ */
 clist_t * clist_init(uint32_t list_size, clist_match_t (* compare_func)(void *, void *), void (* free_func)(void *))
 {
     dlist_t * dlist = dlist_init((dlist_match_t (*)(void *, void *))compare_func);
@@ -53,4 +61,33 @@ clist_t * clist_init(uint32_t list_size, clist_match_t (* compare_func)(void *, 
     return clist;
 }
 
-clist_t * clist_destroy(clist_t * clist, clist_delete_t remove_nodes);
+/*!
+ * @brief Free the circular linked list with the option of freeing all the nodes
+ * using the free function pointer.
+ * @param clist
+ * @param remove_nodes
+ * @return
+ */
+void clist_destroy(clist_t * clist, clist_delete_t remove_nodes)
+{
+    if (FREE_NODES_TRUE == remove_nodes)
+    {
+        dlist_destroy_free(clist->dlist, clist->free_func);
+    }
+    else
+    {
+        dlist_destroy(clist->dlist);
+    }
+
+    free(clist);
+}
+
+int32_t clist_get_length(clist_t * clist)
+{
+    return dlist_length(clist->dlist);
+}
+
+void clist_insert(clist_t * clist, void * node, int32_t index, clist_location_t insert_at)
+{
+
+}
