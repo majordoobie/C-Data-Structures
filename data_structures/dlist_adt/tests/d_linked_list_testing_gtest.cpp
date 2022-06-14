@@ -345,3 +345,23 @@ TEST_F(DListTestFixture, TestFetchByIndex)
     EXPECT_EQ(std::strcmp(target_val.c_str(), (const char *)data), 0);
 }
 
+
+TEST_F(DListTestFixture, TestInsertAt)
+{
+    // get a middle index
+    int32_t middle_index = (int32_t)this->test_vector.size() / 2;
+    void * middle_node = dlist_get_by_index(this->dlist, middle_index);
+    dlist_remove_value(this->dlist, middle_node);
+
+    // Now try to insert at the same location
+    dlist_insert(this->dlist, middle_node, middle_index);
+
+    // reset back to head
+    char * node = (char * )dlist_get_iter_value(this->iter);
+    for (std::string& val: this->test_vector)
+    {
+        EXPECT_EQ(std::strcmp(val.c_str(), node), 0) << val.c_str() << " " << node;
+        node = (char *)dlist_get_iter_next(this->iter);
+    }
+
+}

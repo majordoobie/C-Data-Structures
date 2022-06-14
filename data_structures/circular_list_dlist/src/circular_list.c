@@ -89,5 +89,17 @@ int32_t clist_get_length(clist_t * clist)
 
 void clist_insert(clist_t * clist, void * node, int32_t index, clist_location_t insert_at)
 {
+    if (HEAD == insert_at)
+    {
+        dlist_prepend(clist->dlist, node);
+    }
+    else if (TAIL == insert_at)
+    {
+        dlist_append(clist->dlist, node);
+    }
+    else
+    {
+
+    }
 
 }

@@ -31,6 +31,12 @@ typedef enum
     DESCENDING
 } sort_direction_t;
 
+typedef enum
+{
+    DLIST_SUCC,
+    DLIST_FAIL
+} dlist_result_t;
+
 
 
 
@@ -43,8 +49,10 @@ void dlist_destroy(dlist_t * dlist);
 void dlist_destroy_free(dlist_t * dlist, void (* free_func)(void *));
 
 // inserting methods
-void dlist_append(dlist_t * dlist, void * data);
-void dlist_prepend(dlist_t * dlist, void * data);
+dlist_result_t dlist_append(dlist_t * dlist, void * data);
+dlist_result_t dlist_prepend(dlist_t * dlist, void * data);
+dlist_result_t dlist_insert(dlist_t * dlist, void * data, int32_t index);
+
 
 // manipulation methods
 void * dlist_pop_tail(dlist_t * dlist);

@@ -28,7 +28,8 @@ typedef enum
     FREE_NODES,
     NO_FREE_NODES,
     APPEND,
-    PREPEND
+    PREPEND,
+    INSERT_AT
 } dlist_settings_t;
 
 
@@ -69,7 +70,10 @@ static dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch);
 static dnode_t * get_value(dlist_t * dlist, void * data);
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
 static void * remove_node(dlist_t * dlist, dnode_t * node);
-static void add_node(dlist_t * dlist, void * data, dlist_settings_t add_mode);
+static dlist_result_t add_node(dlist_t * dlist,
+                               void * data,
+                               dlist_settings_t add_mode,
+                               int32_t at_index);
 TEST int32_t get_inverse(int32_t value);
 static dnode_t * get_at_index(dlist_t * dlist, int32_t index);
 
@@ -164,13 +168,13 @@ size_t dlist_length(dlist_t * dlist)
  * @param dlist
  * @param data
  */
-void dlist_prepend(dlist_t * dlist, void * data)
+dlist_result_t dlist_prepend(dlist_t * dlist, void * data)
 {
     // make sure that the pointers are valid
     assert(dlist);
     assert(data);
 
-    add_node(dlist, data, PREPEND);
+    return add_node(dlist, data, PREPEND, 0);
 }
 
 /*!
@@ -179,13 +183,22 @@ void dlist_prepend(dlist_t * dlist, void * data)
  * @param dlist
  * @param data
  */
-void dlist_append(dlist_t * dlist, void * data)
+dlist_result_t dlist_append(dlist_t * dlist, void * data)
 {
     // make sure that the pointers are valid
     assert(dlist);
     assert(data);
 
-    add_node(dlist, data, APPEND);
+    return add_node(dlist, data, APPEND, 0);
+}
+
+dlist_result_t dlist_insert(dlist_t * dlist, void * data, int32_t index)
+{
+    // make sure that the pointers are valid
+    assert(dlist);
+    assert(data);
+
+    return add_node(dlist, data, INSERT_AT, index);
 }
 
 /*!
@@ -634,7 +647,10 @@ static void * remove_node(dlist_t * dlist, dnode_t * node)
  * @param data
  * @param add_mode
  */
-static void add_node(dlist_t * dlist, void * data, dlist_settings_t add_mode)
+static dlist_result_t add_node(dlist_t * dlist,
+                               void * data,
+                               dlist_settings_t add_mode,
+                               int32_t at_index)
 {
     // make sure that the pointers are valid
     assert(dlist);
@@ -663,6 +679,20 @@ static void add_node(dlist_t * dlist, void * data, dlist_settings_t add_mode)
         node->next->prev = node;
         dlist->head = node;
     }
+    else if (INSERT_AT == add_mode)
+    {
+        dnode_t * child_node = get_at_index(dlist, at_index);
+        if (NULL == child_node)
+        {
+            return DLIST_FAIL;
+        }
+
+        dnode_t * parent_node = child_node->prev;
+        child_node->prev = node;
+        node->prev = parent_node;
+        node->next = child_node;
+        parent_node->next = node;
+    }
     else
     {
         node->prev = dlist->tail;
@@ -670,6 +700,7 @@ static void add_node(dlist_t * dlist, void * data, dlist_settings_t add_mode)
         dlist->tail = node;
     }
     dlist->length++;
+    return DLIST_SUCC;
 }
 
 /*!
