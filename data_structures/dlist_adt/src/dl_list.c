@@ -428,7 +428,7 @@ void * dlist_pop_head(dlist_t * dlist)
  * comparison function massed in.
  * @param dlist
  * @param data
- * @return
+ * @return Pointer to the node if found else NULL
  */
 void * dlist_get_by_value(dlist_t * dlist, void * data)
 {

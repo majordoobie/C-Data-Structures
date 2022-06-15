@@ -90,3 +90,19 @@ TEST_F(CListTestFixture, TestIteration)
     }
 }
 
+
+TEST_F(CListTestFixture, TestFindingNode)
+{
+    std::string node_to_find = this->words.at(this->words.size() / 2);
+    char * target_node = (char *)clist_find(this->clist, (void *)node_to_find.c_str());
+
+    EXPECT_EQ(strcmp(node_to_find.c_str(), target_node), 0);
+
+    // Now find something not present
+
+    char * new_payload = get_payload("This is a new sting not present");
+    target_node = (char *)clist_find(this->clist, new_payload);
+
+    EXPECT_EQ(target_node, nullptr);
+    free_payload(new_payload);
+}

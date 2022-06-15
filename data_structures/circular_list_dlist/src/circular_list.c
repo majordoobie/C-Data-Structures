@@ -161,3 +161,18 @@ void * clist_get_next(clist_t * clist)
     }
     return node;
 }
+
+/*!
+ * @brief Fetch the node in the circular linked list by matching with the
+ * node passed in. The search uses the comparison function passed in the
+ * find the correct node. This does not remove the node from the list, you
+ * must use the remove function for that. The remove function does both finding
+ * and removing.
+ * @param clist
+ * @param node
+ * @return Pointer to node if found else NULL
+ */
+void * clist_find(clist_t * clist, void * node)
+{
+    return dlist_get_by_value(clist->dlist, node);
+}
