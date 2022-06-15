@@ -187,5 +187,37 @@ void * clist_find(clist_t * clist, void * node)
  */
 void * clist_remove(clist_t * clist, void * node)
 {
-    return dlist_remove_value(clist->dlist, node);
+    // Get the index of the iter to see if we need to adjust the iter object
+    int32_t iter_index = dlist_get_iter_index(clist->iter);
+
+    // if iter is head, then move over
+    if (0 == iter_index)
+    {
+        dlist_get_iter_next(clist->iter);
+    }
+    // else if iter is tail, move back one
+    else if ((clist_get_length(clist) - 1) == (size_t)iter_index)
+    {
+        dlist_get_iter_prev(clist->iter);
+    }
+
+
+    void * data = dlist_remove_value(clist->dlist, node);
+
+    if (NULL == data)
+    {
+        return data;
+    }
+
+
+
+    return data;
+}
+
+void clist_quick_sort(clist_t * clist,
+                      sort_order_t order,
+                      clist_compare_t (* compare_func)(void *, void *))
+{
+    dlist_quick_sort(clist->dlist, (sort_direction_t)order,
+                     (dlist_compare_t (*)(void *, void *))compare_func);
 }

@@ -57,12 +57,13 @@ void * clist_get_value(clist_t * clist);
 void * clist_get_next(clist_t * clist);
 void * clist_find(clist_t * clist, void * node);
 void * clist_remove(clist_t * clist, void * node);
-void clist_quick_sort(clist_t * clist, sort_order_t order);
+void clist_quick_sort(clist_t * clist,
+                      sort_order_t order,
+                      clist_compare_t (* compare_func)(void *, void *));
 clist_result_t clist_insert(clist_t * clist, void * node, int32_t index, clist_location_t insert_at);
 
 
 #ifdef __cplusplus
 };
-
-#endif
+#endif // END __cplusplus
 #endif //DATA_STRUCTURES_C_CIRCULAR_LIST_DLIST_SRC_CIRCULAR_LIST_H_

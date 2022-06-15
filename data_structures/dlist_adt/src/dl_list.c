@@ -578,15 +578,16 @@ static dnode_t * get_value(dlist_t * dlist, void * data)
     }
 
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    dnode_t * node;
     dlist_match_t found = DLIST_MISS_MATCH;
-    while (NULL != (node = iterate(iter, NEXT)))
+    dnode_t * node = iter->node;
+    while (NULL != node)
     {
         if (DLIST_MATCH == dlist->compare_func(node->data, data))
         {
             found = DLIST_MATCH;
             break;
         }
+        node = iterate(iter, NEXT);
     }
 
     // destroy the iter and return the value if found

@@ -124,3 +124,29 @@ TEST_F(CListTestFixture, TestNodeRemoval)
 
     free_payload(target_node);
 }
+
+TEST_F(CListTestFixture, TestSorting)
+{
+    // First sort the test vector using the c++ sorter
+    std::sort(this->words.begin(), this->words.end());
+    clist_quick_sort(this->clist, C_ASCENDING, compare_payloads);
+
+    char * node = (char *)clist_get_value(this->clist);
+
+    for (std::string& word: this->words)
+    {
+        EXPECT_EQ(strcmp(word.c_str(), node), 0);
+        node = (char *)clist_get_next(this->clist);
+    }
+}
+
+TEST_F(CListTestFixture, TestAbilityToDeleteAll)
+{
+    char * node = (char *)clist_get_value(this->clist);
+    while (nullptr != node)
+    {
+        clist_remove(this->clist, node);
+        node = (char *)clist_get_value(this->clist);
+    }
+
+}
