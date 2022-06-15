@@ -163,35 +163,46 @@ size_t dlist_length(dlist_t * dlist)
 }
 
 /*!
- * @brief Prepend a object to the end of the linked list
- *
+ * @brief Insert a node at the head of the linked list making the new node the
+ * head node.
  * @param dlist
  * @param data
  */
-dlist_result_t dlist_prepend(dlist_t * dlist, void * data)
+void dlist_prepend(dlist_t * dlist, void * data)
 {
     // make sure that the pointers are valid
     assert(dlist);
     assert(data);
 
-    return add_node(dlist, data, PREPEND, 0);
+    add_node(dlist, data, PREPEND, 0);
 }
 
 /*!
- * @brief Append an item to the end of the linked list
- *
+ * @brief Insert a node at the tail of the linked list making the new node the
+ * tail node.
  * @param dlist
  * @param data
  */
-dlist_result_t dlist_append(dlist_t * dlist, void * data)
+void dlist_append(dlist_t * dlist, void * data)
 {
     // make sure that the pointers are valid
     assert(dlist);
     assert(data);
 
-    return add_node(dlist, data, APPEND, 0);
+    add_node(dlist, data, APPEND, 0);
 }
 
+/*!
+ * @brief Insert a node at the given index. The new node will maintain the index
+ * given in the parameter. If the index is not within the invalid range then
+ * an error is returned. A negative index is possible with -1 indicating the
+ * tail node and the absolute value of the negative length of the list minus
+ * one indicating the head node.
+ * @param dlist
+ * @param data
+ * @param index
+ * @return DLIST_SUCC if successful or DLIST_FAIL
+ */
 dlist_result_t dlist_insert(dlist_t * dlist, void * data, int32_t index)
 {
     // make sure that the pointers are valid

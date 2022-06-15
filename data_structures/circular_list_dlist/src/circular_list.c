@@ -99,7 +99,7 @@ clist_result_t clist_insert(clist_t * clist, void * node, int32_t index, clist_l
     }
     else
     {
-        dlist_insert(clist->dlist, node, index);
+        return (clist_result_t)dlist_insert(clist->dlist, node, index);
     }
-
+    return C_SUCCESS;
 }

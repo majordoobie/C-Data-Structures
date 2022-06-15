@@ -49,8 +49,8 @@ void dlist_destroy(dlist_t * dlist);
 void dlist_destroy_free(dlist_t * dlist, void (* free_func)(void *));
 
 // inserting methods
-dlist_result_t dlist_append(dlist_t * dlist, void * data);
-dlist_result_t dlist_prepend(dlist_t * dlist, void * data);
+void dlist_append(dlist_t * dlist, void * data);
+void dlist_prepend(dlist_t * dlist, void * data);
 dlist_result_t dlist_insert(dlist_t * dlist, void * data, int32_t index);
 
 
