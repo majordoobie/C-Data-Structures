@@ -176,3 +176,16 @@ void * clist_find(clist_t * clist, void * node)
 {
     return dlist_get_by_value(clist->dlist, node);
 }
+
+/*!
+ * @brief Remove a node from the linked list. If the node is not found a NULL
+ * is returned. Otherwise, the node is returned and it is up to the caller to
+ * free the node.
+ * @param clist
+ * @param node
+ * @return Pointer to node or NULL if not found
+ */
+void * clist_remove(clist_t * clist, void * node)
+{
+    return dlist_remove_value(clist->dlist, node);
+}

@@ -66,11 +66,14 @@ class CListTestFixture : public ::testing::Test
     }
 };
 
+// Test that we can init
 TEST_F(CListTestFixture, TestInit)
 {
     EXPECT_EQ(this->words.size(), clist_get_length(this->clist));
 }
 
+// Test ability to iterate over the linked list multiple times to showcase the
+// linked list wrapping
 TEST_F(CListTestFixture, TestIteration)
 {
     // Get the first value from the circular linked list
@@ -90,7 +93,7 @@ TEST_F(CListTestFixture, TestIteration)
     }
 }
 
-
+// Test ability to find a node in the circular linked list
 TEST_F(CListTestFixture, TestFindingNode)
 {
     std::string node_to_find = this->words.at(this->words.size() / 2);
@@ -105,4 +108,19 @@ TEST_F(CListTestFixture, TestFindingNode)
 
     EXPECT_EQ(target_node, nullptr);
     free_payload(new_payload);
+}
+
+TEST_F(CListTestFixture, TestNodeRemoval)
+{
+    std::string node_to_find = this->words.at(this->words.size() / 2);
+    char * target_node = (char *)clist_remove(this->clist, (void *)node_to_find.c_str());
+
+    EXPECT_EQ(strcmp(node_to_find.c_str(), target_node), 0);
+
+
+    char * is_present = (char *)clist_find(this->clist, (void *)node_to_find.c_str());
+
+    EXPECT_EQ(is_present, nullptr);
+
+    free_payload(target_node);
 }
