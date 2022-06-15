@@ -6,6 +6,7 @@ extern "C"{
 #endif
 
 #include <stdint.h>
+#include <stddef.h>
 typedef struct clist_t clist_t;
 typedef enum
 {
@@ -51,7 +52,7 @@ typedef enum
 
 clist_t * clist_init(uint32_t list_size, clist_match_t (* compare_func)(void *, void *), void (* free_func)(void *));
 void clist_destroy(clist_t * clist, clist_delete_t remove_nodes);
-int32_t clist_get_length(clist_t * clist);
+size_t clist_get_length(clist_t * clist);
 void * clist_get_value(clist_t * clist);
 void * clist_get_next(clist_t * clist);
 void * clist_find(clist_t * clist, void * node);

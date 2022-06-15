@@ -38,21 +38,11 @@ clist_t * clist_init(uint32_t list_size, clist_match_t (* compare_func)(void *, 
         dlist_destroy(dlist);
     }
 
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    if (NULL == iter)
-    {
-        fprintf(stderr, "[!] Unable to allocate memory for circular "
-                        "linked list\n");
-        dlist_destroy_iter(iter);
-        dlist_destroy(dlist);
-        free(clist);
-        return NULL;
-    }
 
     // Initialize the struct
     * clist = (clist_t) {
         .dlist          = dlist,
-        .iter           = dlist_get_iterable(dlist, ITER_HEAD),
+        .iter           = NULL,
         .clist_size     = list_size,
         .compare_func   = compare_func,
         .free_func      = free_func,
@@ -70,6 +60,7 @@ clist_t * clist_init(uint32_t list_size, clist_match_t (* compare_func)(void *, 
  */
 void clist_destroy(clist_t * clist, clist_delete_t remove_nodes)
 {
+    dlist_destroy_iter(clist->iter);
     if (FREE_NODES_TRUE == remove_nodes)
     {
         dlist_destroy_free(clist->dlist, clist->free_func);
@@ -82,13 +73,36 @@ void clist_destroy(clist_t * clist, clist_delete_t remove_nodes)
     free(clist);
 }
 
-int32_t clist_get_length(clist_t * clist)
+
+/*!
+ * @brief Return the number of elements in the list
+ * @param clist
+ * @return Number of elements
+ */
+size_t clist_get_length(clist_t * clist)
 {
     return dlist_length(clist->dlist);
 }
 
+/*!
+ * @brief Insert node at the given index. The new node will take on the given
+ * index by moving the nodes already at the index to the right.
+ *
+ * If using clist_location_t of HEAD or TAIL the index parameter is ignored and
+ * the node is inserted at the head or tail respectably. If using the the INDEX
+ * clist_location_t then the index parameter is used as the location where the
+ * new node is inserted. If the index is an invalid location a C_FAIL is
+ * returned and the node is not inserted.
+ *
+ * @param clist
+ * @param node
+ * @param index
+ * @param insert_at
+ * @return C_SUCCESS if successful insert or C_FAIL
+ */
 clist_result_t clist_insert(clist_t * clist, void * node, int32_t index, clist_location_t insert_at)
 {
+    clist_result_t result = C_SUCCESS;
     if (HEAD == insert_at)
     {
         dlist_prepend(clist->dlist, node);
@@ -99,7 +113,51 @@ clist_result_t clist_insert(clist_t * clist, void * node, int32_t index, clist_l
     }
     else
     {
-        return (clist_result_t)dlist_insert(clist->dlist, node, index);
+        result = (clist_result_t)dlist_insert(clist->dlist, node, index);
+        if (C_FAIL == result)
+        {
+            return result;
+        }
     }
-    return C_SUCCESS;
+
+    // If iter is NULL, initialize it now that we have nodes
+    if (NULL == clist->iter)
+    {
+        clist->iter = dlist_get_iterable(clist->dlist, ITER_HEAD);
+        if (NULL == clist->iter)
+        {
+            fprintf(stderr, "[!] Unable to allocate memory for circular "
+                            "linked list\n");
+        }
+    }
+
+    return result;
+}
+
+/*!
+ * @brief Return the value of the current node in the rotation of indexes
+ * @param clist
+ * @return Pointer to the current node or NULL if list is empty
+ */
+void * clist_get_value(clist_t * clist)
+{
+    return dlist_get_iter_value(clist->iter);
+}
+
+/*!
+ * @brief Rotates the nodes to the right and returns the next node in the
+ * rotation. If the previous node is the tail then the next node will be the
+ * head of the linked list.
+ * @param clist
+ * @return Next node pointer or NULL if empty
+ */
+void * clist_get_next(clist_t * clist)
+{
+    void * node = dlist_get_iter_next(clist->iter);
+    if (NULL == node)
+    {
+        dlist_set_iter_head(clist->iter);
+        return dlist_get_iter_value(clist->iter);
+    }
+    return node;
 }

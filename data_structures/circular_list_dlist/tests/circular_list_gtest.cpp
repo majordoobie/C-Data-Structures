@@ -71,3 +71,22 @@ TEST_F(CListTestFixture, TestInit)
     EXPECT_EQ(this->words.size(), clist_get_length(this->clist));
 }
 
+TEST_F(CListTestFixture, TestIteration)
+{
+    // Get the first value from the circular linked list
+    char * node = (char *)clist_get_value(this->clist);
+
+    for (std::string& word: this->words)
+    {
+        EXPECT_EQ(strcmp(word.c_str(), node), 0);
+        node = (char *)clist_get_next(this->clist);
+    }
+
+    // We can iterate again because the circular linked list loops around
+    for (std::string& word: this->words)
+    {
+        EXPECT_EQ(strcmp(word.c_str(), node), 0);
+        node = (char *)clist_get_next(this->clist);
+    }
+}
+

@@ -55,7 +55,6 @@ typedef struct dlist_iter_t
     dlist_t * dlist;
     dnode_t * node;
     int32_t index;
-    size_t length;
 } dlist_iter_t;
 
 typedef struct
@@ -234,7 +233,6 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
     *iter = (dlist_iter_t){
         .node       = (ITER_HEAD == pos) ? dlist->head : dlist->tail,
         .dlist      = dlist,
-        .length     = dlist->length,
         .index      = (ITER_HEAD == pos || 0 == dlist->length ) ? 0 :
                                                     (int32_t)dlist->length - 1
     };
@@ -288,7 +286,7 @@ void dlist_set_iter_tail(dlist_iter_t * iter)
 
     // length can never be less than 0. If length is already 0 then that
     // means that the tail IS the head. So we set the index to 0 here
-    iter->length = (0 == iter->length) ? 0 : iter->length - 1;
+    iter->dlist->length = (0 == iter->dlist->length) ? 0 : iter->dlist->length - 1;
 }
 
 /*!
