@@ -75,13 +75,13 @@ TEST_F(DListTestSortFixture, SortAscending)
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
 
     int count = 0;
-    int node = *(int *)dlist_get_iter_value(iter);
+    int node = *(int *)dlist_get_value(iter);
 
     while (count < (int)this->test_array.size() - 1)
     {
         const int& target = this->test_array.at(count);
         EXPECT_EQ(node, target);
-        node = *(int*)dlist_get_iter_next(iter);
+        node = *(int*)dlist_get_next(iter);
         count++;
     }
 
@@ -98,13 +98,13 @@ TEST_F(DListTestSortFixture, SortAscendingAdv)
     dlist_iter_t * iter = dlist_get_iterable(dlist2, ITER_HEAD);
 
     int count = 0;
-    int node = *(int *)dlist_get_iter_value(iter);
+    int node = *(int *)dlist_get_value(iter);
 
     while (count < (int)this->test_array2.size() - 1)
     {
         const int& target = this->test_array2.at(count);
         EXPECT_EQ(node, target);
-        node = *(int*)dlist_get_iter_next(iter);
+        node = *(int*)dlist_get_next(iter);
         count++;
     }
 
@@ -122,13 +122,13 @@ TEST_F(DListTestSortFixture, SortDescending)
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
 
     int count = 0;
-    int node = *(int *)dlist_get_iter_value(iter);
+    int node = *(int *)dlist_get_value(iter);
 
     while (count < (int)this->test_array.size() - 1)
     {
         const int& target = this->test_array.at(count);
         EXPECT_EQ(node, target);
-        node = *(int*)dlist_get_iter_next(iter);
+        node = *(int*)dlist_get_next(iter);
         count++;
     }
 
@@ -147,13 +147,13 @@ TEST_F(DListTestSortFixture, SortDescendingAdv)
     dlist_iter_t * iter = dlist_get_iterable(dlist2, ITER_HEAD);
 
     int count = 0;
-    int node = *(int *)dlist_get_iter_value(iter);
+    int node = *(int *)dlist_get_value(iter);
 
     while (count < (int)this->test_array2.size() - 1)
     {
         const int& target = this->test_array2.at(count);
         EXPECT_EQ(node, target);
-        node = *(int*)dlist_get_iter_next(iter);
+        node = *(int*)dlist_get_next(iter);
         count++;
     }
 

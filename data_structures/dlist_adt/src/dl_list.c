@@ -46,7 +46,8 @@ typedef struct dlist_t
 {
     dnode_t * head;
     dnode_t * tail;
-    size_t length;
+    dlist_iter_t * iter;
+    int32_t length;
     dlist_match_t (* compare_func)(void *, void *);
 } dlist_t;
 
@@ -65,7 +66,7 @@ typedef struct
 
 static dnode_t * init_node(void * data);
 static valid_ptr_t verify_alloc(void * ptr);
-static dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch);
+static void iterate(dlist_iter_t * iter, iter_fetch_t fetch);
 static dnode_t * get_value(dlist_t * dlist, void * data);
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
 static void * remove_node(dlist_t * dlist, dnode_t * node);
@@ -80,6 +81,8 @@ static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 static void swap_dnodes(dnode_t * left, dnode_t * right);
 static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 
+static dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos);
+static void dlist_destroy_iter(dlist_iter_t * dlist_iter);
 
 /*!
  * @brief Perform a quick sort on the double linked list. The quick sort
@@ -146,7 +149,11 @@ dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
         return NULL;
     }
 
-    dlist->compare_func = compare_func;
+    * dlist = (dlist_t) {
+        .compare_func = compare_func,
+        .iter       = dlist_get_iterable(dlist, ITER_HEAD)
+    };
+
     return dlist;
 }
 
@@ -192,9 +199,9 @@ void dlist_append(dlist_t * dlist, void * data)
 }
 
 /*!
- * @brief Insert a node at the given index. The new node will maintain the index
- * given in the parameter. If the index is not within the invalid range then
- * an error is returned. A negative index is possible with -1 indicating the
+ * @brief Insert a node at the given iter_index. The new node will maintain the iter_index
+ * given in the parameter. If the iter_index is not within the invalid range then
+ * an error is returned. A negative iter_index is possible with -1 indicating the
  * tail node and the absolute value of the negative length of the list minus
  * one indicating the head node.
  * @param dlist
@@ -214,7 +221,7 @@ dlist_result_t dlist_insert(dlist_t * dlist, void * data, int32_t index)
 /*!
  * @brief Creates an iterable object with a start node value of either head
  * or tail based on the iter_start_t position. The value is then extracted by
- * using the dlist_get_iter_value and iterated with the iter call
+ * using the dlist_get_value and iterated with the iter call
  *
  * @param dlist
  * @return dlist_iter_t object starting at head or tail
@@ -233,93 +240,91 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
     *iter = (dlist_iter_t){
         .node       = (ITER_HEAD == pos) ? dlist->head : dlist->tail,
         .dlist      = dlist,
-        .index      = (ITER_HEAD == pos || 0 == dlist->length ) ? 0 :
-                                                    (int32_t)dlist->length - 1
+        .index      = (ITER_HEAD == pos || 0 == dlist->length ) ? 0 : dlist->length - 1
     };
     return iter;
 }
 
 /*!
- * @brief Function returns the current value at the current index. For a
+ * @brief Function returns the current value at the current iter_index. For a
  * newly created iter, this will either be the head or the tail based ont he
  * end of the list that the iter object was created with.
  *
- * @param iter
+ * @param dlist_iter
  * @return Pointer to the node data
  */
-void * dlist_get_iter_value(dlist_iter_t * iter)
+void * dlist_get_value(dlist_t * dlist)
 {
-    assert(iter);
-    return iter->node->data;
+    assert(dlist);
+    return dlist->iter_node->data;
 }
 
 /*!
- * @brief Return the current index of the iter object
- * @param iter
- * @return int32_t index of the iterable
+ * @brief Return the current iter_index of the iter object
+ * @param dlist
+ * @return int32_t iter_index of the iterable
  */
-int32_t dlist_get_iter_index(dlist_iter_t * iter)
+size_t dlist_get_index(dlist_t * dlist)
 {
-    assert(iter);
-    return iter->index;
+    assert(dlist);
+    return dlist->iter_index;
 }
 
 /*!
  * @brief Reset the iterable to start with the head of the dlist
- * @param iter
+ * @param dlist
  */
-void dlist_set_iter_head(dlist_iter_t * iter)
+void dlist_set_head(dlist_t * dlist)
 {
-    assert(iter);
-    iter->node = iter->dlist->head;
-    iter->index = 0;
+    assert(dlist);
+    dlist->iter_node = dlist->head;
+    dlist->iter_index = 0;
 }
 
 /*!
  * @brief Reset the iterable to start with the tail of the dlist
- * @param iter
+ * @param dlist
  */
-void dlist_set_iter_tail(dlist_iter_t * iter)
+void dlist_set_tail(dlist_t * dlist)
 {
-    assert(iter);
-    iter->node = iter->dlist->tail;
+    assert(dlist);
+    dlist->iter_node = dlist->tail;
 
     // length can never be less than 0. If length is already 0 then that
-    // means that the tail IS the head. So we set the index to 0 here
-    iter->dlist->length = (0 == iter->dlist->length) ? 0 : iter->dlist->length - 1;
+    // means that the tail IS the head. So we set the iter_index to 0 here
+    dlist->iter_index = (0 == dlist->length) ? 0 : dlist->length - 1;
 }
 
 /*!
  * @brief Iterates over the iterable and returns the prev node. A NULL is
  * returned if the next node is NULL
- * @param dlist_iter
+ * @param dlist
  * @return Returns the data pointer for the node. If the end of the linked
  * list is reached, then a NULL is returned.
  */
-void * dlist_get_iter_prev(dlist_iter_t * dlist_iter)
+void * dlist_get_prev(dlist_t * dlist)
 {
-    dnode_t * data = iterate(dlist_iter, PREV);
-    if (NULL != data)
+    iterate(dlist, PREV);
+    if (NULL != dlist->iter_node)
     {
-        return data->data;
+        return dlist->iter_node;
     }
     return NULL;
-
 }
 
 /*!
  * @brief Iterates over the iterable and returns the next node. A NULL is
  * returned if the next node is NULL
- * @param dlist_iter
+ * @param dlist
  * @return Returns the data pointer for the node. If the end of the linked
  * list is reached, then a NULL is returned.
  */
-void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
+void * dlist_get_next(dlist_t * dlist)
 {
-    dnode_t * data = iterate(dlist_iter, NEXT);
-    if (NULL != data)
+    iterate(dlist, NEXT);
+    if (NULL != dlist->iter_node)
     {
-        return data->data;
+        return dlist->iter_node;
     }
     return NULL;
 }
@@ -515,39 +520,35 @@ static dnode_t * init_node(void * data)
 }
 
 /*!
- * @brief Internal function to iterate the iter object. After it updates the
- * iter object it will then return that specific node incase it is needed.
+ * @brief Iterate the iter object to the next value specified by `fetch`.
  *
- * @param iter
- * @return Returns the dnode_t object that is on the dlist. This could be
- * NULL if the next node in the list is NULL.
+ * @param iter Stand alone iter object or the iter object built into dlist
+ * @param fetch
  */
-static dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch)
+static void iterate(dlist_iter_t * iter, iter_fetch_t fetch)
 {
-    // If this is not the initial, check if the iter node is already set to
-    // NULL. If it is, then just return
-    if (NULL == iter->node)
+    // If there is no items in the linked list then return  NULL
+    if (0 == iter->dlist->length)
     {
-        return NULL;
+        return;
     }
 
-    // iterate the value based on the direction
+    // Iterate to the next value. If the next value is out of bounds then set
+    // te index to -1 indicating an invalid iteration
     if (NEXT == fetch)
     {
         iter->node = iter->node->next;
-        iter->index++;
+        iter->index = (++iter->index == iter->dlist->length) ? -1 : iter->index;
     }
-
-    else
+    else if(PREV == fetch)
     {
         iter->node = iter->node->prev;
         iter->index--;
     }
-    return iter->node;
 }
 
 /*!
- * @brief Get a dlist value by its index in the linked list
+ * @brief Get a dlist value by its iter_index in the linked list
  * @param dlist
  * @param index
  * @return void * pointer to the data
@@ -576,30 +577,25 @@ static dnode_t * get_value(dlist_t * dlist, void * data)
     {
         return NULL;
     }
+    // Store the current iter before searching for the target value
+    int32_t stored_index = dlist->iter_index;
+    dnode_t * stored_node = dlist->iter_node;
+    dlist_set_head(dlist);
 
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    dlist_match_t found = DLIST_MISS_MATCH;
-    dnode_t * node = iter->node;
-    while (NULL != node)
+    while (NULL != dlist->iter_node)
     {
-        if (DLIST_MATCH == dlist->compare_func(node->data, data))
+        if (DLIST_MATCH == dlist->compare_func(dlist->iter_node->data, data))
         {
-            found = DLIST_MATCH;
             break;
         }
-        node = iterate(iter, NEXT);
+        iterate(dlist, NEXT);
     }
 
-    // destroy the iter and return the value if found
-    dlist_destroy_iter(iter);
-    if (DLIST_MISS_MATCH == found)
-    {
-        return NULL;
-    }
-    else
-    {
-        return node;
-    }
+    dnode_t * found_node = dlist->iter_node;
+    dlist->iter_node = stored_node;
+    dlist->iter_index = stored_index;
+
+    return found_node;
 }
 
 /*!
@@ -614,34 +610,63 @@ static void * remove_node(dlist_t * dlist, dnode_t * node)
     void * node_data = node->data;
     dlist->length--;
 
-    // check if node is the head, if so, update
+
+    // get the nodes related to the node being removed
+    dnode_t * parent_node = node->prev;
+    dnode_t * child_node = node->next;
+
+    /*
+     * Update the head and tail values if they are affected by the removal of
+     * the node
+     */
     if (dlist->head == node)
     {
-        dlist->head = node->next;
-        if (NULL != dlist->head)
-        {
-            dlist->head->prev = NULL;
-        }
+        dlist->head = child_node;
     }
 
-    // Check if node is the tail, if so, update
+    // update the tail if affected
     if (dlist->tail == node)
     {
-        dlist->tail = node->prev;
-        if (NULL != dlist->tail)
-        {
-            dlist->tail->next = NULL;
-        }
+        dlist->tail = parent_node;
     }
 
-    // Update the poiters for left and right
-    if (NULL != node->prev)
+
+    /*
+     * Make the parent and child pointers point at each other officially
+     * removing the node from the linked list
+     */
+    if (NULL != parent_node)
     {
-        node->prev->next = node->next;
+        parent_node->next = child_node;
     }
-    if (NULL != node->next)
+    if (NULL != child_node)
     {
-        node->next->prev = node->prev;
+        child_node->prev = parent_node;
+    }
+
+    /*
+     * Update the iter node if the iter node is the node being removed. If the
+     * index of the iter is 0, the set to the head. Otherwise, set it to the
+     * child if not NULL or parent if NULL which requires a decrement of the
+     * index.
+     */
+    if (dlist->iter_node == node)
+    {
+        // if index is zero, then set the head to iter_node
+        if (0 == dlist->iter_index)
+        {
+            dlist->iter_node = dlist->head;
+        }
+        else if(NULL == child_node)
+        {
+            dlist->iter_node = parent_node;
+            dlist->iter_index--;
+        }
+        else
+        {
+            dlist->iter_node = child_node;
+        }
+
     }
 
     // free the node and return the actual data
@@ -676,18 +701,32 @@ static dlist_result_t add_node(dlist_t * dlist,
     }
     node->data = data;
 
-    // If tail is None, then we know that there is no items in the linked
-    // list. So this item will be the very first item appended
+    // If length is 0 then this is the first item to add so set the head and
+    // tail to the same value.
     if (0 == dlist->length)
     {
-        dlist->head = node;
-        dlist->tail = node;
+        * dlist = (dlist_t){
+            .head   = node,
+            .tail   = node,
+        };
+        * dlist->iter = (dlist_iter_t){
+            .node   = node,
+            .index  = 0
+        };
     }
     else if (PREPEND == add_mode)
     {
+        // Update the iter pointer
+        if (0 == dlist->iter->index)
+        {
+            dlist->iter->node = node;
+        }
+
+        // add node to the linked list
         node->next = dlist->head;
         node->next->prev = node;
         dlist->head = node;
+
     }
     else if (INSERT_AT == add_mode)
     {
@@ -695,6 +734,12 @@ static dlist_result_t add_node(dlist_t * dlist,
         if (NULL == child_node)
         {
             return DLIST_FAIL;
+        }
+
+        // update iter iter_index if affected
+        if (child_node == dlist->iter->node)
+        {
+            dlist->iter->node = node;
         }
 
         dnode_t * parent_node = child_node->prev;
@@ -754,8 +799,8 @@ TEST int32_t get_inverse(int32_t value)
 }
 
 /*!
- * @brief Internal function which fetches the node at the index using a iter
- * object. If the index is invalid an None is returned. If the negative value
+ * @brief Internal function which fetches the node at the iter_index using a iter
+ * object. If the iter_index is invalid an None is returned. If the negative value
  * is the MIN then the same value is returned.
  * k
  * @param dlist
@@ -764,25 +809,25 @@ TEST int32_t get_inverse(int32_t value)
  */
 static dnode_t * get_at_index(dlist_t * dlist, int32_t index)
 {
-    // the target index we want to match with
+    // the target iter_index we want to match with
     int32_t target_index = index;
     iter_start_t flag = ITER_HEAD;
 
-    // if we have a positive index, check if its with in the positive range
+    // if we have a positive iter_index, check if its with in the positive range
     if (index > -1)
     {
-        if ((size_t)index > dlist->length - 1)
+        if (index > dlist->length - 1)
         {
             return NULL;
         }
     }
-    else
+    else // If index is negative make sure that we can convert it to a positive
     {
-        if ((size_t)get_inverse(index) > dlist->length)
+        if (get_inverse(index) > dlist->length)
         {
             return NULL;
         }
-        // If we have a valid negative, convert the value to a positive index
+        // If we have a valid negative, convert the value to a positive iter_index
         target_index = (int32_t)dlist->length + index;
         flag = ITER_TAIL;
     }

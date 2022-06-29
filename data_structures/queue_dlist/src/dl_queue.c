@@ -134,7 +134,7 @@ queue_t * queue_get_by_value(queue_t * queue, void * data)
 
 
 /*!
- * @brief Fetch a value from the queue based on its index
+ * @brief Fetch a value from the queue based on its iter_index
  * @param queue
  * @param index
  * @return

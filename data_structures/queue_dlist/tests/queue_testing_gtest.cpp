@@ -129,14 +129,14 @@ TEST_F(DQueueTestFixture, TestFindMethod)
     free(payload);
 }
 
-// Test ability to find a node by its index
+// Test ability to find a node by its iter_index
 TEST_F(DQueueTestFixture, TestFindIndexMethod)
 {
     int index = this->length / 2;
     void * queue_node = queue_get_by_index(this->queue, index);
     ASSERT_NE(queue_node, nullptr);
 
-    // Payloads are the same as their index so index should equal the queue_node
+    // Payloads are the same as their iter_index so iter_index should equal the queue_node
     EXPECT_EQ(*(int*)queue_node, index);
 }
 

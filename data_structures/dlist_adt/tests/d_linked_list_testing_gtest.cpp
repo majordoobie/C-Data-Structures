@@ -65,18 +65,15 @@ TEST(dlist_test, IterableTest)
     dlist_t * dlist = dlist_init(0);
     ASSERT_NE(dlist, nullptr);
     dlist_append(dlist, get_payload(1));
-    dlist_append(dlist, get_payload(2));
     dlist_append(dlist, get_payload(3));
     EXPECT_EQ(dlist_length(dlist), 3);
 
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    char * node = (char*)dlist_get_iter_next(iter);
+    char * node = (char *)dlist_get_value(dlist);
     while (nullptr != node)
     {
-        printf("%s", node);
-        node = (char*)dlist_get_iter_next(iter);
+        printf("%s\n", node);
+        node = (char *)dlist_get_next(dlist);
     }
-    dlist_destroy_iter(iter);
     dlist_destroy_free(dlist, free_payload);
 }
 
@@ -184,7 +181,7 @@ TEST_F(DListTestFixture, TestRemoveValue)
     EXPECT_EQ(strcmp((char *)to_match, (char *)the_match), 0);
     EXPECT_EQ(dlist_length(dlist), length - 1);
 
-    while (NULL != (node = dlist_get_iter_next(iter)))
+    while (NULL != (node = dlist_get_next(iter)))
     {
         printf("%s", (char*)node);
     }
@@ -219,18 +216,18 @@ TEST_F(DListTestFixture, TestPrepend)
 // Test that forward iteration is working properly
 TEST_F(DListTestFixture, TestIterForward)
 {
-    void * node = dlist_get_iter_value(this->iter);
+    void * node = dlist_get_value(this->iter);
     int count = 0;
     while (count < this->length)
     {
         // get the reference to avoid copying the string value
         const std::string& target_value = this->test_vector.at(count);
         EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0)
-        << "index: " << count << "\nTarget value: " << target_value.c_str() <<
+        << "iter_index: " << count << "\nTarget value: " << target_value.c_str() <<
         "\nExpected Value: " << (char *)node;
 
         // get the next node
-        node = (char * )dlist_get_iter_next(this->iter);
+        node = (char * )dlist_get_next(this->iter);
         count++;
     }
     EXPECT_EQ(count, 10);
@@ -240,9 +237,9 @@ TEST_F(DListTestFixture, TestIterForward)
 TEST_F(DListTestFixture, TestIterReverse)
 {
     // set the tail since our init is for head
-    dlist_set_iter_tail(this->iter);
+    dlist_set_tail(this->iter);
 
-    void * node = dlist_get_iter_value(this->iter);
+    void * node = dlist_get_value(this->iter);
 
     int count = this->length - 1;
     while (count > -1)
@@ -250,11 +247,11 @@ TEST_F(DListTestFixture, TestIterReverse)
         // get the reference to avoid copying the string value
         const std::string& target_value = this->test_vector.at(count);
         EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0)
-                        << "index: " << count << "\nTarget value: "
+                        << "iter_index: " << count << "\nTarget value: "
                         << target_value.c_str() <<
                         "\nExpected Value: " << (char *)node;
 
-        node = (char *)dlist_get_iter_prev(this->iter);
+        node = (char *)dlist_get_prev(this->iter);
         count--;
     }
     EXPECT_EQ(count, -1);
@@ -263,7 +260,7 @@ TEST_F(DListTestFixture, TestIterReverse)
 // Test ability to change the direction of the iter as we see fit
 TEST_F(DListTestFixture, TestForwardReverse)
 {
-    void * node = dlist_get_iter_value(this->iter);
+    void * node = dlist_get_value(this->iter);
     int count = 0;
     while (count < this->length)
     {
@@ -271,31 +268,31 @@ TEST_F(DListTestFixture, TestForwardReverse)
         const std::string& target_value = this->test_vector.at(count);
         EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0);
 
-        node = (char * )dlist_get_iter_next(this->iter);
+        node = (char * )dlist_get_next(this->iter);
         count++;
     }
     EXPECT_EQ(count, 10);
 
     // Reset to the tail
-    dlist_set_iter_tail(this->iter);
+    dlist_set_tail(this->iter);
     count = this->length - 1;
-    node = (char * )dlist_get_iter_value(this->iter);
+    node = (char * )dlist_get_value(this->iter);
     while (count > -1)
     {
         // get the reference to avoid copying the string value
         const std::string& target_value = this->test_vector.at(count);
         EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0)
-                        << "index: " << count << "\nTarget value: "
+                        << "iter_index: " << count << "\nTarget value: "
                         << target_value.c_str() <<
                         "\nExpected Value: " << (char *)node;
-        node = (char *)dlist_get_iter_prev(this->iter);
+        node = (char *)dlist_get_prev(this->iter);
         count--;
     }
     EXPECT_EQ(count, -1);
 
     // reset back to head
-    dlist_set_iter_head(this->iter);
-    node = (char * )dlist_get_iter_value(this->iter);
+    dlist_set_head(this->iter);
+    node = (char * )dlist_get_value(this->iter);
 
     count = 0;
     while (count < this->length)
@@ -304,7 +301,7 @@ TEST_F(DListTestFixture, TestForwardReverse)
         const std::string& target_value = this->test_vector.at(count);
         EXPECT_EQ(std::strcmp(target_value.c_str(), (const char *)node), 0);
 
-        node = (char * )dlist_get_iter_next(this->iter);
+        node = (char * )dlist_get_next(this->iter);
         count++;
     }
 
@@ -322,7 +319,7 @@ TEST_F(DListTestFixture, TesteInverseFunc)
 }
 
 
-// Test ability to fetch a value by its index even if it is negative
+// Test ability to fetch a value by its iter_index even if it is negative
 TEST_F(DListTestFixture, TestFetchByIndex)
 {
     // Fetch one higher than expected
@@ -348,7 +345,7 @@ TEST_F(DListTestFixture, TestFetchByIndex)
 
 TEST_F(DListTestFixture, TestInsertAt)
 {
-    // get a middle index
+    // get a middle iter_index
     int32_t middle_index = (int32_t)this->test_vector.size() / 2;
     void * middle_node = dlist_get_by_index(this->dlist, middle_index);
     dlist_remove_value(this->dlist, middle_node);
@@ -357,11 +354,11 @@ TEST_F(DListTestFixture, TestInsertAt)
     dlist_insert(this->dlist, middle_node, middle_index);
 
     // reset back to head
-    char * node = (char * )dlist_get_iter_value(this->iter);
+    char * node = (char * )dlist_get_value(this->iter);
     for (std::string& val: this->test_vector)
     {
         EXPECT_EQ(std::strcmp(val.c_str(), node), 0) << val.c_str() << " " << node;
-        node = (char *)dlist_get_iter_next(this->iter);
+        node = (char *)dlist_get_next(this->iter);
     }
 
 }

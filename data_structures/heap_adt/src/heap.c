@@ -410,12 +410,12 @@ void * heap_pop(heap_t * heap)
     }
     else
     {
-        // Extract the current data at index 0
+        // Extract the current data at iter_index 0
         uint8_t * temp = (uint8_t *)calloc(1, sizeof(heap->node_size));
         uint8_t * index_0_ptr = get_slice(heap, 0);
         memcpy(temp, index_0_ptr, heap->node_size);
 
-        // Place the last node at index 0 to start the bubble algorithm
+        // Place the last node at iter_index 0 to start the bubble algorithm
         // the copied node is zeroes out
         heap->array_length--;
         uint8_t * index_last_ptr = get_slice(heap, heap->array_length);
@@ -507,7 +507,7 @@ static void resize_heap(heap_t * heap)
  */
 static void bubble_up(heap_t * heap)
 {
-    // get the last index
+    // get the last iter_index
     size_t index = heap->array_length - 1;
 
     while ((index > 0) &&
@@ -535,7 +535,7 @@ static void bubble_down(heap_t * heap)
     size_t target_index = 0;
     while ((parent_index < heap->array_length) && (!(is_valid_parent(heap, parent_index))))
     {
-        // if the "target_index" or the index to swap the parent with is the
+        // if the "target_index" or the iter_index to swap the parent with is the
         // parent itself then we know that we are done bubbling.
         target_index = get_target_index(heap, parent_index);
         if (target_index == parent_index)
@@ -550,8 +550,8 @@ static void bubble_down(heap_t * heap)
 }
 
 /*!
- * @brief Gets the parent index of the index provided
- * @param index[in] index to inspect
+ * @brief Gets the parent iter_index of the iter_index provided
+ * @param index[in] iter_index to inspect
  * @return Index of the parent
  */
 static size_t get_parent_index(size_t index)
@@ -560,8 +560,8 @@ static size_t get_parent_index(size_t index)
 }
 
 /*!
- * @brief Gets the child index of the index provided
- * @param index[in] index to inspect
+ * @brief Gets the child iter_index of the iter_index provided
+ * @param index[in] iter_index to inspect
  * @return Index of the child
  */
 static size_t get_left_child_index(size_t index)
@@ -570,8 +570,8 @@ static size_t get_left_child_index(size_t index)
 }
 
 /*!
- * @brief Gets the child index of the index provided
- * @param index[in] index to inspect
+ * @brief Gets the child iter_index of the iter_index provided
+ * @param index[in] iter_index to inspect
  * @return Index of the child
  */
 static size_t get_right_child_index(size_t index)
@@ -580,10 +580,10 @@ static size_t get_right_child_index(size_t index)
 }
 
 /*!
- * @brief Swap the positions of the two index in the array
+ * @brief Swap the positions of the two iter_index in the array
  * @param heap[in] heap_t
- * @param child_index[in] index of the child_index to swap from
- * @param parent_index[in] index of the new get_parent_index
+ * @param child_index[in] iter_index of the child_index to swap from
+ * @param parent_index[in] iter_index of the new get_parent_index
  */
 static void swap(heap_t * heap, size_t child_index, size_t parent_index)
 {
@@ -655,8 +655,8 @@ static bool is_valid_parent(heap_t * heap, size_t parent_index)
 }
 
 /*!
- * Return if the node has a left child by getting the what would be the index
- * of its child and see if that index fits in the range of items that we have
+ * Return if the node has a left child by getting the what would be the iter_index
+ * of its child and see if that iter_index fits in the range of items that we have
  * on the list.
  */
 static bool has_left_child(heap_t * heap, size_t index)
@@ -665,8 +665,8 @@ static bool has_left_child(heap_t * heap, size_t index)
 }
 
 /*!
- * Return if the node has a right child by getting the what would be the index
- * of its child and see if that index fits in the range of items that we have
+ * Return if the node has a right child by getting the what would be the iter_index
+ * of its child and see if that iter_index fits in the range of items that we have
  * on the list.
  */
 static bool has_right_child(heap_t * heap, size_t index)
@@ -693,7 +693,7 @@ static size_t get_target_index(heap_t * heap, size_t parent_index)
         return parent_index;
     }
 
-    // target index is either the max child (maxheap) or min child (min heap_adt)
+    // target iter_index is either the max child (maxheap) or min child (min heap_adt)
     size_t target_index = parent_index;
     heap_compare_t eval;
 
@@ -756,7 +756,7 @@ static uint8_t * get_slice(heap_t * heap, size_t index)
 }
 
 /*!
- * Small function for calculating the index. This was part of get_slice but a
+ * Small function for calculating the iter_index. This was part of get_slice but a
  * seperation was required for the inline sort function
  * @param index
  * @param node_size

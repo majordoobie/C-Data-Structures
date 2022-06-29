@@ -85,13 +85,13 @@ size_t clist_get_length(clist_t * clist)
 }
 
 /*!
- * @brief Insert node at the given index. The new node will take on the given
- * index by moving the nodes already at the index to the right.
+ * @brief Insert node at the given iter_index. The new node will take on the given
+ * iter_index by moving the nodes already at the iter_index to the right.
  *
- * If using clist_location_t of HEAD or TAIL the index parameter is ignored and
+ * If using clist_location_t of HEAD or TAIL the iter_index parameter is ignored and
  * the node is inserted at the head or tail respectably. If using the the INDEX
- * clist_location_t then the index parameter is used as the location where the
- * new node is inserted. If the index is an invalid location a C_FAIL is
+ * clist_location_t then the iter_index parameter is used as the location where the
+ * new node is inserted. If the iter_index is an invalid location a C_FAIL is
  * returned and the node is not inserted.
  *
  * @param clist
@@ -141,7 +141,7 @@ clist_result_t clist_insert(clist_t * clist, void * node, int32_t index, clist_l
  */
 void * clist_get_value(clist_t * clist)
 {
-    return dlist_get_iter_value(clist->iter);
+    return dlist_get_value(clist->iter);
 }
 
 /*!
@@ -153,11 +153,11 @@ void * clist_get_value(clist_t * clist)
  */
 void * clist_get_next(clist_t * clist)
 {
-    void * node = dlist_get_iter_next(clist->iter);
+    void * node = dlist_get_next(clist->iter);
     if (NULL == node)
     {
-        dlist_set_iter_head(clist->iter);
-        return dlist_get_iter_value(clist->iter);
+        dlist_set_head(clist->iter);
+        return dlist_get_value(clist->iter);
     }
     return node;
 }
@@ -187,18 +187,18 @@ void * clist_find(clist_t * clist, void * node)
  */
 void * clist_remove(clist_t * clist, void * node)
 {
-    // Get the index of the iter to see if we need to adjust the iter object
-    int32_t iter_index = dlist_get_iter_index(clist->iter);
+    // Get the iter_index of the iter to see if we need to adjust the iter object
+    int32_t iter_index = dlist_get_index(clist->iter);
 
     // if iter is head, then move over
     if (0 == iter_index)
     {
-        dlist_get_iter_next(clist->iter);
+        dlist_get_next(clist->iter);
     }
     // else if iter is tail, move back one
     else if ((clist_get_length(clist) - 1) == (size_t)iter_index)
     {
-        dlist_get_iter_prev(clist->iter);
+        dlist_get_prev(clist->iter);
     }
 
 
