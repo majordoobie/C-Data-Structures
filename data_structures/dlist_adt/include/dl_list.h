@@ -60,10 +60,11 @@ void * dlist_pop_head(dlist_t * dlist);
 void * dlist_get_by_value(dlist_t * dlist, void * data);
 void * dlist_get_by_index(dlist_t * dlist, int32_t index);
 void * dlist_remove_value(dlist_t * dlist, void * data);
+int32_t dlist_get_index_of_value(dlist_t * dlist, void * data);
 
 // metadata methods
 bool dlist_is_empty(dlist_t * dlist);
-size_t dlist_length(dlist_t * dlist);
+size_t dlist_get_length(dlist_t * dlist);
 dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data);
 
 // iterables

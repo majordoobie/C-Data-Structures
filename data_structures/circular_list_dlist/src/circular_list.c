@@ -38,11 +38,19 @@ clist_t * clist_init(uint32_t list_size, clist_match_t (* compare_func)(void *, 
         dlist_destroy(dlist);
     }
 
+    dlist_iter_t * iter = (dlist_iter_t *)dlist_get_iterable(dlist, ITER_HEAD);
+    if (NULL == iter)
+    {
+        fprintf(stderr, "[!] Unable to allocate memory for circular "
+                        "linked list\n");
+        dlist_destroy(dlist);
+    }
+
 
     // Initialize the struct
     * clist = (clist_t) {
         .dlist          = dlist,
-        .iter           = NULL,
+        .iter           = iter,
         .clist_size     = list_size,
         .compare_func   = compare_func,
         .free_func      = free_func,
@@ -81,7 +89,7 @@ void clist_destroy(clist_t * clist, clist_delete_t remove_nodes)
  */
 size_t clist_get_length(clist_t * clist)
 {
-    return dlist_length(clist->dlist);
+    return dlist_get_length(clist->dlist);
 }
 
 /*!
@@ -120,17 +128,11 @@ clist_result_t clist_insert(clist_t * clist, void * node, int32_t index, clist_l
         }
     }
 
-    // If iter is NULL, initialize it now that we have nodes
-    if (NULL == clist->iter)
+    // if this is the first item in the list then initialize the iter
+    if (1 == dlist_get_length(clist->dlist))
     {
-        clist->iter = dlist_get_iterable(clist->dlist, ITER_HEAD);
-        if (NULL == clist->iter)
-        {
-            fprintf(stderr, "[!] Unable to allocate memory for circular "
-                            "linked list\n");
-        }
+        dlist_set_iter_head(clist->iter);
     }
-
     return result;
 }
 
@@ -187,6 +189,10 @@ void * clist_find(clist_t * clist, void * node)
  */
 void * clist_remove(clist_t * clist, void * node)
 {
+    // get the index of the node in the iter if any to understand if we need
+    // to manipulate the iter object
+
+
     // Get the index of the iter to see if we need to adjust the iter object
     int32_t iter_index = dlist_get_iter_index(clist->iter);
 
