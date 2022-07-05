@@ -151,7 +151,7 @@ dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
 
     * dlist = (dlist_t) {
         .compare_func = compare_func,
-        .iter       = dlist_get_iterable(dlist, ITER_HEAD)
+        .iter         = dlist_get_iterable(dlist, ITER_HEAD)
     };
 
     return dlist;
@@ -256,7 +256,7 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
 void * dlist_get_value(dlist_t * dlist)
 {
     assert(dlist);
-    return dlist->iter_node->data;
+    return dlist->iter->node->data;
 }
 
 /*!
@@ -267,7 +267,7 @@ void * dlist_get_value(dlist_t * dlist)
 size_t dlist_get_index(dlist_t * dlist)
 {
     assert(dlist);
-    return dlist->iter_index;
+    return dlist->iter->index;
 }
 
 /*!
@@ -277,8 +277,8 @@ size_t dlist_get_index(dlist_t * dlist)
 void dlist_set_head(dlist_t * dlist)
 {
     assert(dlist);
-    dlist->iter_node = dlist->head;
-    dlist->iter_index = 0;
+    dlist->iter->node = dlist->head;
+    dlist->iter->index = 0;
 }
 
 /*!
@@ -288,11 +288,11 @@ void dlist_set_head(dlist_t * dlist)
 void dlist_set_tail(dlist_t * dlist)
 {
     assert(dlist);
-    dlist->iter_node = dlist->tail;
+    dlist->iter->node = dlist->tail;
 
     // length can never be less than 0. If length is already 0 then that
     // means that the tail IS the head. So we set the iter_index to 0 here
-    dlist->iter_index = (0 == dlist->length) ? 0 : dlist->length - 1;
+    dlist->iter->index = (0 == dlist->length) ? 0 : dlist->length - 1;
 }
 
 /*!
@@ -304,8 +304,8 @@ void dlist_set_tail(dlist_t * dlist)
  */
 void * dlist_get_prev(dlist_t * dlist)
 {
-    iterate(dlist, PREV);
-    if (NULL != dlist->iter_node)
+    iterate(dlist->iter, PREV);
+    if (NULL != dlist->iter->node)
     {
         return dlist->iter_node;
     }
@@ -562,6 +562,33 @@ void * dlist_get_by_index(dlist_t * dlist, int32_t index)
     }
     return node->data;
 }
+
+
+/*
+ *
+ *
+ * START Iteration Section
+ *
+ *
+ *
+ */
+
+dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos);
+void * iter_get_value(dlist_iter_t * iter);
+void * iter_get_next(dlist_iter_t * iter);
+void * iter_get_prev(dlist_iter_t * iter);
+void * iter_set_head(dlist_iter_t * iter);
+void * iter_set_tail(dlist_iter_t * iter);
+uint32_t iter_get_index(dlist_iter_t * iter);
+
+/*
+ *
+ *
+ * END Iteration Section
+ *
+ *
+ *
+ */
 
 /*!
  * @brief Handles finding the node in the linked list by comparing it with

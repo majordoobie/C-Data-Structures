@@ -66,7 +66,16 @@ bool dlist_is_empty(dlist_t * dlist);
 size_t dlist_length(dlist_t * dlist);
 dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data);
 
-// iterables
+// iterables generic
+dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos);
+void * iter_get_value(dlist_iter_t * iter);
+void * iter_get_next(dlist_iter_t * iter);
+void * iter_get_prev(dlist_iter_t * iter);
+void * iter_set_head(dlist_iter_t * iter);
+void * iter_set_tail(dlist_iter_t * iter);
+uint32_t iter_get_index(dlist_iter_t * iter);
+
+// iterable built-in
 void * dlist_get_value(dlist_t * dlist_iter);
 void * dlist_get_next(dlist_t * dlist);
 void * dlist_get_prev(dlist_t * dlist);
