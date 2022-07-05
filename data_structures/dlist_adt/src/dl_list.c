@@ -11,12 +11,6 @@
 #define TEST
 #endif
 
-typedef enum
-{
-    NEXT,
-    PREV
-} iter_fetch_t;
-
 // Enum for determining if malloc calls were valid
 typedef enum
 {
@@ -58,7 +52,6 @@ typedef struct
 
 static dnode_t * init_node(void * data);
 static valid_ptr_t verify_alloc(void * ptr);
-static dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch);
 static dnode_t * get_value(dlist_t * dlist, void * data);
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
 static void * remove_node(dlist_t * dlist, dnode_t * node);
@@ -438,6 +431,7 @@ int32_t dlist_get_index_of_value(dlist_t * dlist, void * data)
     assert(dlist);
     assert(data);
 
+    return 32;
 
 }
 
@@ -510,37 +504,6 @@ static dnode_t * init_node(void * data)
     return node;
 }
 
-/*!
- * @brief Internal function to iterate the iter object. After it updates the
- * iter object it will then return that specific node incase it is needed.
- *
- * @param iter
- * @return Returns the dnode_t object that is on the dlist. This could be
- * NULL if the next node in the list is NULL.
- */
-static dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch)
-{
-    // If this is not the initial, check if the iter node is already set to
-    // NULL. If it is, then just return
-    if (NULL == iter->node)
-    {
-        return NULL;
-    }
-
-    // iterate the value based on the direction
-    if (NEXT == fetch)
-    {
-        iter->node = iter->node->next;
-        iter->index++;
-    }
-
-    else
-    {
-        iter->node = iter->node->prev;
-        iter->index--;
-    }
-    return iter->node;
-}
 
 /*!
  * @brief Fetch the node in the dlist by matching the the value using the
@@ -597,7 +560,7 @@ static dnode_t * get_value(dlist_t * dlist, void * data)
 
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
     dlist_match_t found = DLIST_MISS_MATCH;
-    dnode_t * node = iter->node;
+    dnode_t * node = iter_get_iter_node(iter);
     while (NULL != node)
     {
         if (DLIST_MATCH == dlist->compare_func(node->data, data))
@@ -657,7 +620,7 @@ static dnode_t * get_at_index(dlist_t * dlist, int32_t index)
     // create the iter object to start iterating
     dlist_iter_t * iter = dlist_get_iterable(dlist, flag);
 
-    while (target_index != iter->index)
+    while (target_index != iter_get_iter_index(iter))
     {
         if (ITER_HEAD == flag)
         {
@@ -669,7 +632,7 @@ static dnode_t * get_at_index(dlist_t * dlist, int32_t index)
         }
     }
 
-    dnode_t * node = iter->node;
+    dnode_t * node = iter_get_iter_node(iter);
     dlist_destroy_iter(iter);
     return node;
 }

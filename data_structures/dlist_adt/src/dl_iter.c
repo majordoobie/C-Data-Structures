@@ -48,6 +48,7 @@ void iter_set_iter_node(dlist_iter_t * iter, dnode_t * node, int32_t index)
     assert(iter);
     assert(node);
     iter->node = node;
+    iter->index = index;
 }
 
 int32_t iter_get_iter_index(dlist_iter_t * iter)
@@ -58,4 +59,41 @@ int32_t iter_get_iter_index(dlist_iter_t * iter)
 dlist_t * iter_get_dlist(dlist_iter_t * iter)
 {
     return iter->dlist;
+}
+
+dnode_t * iter_get_iter_node(dlist_iter_t * iter)
+{
+    return iter->node;
+}
+
+/*!
+ * @brief Internal function to iterate the iter object. After it updates the
+ * iter object it will then return that specific node incase it is needed.
+ *
+ * @param iter
+ * @return Returns the dnode_t object that is on the dlist. This could be
+ * NULL if the next node in the list is NULL.
+ */
+dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch)
+{
+    // If this is not the initial, check if the iter node is already set to
+    // NULL. If it is, then just return
+    if (NULL == iter->node)
+    {
+        return NULL;
+    }
+
+    // iterate the value based on the direction
+    if (NEXT == fetch)
+    {
+        iter->node = iter->node->next;
+        iter->index++;
+    }
+
+    else
+    {
+        iter->node = iter->node->prev;
+        iter->index--;
+    }
+    return iter->node;
 }
