@@ -338,29 +338,6 @@ void dlist_destroy_iter(dlist_iter_t * dlist_iter)
 
 
 /*!
- * Static function that handles the actual deletion. If free of the nodes is
- * requested then a function pointer to how to free the nodes is required.
- * @param dlist
- * @param delete
- * @param free_func
- */
-static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void (*free_func)(void *))
-{
-    dnode_t * node = dlist->head;
-    dnode_t * next_node;
-    while (NULL != node)
-    {
-        next_node = node->next;
-        if (FREE_NODES == delete)
-        {
-            free_func(node->data);
-        }
-        free(node);
-        node = next_node;
-    }
-    free(dlist);
-}
-/*!
  * @brief Free the double linked list without freeing the satellite data.
  *
  * This function will leave the satellite data up to the user to free.
@@ -883,4 +860,28 @@ static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right)
         quick_sort(sort, left, partition_node->prev);
         quick_sort(sort, partition_node->next, right);
     }
+}
+
+/*!
+ * Static function that handles the actual deletion. If free of the nodes is
+ * requested then a function pointer to how to free the nodes is required.
+ * @param dlist
+ * @param delete
+ * @param free_func
+ */
+static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void (*free_func)(void *))
+{
+    dnode_t * node = dlist->head;
+    dnode_t * next_node;
+    while (NULL != node)
+    {
+        next_node = node->next;
+        if (FREE_NODES == delete)
+        {
+            free_func(node->data);
+        }
+        free(node);
+        node = next_node;
+    }
+    free(dlist);
 }
