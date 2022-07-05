@@ -8,6 +8,12 @@ set(CMAKE_CXX_STANDARD 17)
 # Add the cmake modules directory to call functions in them
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+# If debug is enabled make sure to include CTest at the root. This will allow
+# the ctest config to be placed at the root of the build directory
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    include(CTest)
+ENDIF()
+
 add_subdirectory(data_structures/avl_bst_adt)
 add_subdirectory(data_structures/treemap_avl_bst)
 add_subdirectory(data_structures/stack_adt)
