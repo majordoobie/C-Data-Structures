@@ -2,6 +2,7 @@
 #include <dl_list.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <dl_iter.h>
 
 // If in debug mode, remove static for testing
 #ifdef NDEBUG
@@ -33,14 +34,6 @@ typedef enum
 } dlist_settings_t;
 
 
-// Structure with the individual satellite data
-typedef struct node
-{
-    void * data;
-    struct node * next;
-    struct node * prev;
-} dnode_t;
-
 // Manager structure
 typedef struct dlist_t
 {
@@ -50,12 +43,12 @@ typedef struct dlist_t
     dlist_match_t (* compare_func)(void *, void *);
 } dlist_t;
 
-typedef struct dlist_iter_t
-{
-    dlist_t * dlist;
-    dnode_t * node;
-    int32_t index;
-} dlist_iter_t;
+//typedef struct dlist_iter_t
+//{
+//    dlist_t * dlist;
+//    dnode_t * node;
+//    int32_t index;
+//} dlist_iter_t;
 
 typedef struct
 {
@@ -223,35 +216,40 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
 {
     // verify that the dlist is a valid pointer
     assert(dlist);
-    dlist_iter_t * iter = (dlist_iter_t *)malloc(sizeof(dlist_iter_t));
-    if (INVALID_PTR == verify_alloc(iter))
-    {
-        return NULL;
-    }
-
-    // Init the iter structure and return the pointer to it
-    *iter = (dlist_iter_t){
-        .node       = (ITER_HEAD == pos) ? dlist->head : dlist->tail,
-        .dlist      = dlist,
-        .index      = (ITER_HEAD == pos || 0 == dlist->length ) ? 0 :
-                                                    (int32_t)dlist->length - 1
-    };
+    dlist_iter_t * iter = iter_get_iterable(
+        (ITER_HEAD == pos) ? dlist->head : dlist->tail,
+        dlist,
+        (ITER_HEAD == pos || 0 == dlist->length ) ? 0 : (int32_t)dlist->length - 1
+        );
+//    dlist_iter_t * iter = (dlist_iter_t *)malloc(sizeof(dlist_iter_t));
+//    if (INVALID_PTR == verify_alloc(iter))
+//    {
+//        return NULL;
+//    }
+//
+//    // Init the iter structure and return the pointer to it
+//    *iter = (dlist_iter_t){
+//        .node       = (ITER_HEAD == pos) ? dlist->head : dlist->tail,
+//        .dlist      = dlist,
+//        .index      = (ITER_HEAD == pos || 0 == dlist->length ) ? 0 :
+//                                                    (int32_t)dlist->length - 1
+//    };
     return iter;
 }
 
-/*!
- * @brief Function returns the current value at the current index. For a
- * newly created iter, this will either be the head or the tail based ont he
- * end of the list that the iter object was created with.
- *
- * @param iter
- * @return Pointer to the node data
- */
-void * dlist_get_iter_value(dlist_iter_t * iter)
-{
-    assert(iter);
-    return iter->node->data;
-}
+///*!
+// * @brief Function returns the current value at the current index. For a
+// * newly created iter, this will either be the head or the tail based ont he
+// * end of the list that the iter object was created with.
+// *
+// * @param iter
+// * @return Pointer to the node data
+// */
+//void * dlist_get_iter_value(dlist_iter_t * iter)
+//{
+//    assert(iter);
+//    return iter->node->data;
+//}
 
 /*!
  * @brief Return the current index of the iter object
@@ -261,7 +259,7 @@ void * dlist_get_iter_value(dlist_iter_t * iter)
 int32_t dlist_get_iter_index(dlist_iter_t * iter)
 {
     assert(iter);
-    return iter->index;
+    return iter_get_iter_index(iter);
 }
 
 /*!
@@ -271,8 +269,12 @@ int32_t dlist_get_iter_index(dlist_iter_t * iter)
 void dlist_set_iter_head(dlist_iter_t * iter)
 {
     assert(iter);
-    iter->node = iter->dlist->head;
-    iter->index = 0;
+
+    // Get the embedded dlist from iter
+    dlist_t * dlist = iter_get_dlist(iter);
+    assert(dlist);
+
+    iter_set_iter_node(iter, dlist->head, 0);
 }
 
 /*!
@@ -282,11 +284,18 @@ void dlist_set_iter_head(dlist_iter_t * iter)
 void dlist_set_iter_tail(dlist_iter_t * iter)
 {
     assert(iter);
-    iter->node = iter->dlist->tail;
+
+    // Get the embedded dlist from iter
+    dlist_t * dlist = iter_get_dlist(iter);
+    assert(dlist);
 
     // length can never be less than 0. If length is already 0 then that
     // means that the tail IS the head. So we set the index to 0 here
-    iter->dlist->length = (0 == iter->dlist->length) ? 0 : iter->dlist->length - 1;
+    iter_set_iter_node(
+        iter,
+        dlist->tail,
+        (0 == dlist->length) ? 0 : (int32_t)dlist->length - 1
+        );
 }
 
 /*!
@@ -423,27 +432,6 @@ void * dlist_pop_head(dlist_t * dlist)
 }
 
 
-/*!
- * @brief Fetch the node in the dlist by matching the the value using the
- * comparison function massed in.
- * @param dlist
- * @param data
- * @return Pointer to the node if found else NULL
- */
-void * dlist_get_by_value(dlist_t * dlist, void * data)
-{
-    assert(dlist);
-    assert(data);
-    dnode_t * node = get_value(dlist, data);
-    if (NULL == node)
-    {
-        return NULL;
-    }
-    else
-    {
-        return node->data;
-    }
-}
 
 int32_t dlist_get_index_of_value(dlist_t * dlist, void * data)
 {
@@ -552,6 +540,28 @@ static dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch)
         iter->index--;
     }
     return iter->node;
+}
+
+/*!
+ * @brief Fetch the node in the dlist by matching the the value using the
+ * comparison function massed in.
+ * @param dlist
+ * @param data
+ * @return Pointer to the node if found else NULL
+ */
+void * dlist_get_by_value(dlist_t * dlist, void * data)
+{
+    assert(dlist);
+    assert(data);
+    dnode_t * node = get_value(dlist, data);
+    if (NULL == node)
+    {
+        return NULL;
+    }
+    else
+    {
+        return node->data;
+    }
 }
 
 /*!

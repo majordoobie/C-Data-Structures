@@ -37,6 +37,13 @@ typedef enum
     DLIST_FAIL
 } dlist_result_t;
 
+// Structure with the individual satellite data
+typedef struct node
+{
+    void * data;
+    struct node * next;
+    struct node * prev;
+} dnode_t;
 
 
 

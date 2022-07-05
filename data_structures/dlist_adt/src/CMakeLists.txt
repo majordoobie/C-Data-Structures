@@ -1,4 +1,4 @@
-add_library(dl_list SHARED dl_list.c)
+add_library(dl_list SHARED dl_list.c dl_iter.c)
 
 # Test to public so that gtest can have access
 target_include_directories(
