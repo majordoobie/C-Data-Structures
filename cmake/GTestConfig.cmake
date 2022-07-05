@@ -1,23 +1,12 @@
-# Enable ability to test
-enable_testing()
-
-# Fetch the google test github
-include(FetchContent)
-FetchContent_Declare(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG release-1.11.0
-)
-# GMock does not work in C only C++ so just disable
-option(INSTALL_GMOCK "Install GMock" OFF)
-
-# Make available then include
-FetchContent_MakeAvailable(googletest)
+# Include the gtest framework to be able to discover
 include(GoogleTest)
 
 # Append the gtest libraries to the target passed in then set sanitation flags
 # for detecting memory leaks
 function(AddTest target)
+    # Include the gtest framework to be able to discover
+    include(GoogleTest)
+
     target_compile_options(
             ${target}
             PUBLIC

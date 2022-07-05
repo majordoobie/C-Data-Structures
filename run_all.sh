@@ -1,1 +1,1 @@
-find build -iname \*testing_gtest\* -type f -executable -exec {} \;
+ctest -j 100 --test-dir build

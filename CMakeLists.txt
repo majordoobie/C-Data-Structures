@@ -14,6 +14,7 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     include(CTest)
 ENDIF()
 
+add_subdirectory(dependencies)
 add_subdirectory(data_structures/avl_bst_adt)
 add_subdirectory(data_structures/treemap_avl_bst)
 add_subdirectory(data_structures/stack_adt)
