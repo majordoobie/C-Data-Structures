@@ -272,18 +272,18 @@ int32_t dlist_get_index_of_value(dlist_t * dlist, void * data)
 // * @return NULL if item it not found. Otherwise, the pointer to the data is
 // * returned.
 // */
-//void * dlist_remove_value(dlist_t * dlist, void * data)
-//{
-//    assert(dlist);
-//    assert(data);
-//    dnode_t * node = get_value(dlist, data);
-//    if (NULL == node)
-//    {
-//        return NULL;
-//    }
-//
-//    return remove_node(dlist, node);
-//}
+void * dlist_remove_value(dlist_t * dlist, void * data)
+{
+    assert(dlist);
+    assert(data);
+    dnode_t * node = get_by(dlist, data);
+    if (NULL == node)
+    {
+        return NULL;
+    }
+
+    return remove_node(dlist, node);
+}
 
 /*********************************************************************************************
  *
@@ -410,12 +410,12 @@ void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
  * Get item in dlist by index
  */
 
-void * dlist_get_by_value(dlist_t * dlist, void * data)
+dnode_t * get_by_value(dlist_t * dlist, void * data)
 {
     // Assert values
     assert(dlist);
     assert(data);
-    void * found_data = NULL;
+    dnode_t * found_data = NULL;
 
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
     iter_search_t * search = iter_init_search(iter, data, 0, SEARCH_BY_VALUE);
@@ -423,11 +423,39 @@ void * dlist_get_by_value(dlist_t * dlist, void * data)
 
     if (SEARCH_SUCCESS == result)
     {
-        found_data = search->found_node->data;
+        found_data = search->found_node;
     }
 
     iter_destroy_search(search);
     return found_data;
+}
+
+void * dlist_get_by_value(dlist_t * dlist, void * data)
+{
+    dnode_t * found_node = get_by_value(dlist, data);
+    if (NULL == found_node)
+    {
+        return NULL;
+    }
+
+    return found_node->data;
+}
+
+static dnode_t * get_at_index(dlist_t * dlist, int32_t index)
+{
+    // Assert values
+    assert(dlist);
+    dnode_t * found_node = NULL;
+
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
+    iter_search_t * search = iter_init_search(iter, NULL, index, SEARCH_BY_INDEX);
+    iter_search_result result = iter_search(search);
+
+    if (SEARCH_SUCCESS == result)
+    {
+        found_node = search->found_node;
+    }
+    return found_node;
 }
 
 
