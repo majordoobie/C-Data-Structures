@@ -64,6 +64,6 @@ clist_result_t clist_insert(clist_t * clist, void * node, int32_t index, clist_l
 
 
 #ifdef __cplusplus
-};
+}
 #endif // END __cplusplus
 #endif //DATA_STRUCTURES_C_CIRCULAR_LIST_DLIST_SRC_CIRCULAR_LIST_H_
