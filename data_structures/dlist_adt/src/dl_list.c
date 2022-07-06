@@ -4,12 +4,6 @@
 #include <assert.h>
 #include <dl_iter.h>
 
-// If in debug mode, remove static for testing
-#ifdef NDEBUG
-#define TEST static
-#else
-#define TEST
-#endif
 
 
 typedef enum
@@ -39,15 +33,12 @@ typedef struct
 } quick_sort_t;
 
 static dnode_t * init_node(void * data);
-static dnode_t * get_value(dlist_t * dlist, void * data);
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
 static void * remove_node(dlist_t * dlist, dnode_t * node);
 static dlist_result_t add_node(dlist_t * dlist,
                                void * data,
                                dlist_settings_t add_mode,
                                int32_t at_index);
-TEST int32_t get_inverse(int32_t value);
-static dnode_t * get_at_index(dlist_t * dlist, int32_t index);
 
 static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 static void swap_dnodes(dnode_t * left, dnode_t * right);
@@ -274,25 +265,25 @@ int32_t dlist_get_index_of_value(dlist_t * dlist, void * data)
 
 }
 
-/*!
- * @brief Remove node from the dlist using the value passed in
- * @param dlist
- * @param data
- * @return NULL if item it not found. Otherwise, the pointer to the data is
- * returned.
- */
-void * dlist_remove_value(dlist_t * dlist, void * data)
-{
-    assert(dlist);
-    assert(data);
-    dnode_t * node = get_value(dlist, data);
-    if (NULL == node)
-    {
-        return NULL;
-    }
-
-    return remove_node(dlist, node);
-}
+///*!
+// * @brief Remove node from the dlist using the value passed in
+// * @param dlist
+// * @param data
+// * @return NULL if item it not found. Otherwise, the pointer to the data is
+// * returned.
+// */
+//void * dlist_remove_value(dlist_t * dlist, void * data)
+//{
+//    assert(dlist);
+//    assert(data);
+//    dnode_t * node = get_value(dlist, data);
+//    if (NULL == node)
+//    {
+//        return NULL;
+//    }
+//
+//    return remove_node(dlist, node);
+//}
 
 /*********************************************************************************************
  *
@@ -424,162 +415,81 @@ void * dlist_get_by_value(dlist_t * dlist, void * data)
     // Assert values
     assert(dlist);
     assert(data);
-
-    iter_search_t * search = iter_init_search(NULL, 0, SEARCH_BY_INDEX);
-
-
-}
-
-
-/*!
- * @brief Check if value is in the dlist
- * @param dlist
- * @param data
- * @return
- */
-dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
-{
-    assert(dlist);
-    assert(data);
-    dnode_t * node = get_value(dlist, data);
-    if (NULL == node)
-    {
-        return DLIST_MISS_MATCH;
-    }
-    return DLIST_MATCH;
-}
-
-/*!
- * @brief Fetch the node in the dlist by matching the the value using the
- * comparison function massed in.
- * @param dlist
- * @param data
- * @return Pointer to the node if found else NULL
- */
-void * ldlist_get_by_value(dlist_t * dlist, void * data)
-{
-    assert(dlist);
-    assert(data);
-    dnode_t * node = get_value(dlist, data);
-    if (NULL == node)
-    {
-        return NULL;
-    }
-    else
-    {
-        return node->data;
-    }
-}
-
-/*!
- * @brief Get a dlist value by its index in the linked list
- * @param dlist
- * @param index
- * @return void * pointer to the data
- */
-void * dlist_get_by_index(dlist_t * dlist, int32_t index)
-{
-    dnode_t * node = get_at_index(dlist, index);
-    if (NULL == node)
-    {
-        return NULL;
-    }
-    return node->data;
-}
-
-/*!
- * @brief Handles finding the node in the linked list by comparing it with
- * the values passed in and using the comparison callback function. If found,
- * return the dnode_t else, NULL
- * @param dlist
- * @param data
- * @return
- */
-static dnode_t * get_value(dlist_t * dlist, void * data)
-{
-    if (NULL == dlist->compare_func)
-    {
-        return NULL;
-    }
+    void * found_data = NULL;
 
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    dlist_match_t found = DLIST_MISS_MATCH;
-    dnode_t * node = iter_get_node(iter);
-    while (NULL != node)
+    iter_search_t * search = iter_init_search(iter, data, 0, SEARCH_BY_VALUE);
+    iter_search_result result = iter_search(search);
+
+    if (SEARCH_SUCCESS == result)
     {
-        if (DLIST_MATCH == dlist->compare_func(node->data, data))
-        {
-            found = DLIST_MATCH;
-            break;
-        }
-        node = iterate(iter, NEXT);
+        found_data = search->found_node->data;
     }
 
-    // destroy the iter and return the value if found
-    dlist_destroy_iter(iter);
-    if (DLIST_MISS_MATCH == found)
-    {
-        return NULL;
-    }
-    else
-    {
-        return node;
-    }
+    iter_destroy_search(search);
+    return found_data;
 }
 
-/*!
- * @brief Internal function which fetches the node at the index using a iter
- * object. If the index is invalid an None is returned. If the negative value
- * is the MIN then the same value is returned.
- * k
- * @param dlist
- * @param index
- * @return dnode_t pointer or NULL
- */
-static dnode_t * get_at_index(dlist_t * dlist, int32_t index)
-{
-    // the target index we want to match with
-    int32_t target_index = index;
-    iter_start_t flag = ITER_HEAD;
 
-    // if we have a positive index, check if its with in the positive range
-    if (index > -1)
-    {
-        if ((size_t)index > dlist->length - 1)
-        {
-            return NULL;
-        }
-    }
-    else
-    {
-        if ((size_t)get_inverse(index) > dlist->length)
-        {
-            return NULL;
-        }
-        // If we have a valid negative, convert the value to a positive index
-        target_index = (int32_t)dlist->length + index;
-        flag = ITER_TAIL;
-    }
 
-    // create the iter object to start iterating
-    dlist_iter_t * iter = dlist_get_iterable(dlist, flag);
 
-    while (target_index != iter_get_index(iter))
-    {
-        if (ITER_HEAD == flag)
-        {
-            iterate(iter, NEXT);
-        }
-        else
-        {
-            iterate(iter, PREV);
-        }
-    }
 
-    dnode_t * node = iter_get_node(iter);
-    dlist_destroy_iter(iter);
-    return node;
-}
+
+///*!
+// * @brief Check if value is in the dlist
+// * @param dlist
+// * @param data
+// * @return
+// */
+//dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
+//{
+//    assert(dlist);
+//    assert(data);
+//    dnode_t * node = get_value(dlist, data);
+//    if (NULL == node)
+//    {
+//        return DLIST_MISS_MATCH;
+//    }
+//    return DLIST_MATCH;
+//}
+//
+///*!
+// * @brief Fetch the node in the dlist by matching the the value using the
+// * comparison function massed in.
+// * @param dlist
+// * @param data
+// * @return Pointer to the node if found else NULL
+// */
+//void * ldlist_get_by_value(dlist_t * dlist, void * data)
+//{
+//    assert(dlist);
+//    assert(data);
+//    dnode_t * node = get_value(dlist, data);
+//    if (NULL == node)
+//    {
+//        return NULL;
+//    }
+//    else
+//    {
+//        return node->data;
+//    }
+//}
+//
+///*!
+// * @brief Get a dlist value by its index in the linked list
+// * @param dlist
+// * @param index
+// * @return void * pointer to the data
+// */
+//void * dlist_get_by_index(dlist_t * dlist, int32_t index)
+//{
+//    dnode_t * node = get_at_index(dlist, index);
+//    if (NULL == node)
+//    {
+//        return NULL;
+//    }
+//    return node->data;
+//}
 
 /*!
  * @brief Create the structure that is stored on each item in the linked list
@@ -708,45 +618,6 @@ static dlist_result_t add_node(dlist_t * dlist,
     return DLIST_SUCC;
 }
 
-/*!
- * @brief Function returns the inverse of a number. The function will return
- * the same value of a int 32 min because there is no inverse for that value
- * in a 32 bit number
- * @param value
- * @return Inverse of the number or same number for INT32_MIN
- */
-TEST int32_t get_inverse(int32_t value)
-{
-    if (0 == value)
-    {
-        return value;
-    }
-
-    // we have a positive number, return a negative
-    if (value > -1)
-    {
-        // if the value is maxed, then return the min value plus 1
-        if (INT32_MAX == value)
-        {
-            return INT32_MIN + 1;
-        }
-
-        return -value;
-    }
-    else
-    {
-        // if the value is min, then there is no inverse possible so return
-        // the same value back
-        if (INT32_MIN == value)
-        {
-            return value;
-        }
-        else
-        {
-            return -value;
-        }
-    }
-}
 
 
 /*

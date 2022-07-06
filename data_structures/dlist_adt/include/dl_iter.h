@@ -16,11 +16,18 @@ typedef enum
 typedef enum
 {
     SEARCH_BY_INDEX,
-    SEARCH_BY_VALUE
+    SEARCH_BY_VALUE,
 } iter_search_by;
+
+typedef enum
+{
+    SEARCH_SUCCESS,
+    SEARCH_FAILURE
+} iter_search_result;
 
 typedef struct
 {
+    dlist_iter_t * iter;
     void * target_data;
     int32_t target_index;
     dnode_t * found_node;
@@ -40,7 +47,10 @@ dnode_t * iter_get_node(dlist_iter_t * iter);
 dlist_t * iter_get_dlist(dlist_iter_t * iter);
 
 // Search for values
-iter_search_t * iter_init_search(void * data,
+iter_search_result iter_search(iter_search_t * search);
+void iter_destroy_search(iter_search_t * search);
+iter_search_t * iter_init_search(dlist_iter_t * iter,
+                                 void * data,
                                  int32_t index,
                                  iter_search_by search_by);
 

@@ -2,6 +2,13 @@
 #include <assert.h>
 #include <stdlib.h>
 
+// If in debug mode, remove static for testing
+#ifdef NDEBUG
+#define TEST static
+#else
+#define TEST
+#endif
+
 typedef struct dlist_iter_t
 {
     dlist_t * dlist;
@@ -9,6 +16,7 @@ typedef struct dlist_iter_t
     int32_t index;
 } dlist_iter_t;
 
+TEST int32_t get_inverse(int32_t value);
 
 /*!
  * @brief Create an iterable object. The iterable is a structure capable of
@@ -173,7 +181,8 @@ typedef struct
 } iter_search_t;
 */
 
-iter_search_t * iter_init_search(void * data,
+iter_search_t * iter_init_search(dlist_iter_t * iter,
+                                 void * data,
                                  int32_t index,
                                  iter_search_by search_by)
 {
@@ -184,20 +193,128 @@ iter_search_t * iter_init_search(void * data,
     }
 
     * search = (iter_search_t){
+        .iter           = iter,
         .search_by      = search_by,
         .target_data    = data,
         .target_index   = index,
         .found_node     = NULL,
         .found_index    = -1,
-        .search_by      = search_by
     };
     return search;
 }
 
+void iter_destroy_search(iter_search_t * search)
+{
+    free(search);
+}
+
+iter_search_result iter_search(iter_search_t * search)
+{
+    assert(search);
+    size_t dlist_length = dlist_get_length(search->iter->dlist);
+    iter_fetch_t iterate_to = NEXT;
+
+    // If search by index, ensure that the index is within range
+    if (SEARCH_BY_INDEX == search->search_by)
+    {
+        // If index is a positive integer
+        if (search->target_index > -1)
+        {
+            // If the ABS of index is grater than our length, fail
+            if ((size_t)search->target_index > (dlist_length - 1))
+            {
+                return SEARCH_FAILURE;
+            }
+        }
+
+        else // Target index is a negative integer
+        {
+            // If the inverse is greater than our length, return NULL
+            if ((size_t)get_inverse > dlist_length)
+            {
+                return SEARCH_FAILURE;
+            }
+
+            // If negative index is valid, convert it to a positive and change
+            // the direction of the search. This is useful for when wanting
+            // to search for an index from the end of the linked list
+            search->target_index = (int32_t)dlist_length + search->target_index;
+            iterate_to = PREV;
+        }
+    }
 
 
+    dnode_t * current_node = iter_get_node(search->iter);
+    int32_t current_index = iter_get_index(search->iter);
+
+    while (NULL != current_node)
+    {
+        if (SEARCH_BY_VALUE == search->search_by)
+        {
+            if (current_node->data == search->target_data)
+            {
+                search->target_data = current_node->data;
+                search->target_index = current_index;
+                return SEARCH_SUCCESS;
+            }
+        }
+        else   // Else SEARCH_BY_INDEX
+        {
+            if (current_index == search->target_index)
+            {
+                search->target_data = current_node->data;
+                search->target_index = current_index;
+                return SEARCH_SUCCESS;
+            }
+        }
 
 
+        // Iterate and update the values
+        iterate(search->iter, iterate_to);
+        current_node = iter_get_node(search->iter);
+        current_index = iter_get_index(search->iter);
+    }
+
+    return SEARCH_FAILURE;
+}
 
 
+/*!
+ * @brief Function returns the inverse of a number. The function will return
+ * the same value of a int 32 min because there is no inverse for that value
+ * in a 32 bit number
+ * @param value
+ * @return Inverse of the number or same number for INT32_MIN
+ */
+TEST int32_t get_inverse(int32_t value)
+{
+    if (0 == value)
+    {
+        return value;
+    }
 
+    // we have a positive number, return a negative
+    if (value > -1)
+    {
+        // if the value is maxed, then return the min value plus 1
+        if (INT32_MAX == value)
+        {
+            return INT32_MIN + 1;
+        }
+
+        return -value;
+    }
+    else
+    {
+        // if the value is min, then there is no inverse possible so return
+        // the same value back
+        if (INT32_MIN == value)
+        {
+            return value;
+        }
+        else
+        {
+            return -value;
+        }
+    }
+}
