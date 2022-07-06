@@ -45,6 +45,10 @@ static void swap_dnodes(dnode_t * left, dnode_t * right);
 static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 
 
+//Search functions
+static dnode_t * get_by_value(dlist_t * dlist, void * data);
+static dnode_t * get_at_index(dlist_t * dlist, int32_t index);
+
 /*!
  * @brief Check if allocation is valid
  * @param ptr Any pointer
@@ -276,7 +280,7 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
 {
     assert(dlist);
     assert(data);
-    dnode_t * node = get_by(dlist, data);
+    dnode_t * node = get_by_value(dlist, data);
     if (NULL == node)
     {
         return NULL;
@@ -410,7 +414,7 @@ void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
  * Get item in dlist by index
  */
 
-dnode_t * get_by_value(dlist_t * dlist, void * data)
+static dnode_t * get_by_value(dlist_t * dlist, void * data)
 {
     // Assert values
     assert(dlist);
@@ -439,6 +443,16 @@ void * dlist_get_by_value(dlist_t * dlist, void * data)
     }
 
     return found_node->data;
+}
+
+void * dlist_get_by_index(dlist_t * dlist, int32_t index)
+{
+    dnode_t * node = get_at_index(dlist, index);
+    if (NULL == node)
+    {
+        return NULL;
+    }
+    return node->data;
 }
 
 static dnode_t * get_at_index(dlist_t * dlist, int32_t index)
@@ -509,15 +523,6 @@ static dnode_t * get_at_index(dlist_t * dlist, int32_t index)
 // * @param index
 // * @return void * pointer to the data
 // */
-//void * dlist_get_by_index(dlist_t * dlist, int32_t index)
-//{
-//    dnode_t * node = get_at_index(dlist, index);
-//    if (NULL == node)
-//    {
-//        return NULL;
-//    }
-//    return node->data;
-//}
 
 /*!
  * @brief Create the structure that is stored on each item in the linked list

@@ -148,15 +148,15 @@ TEST_F(DListTestFixture, TestPopHead)
 }
 
 // Test ability to find a match
-TEST_F(DListTestFixture, TestFindInDlist)
-{
-    EXPECT_EQ(dlist_in_dlist(dlist, payload_last), DLIST_MATCH);
-
-    void * no_match_payload = get_payload(-1);
-    EXPECT_NE(dlist_in_dlist(dlist, no_match_payload), DLIST_MATCH);
-    EXPECT_EQ(dlist_get_length(dlist), length);
-    free(no_match_payload);
-}
+//TEST_F(DListTestFixture, TestFindInDlist)
+//{
+//    EXPECT_EQ(dlist_in_dlist(dlist, payload_last), DLIST_MATCH);
+//
+//    void * no_match_payload = get_payload(-1);
+//    EXPECT_NE(dlist_in_dlist(dlist, no_match_payload), DLIST_MATCH);
+//    EXPECT_EQ(dlist_get_length(dlist), length);
+//    free(no_match_payload);
+//}
 
 // Test ability to fetch an item from the linked list
 TEST_F(DListTestFixture, TestGetInDList)
