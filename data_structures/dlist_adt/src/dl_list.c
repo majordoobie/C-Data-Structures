@@ -351,7 +351,7 @@ void dlist_set_iter_head(dlist_iter_t * iter)
     dlist_t * dlist = iter_get_dlist(iter);
     assert(dlist);
 
-    iter_set_iter_node(iter, dlist->head, 0);
+    iter_set_node(iter, dlist->head, 0);
 }
 
 /*!
@@ -368,11 +368,11 @@ void dlist_set_iter_tail(dlist_iter_t * iter)
 
     // length can never be less than 0. If length is already 0 then that
     // means that the tail IS the head. So we set the index to 0 here
-    iter_set_iter_node(
+    iter_set_node(
         iter,
         dlist->tail,
         (0 == dlist->length) ? 0 : (int32_t)dlist->length - 1
-        );
+    );
 }
 
 /*!
@@ -415,22 +415,6 @@ void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
 
 
 
-
-/*!
- * @brief Create the structure that is stored on each item in the linked list
- * @param data
- * @return
- */
-static dnode_t * init_node(void * data)
-{
-    dnode_t * node = (dnode_t *)calloc(1, sizeof(dnode_t));
-    if (INVALID_PTR == verify_alloc(node))
-    {
-        return NULL;
-    }
-    node->data = data;
-    return node;
-}
 
 
 /*!
@@ -506,7 +490,7 @@ static dnode_t * get_value(dlist_t * dlist, void * data)
 
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
     dlist_match_t found = DLIST_MISS_MATCH;
-    dnode_t * node = iter_get_iter_node(iter);
+    dnode_t * node = iter_get_node(iter);
     while (NULL != node)
     {
         if (DLIST_MATCH == dlist->compare_func(node->data, data))
@@ -578,10 +562,27 @@ static dnode_t * get_at_index(dlist_t * dlist, int32_t index)
         }
     }
 
-    dnode_t * node = iter_get_iter_node(iter);
+    dnode_t * node = iter_get_node(iter);
     dlist_destroy_iter(iter);
     return node;
 }
+
+/*!
+ * @brief Create the structure that is stored on each item in the linked list
+ * @param data
+ * @return
+ */
+static dnode_t * init_node(void * data)
+{
+    dnode_t * node = (dnode_t *)calloc(1, sizeof(dnode_t));
+    if (INVALID_PTR == verify_alloc(node))
+    {
+        return NULL;
+    }
+    node->data = data;
+    return node;
+}
+
 /*!
  * @brief Private function handles the removal of the identified node
  * @param dlist

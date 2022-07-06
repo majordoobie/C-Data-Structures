@@ -82,7 +82,27 @@ int32_t iter_get_index(dlist_iter_t * iter)
     return iter->index;
 }
 
-void iter_set_iter_node(dlist_iter_t * iter, dnode_t * node, int32_t index)
+/*!
+ * @brief Fetches the current node that the iter is pointing to. This function
+ * should only be used by the dlist API since the dnode_t
+ *
+ * @param iter
+ * @return Pointer to the dnode_t at the current iter pointer
+ */
+dnode_t * iter_get_node(dlist_iter_t * iter)
+{
+    return iter->node;
+}
+
+/*!
+ * @brief Function sets the node pointer to the node specified. This can be used
+ * to reset the node iter back to head, tail, or any other index.
+ *
+ * @param iter
+ * @param node
+ * @param index
+ */
+void iter_set_node(dlist_iter_t * iter, dnode_t * node, int32_t index)
 {
     assert(iter);
     assert(node);
@@ -90,15 +110,18 @@ void iter_set_iter_node(dlist_iter_t * iter, dnode_t * node, int32_t index)
     iter->index = index;
 }
 
+/*!
+ * @brief Function to return the dlist pointer inside the iter. This function
+ * should only be used from the dlist API
+ *
+ * @param iter
+ * @return Pointer to the dlist used to create the iter object
+ */
 dlist_t * iter_get_dlist(dlist_iter_t * iter)
 {
     return iter->dlist;
 }
 
-dnode_t * iter_get_iter_node(dlist_iter_t * iter)
-{
-    return iter->node;
-}
 
 /*!
  * @brief Internal function to iterate the iter object. After it updates the
