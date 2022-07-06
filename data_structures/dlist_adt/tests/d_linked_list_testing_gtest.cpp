@@ -219,7 +219,7 @@ TEST_F(DListTestFixture, TestPrepend)
 // Test that forward iteration is working properly
 TEST_F(DListTestFixture, TestIterForward)
 {
-    void * node = dlist_get_iter_value(this->iter);
+    void * node = iter_get_value(this->iter);
     int count = 0;
     while (count < this->length)
     {
@@ -242,7 +242,7 @@ TEST_F(DListTestFixture, TestIterReverse)
     // set the tail since our init is for head
     dlist_set_iter_tail(this->iter);
 
-    void * node = dlist_get_iter_value(this->iter);
+    void * node = iter_get_value(this->iter);
 
     int count = this->length - 1;
     while (count > -1)
@@ -263,7 +263,7 @@ TEST_F(DListTestFixture, TestIterReverse)
 // Test ability to change the direction of the iter as we see fit
 TEST_F(DListTestFixture, TestForwardReverse)
 {
-    void * node = dlist_get_iter_value(this->iter);
+    void * node = iter_get_value(this->iter);
     int count = 0;
     while (count < this->length)
     {
@@ -279,7 +279,7 @@ TEST_F(DListTestFixture, TestForwardReverse)
     // Reset to the tail
     dlist_set_iter_tail(this->iter);
     count = this->length - 1;
-    node = (char * )dlist_get_iter_value(this->iter);
+    node = (char * )iter_get_value(this->iter);
     while (count > -1)
     {
         // get the reference to avoid copying the string value
@@ -295,7 +295,7 @@ TEST_F(DListTestFixture, TestForwardReverse)
 
     // reset back to head
     dlist_set_iter_head(this->iter);
-    node = (char * )dlist_get_iter_value(this->iter);
+    node = (char * )iter_get_value(this->iter);
 
     count = 0;
     while (count < this->length)
@@ -357,7 +357,7 @@ TEST_F(DListTestFixture, TestInsertAt)
     dlist_insert(this->dlist, middle_node, middle_index);
 
     // reset back to head
-    char * node = (char * )dlist_get_iter_value(this->iter);
+    char * node = (char * )iter_get_value(this->iter);
     for (std::string& val: this->test_vector)
     {
         EXPECT_EQ(std::strcmp(val.c_str(), node), 0) << val.c_str() << " " << node;

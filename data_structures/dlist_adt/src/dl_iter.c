@@ -1,7 +1,6 @@
 #include <dl_iter.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 typedef struct dlist_iter_t
 {
@@ -10,19 +9,6 @@ typedef struct dlist_iter_t
     int32_t index;
 } dlist_iter_t;
 
-/*!
- * @brief Function returns the current value at the current index. For a
- * newly created iter, this will either be the head or the tail based ont he
- * end of the list that the iter object was created with.
- *
- * @param iter
- * @return Pointer to the node data
- */
-void * dlist_get_iter_value(dlist_iter_t * iter)
-{
-    assert(iter);
-    return iter->node->data;
-}
 
 /*!
  * @brief Create an iterable object. The iterable is a structure capable of
@@ -61,12 +47,40 @@ dlist_iter_t * iter_get_iterable(dnode_t * node, dlist_t * dlist, int32_t index)
     return iter;
 }
 
+/*!
+ * @brief Destroy the iter object
+ * @param iter
+ */
 void iter_destroy_iterable(dlist_iter_t * iter)
 {
     free(iter);
 }
 
+/*!
+ * @brief Function returns the current value at the current index. For a
+ * newly created iter, this will either be the head or the tail based on the
+ * end of the list that the iter object was created with.
+ *
+ * @param iter
+ * @return Pointer to the void data stored at the iter node. If NULL is returned,
+ * then the dlist is empty
+ */
+void * iter_get_value(dlist_iter_t * iter)
+{
+    assert(iter);
+    return iter->node->data;
+}
 
+/*!
+ * @brief Returns the current index of the current node that the iter object
+ * is pointing to
+ * @param iter
+ * @return Index of the current node. If -1 is returned, then the dlist is empty
+ */
+int32_t iter_get_index(dlist_iter_t * iter)
+{
+    return iter->index;
+}
 
 void iter_set_iter_node(dlist_iter_t * iter, dnode_t * node, int32_t index)
 {
@@ -74,11 +88,6 @@ void iter_set_iter_node(dlist_iter_t * iter, dnode_t * node, int32_t index)
     assert(node);
     iter->node = node;
     iter->index = index;
-}
-
-int32_t iter_get_iter_index(dlist_iter_t * iter)
-{
-    return iter->index;
 }
 
 dlist_t * iter_get_dlist(dlist_iter_t * iter)

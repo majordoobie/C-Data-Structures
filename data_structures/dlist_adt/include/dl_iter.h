@@ -29,7 +29,7 @@ dlist_iter_t * iter_get_iterable(dnode_t * node, dlist_t * dlist, int32_t index)
 void iter_destroy_iterable(dlist_iter_t * iter);
 
 // Get iter values
-int32_t iter_get_iter_index(dlist_iter_t * iter);
+int32_t iter_get_index(dlist_iter_t * iter);
 dnode_t * iter_get_iter_node(dlist_iter_t * iter);
 dlist_t * iter_get_dlist(dlist_iter_t * iter);
 

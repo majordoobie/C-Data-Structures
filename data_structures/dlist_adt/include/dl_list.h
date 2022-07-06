@@ -82,7 +82,7 @@ dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data);
 
 // iterables
 dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos);
-void * dlist_get_iter_value(dlist_iter_t * dlist_iter);
+void * iter_get_value(dlist_iter_t * iter);
 void * dlist_get_iter_next(dlist_iter_t * dlist_iter);
 void * dlist_get_iter_prev(dlist_iter_t * dlist_iter);
 void dlist_set_iter_head(dlist_iter_t * dlist_iter);

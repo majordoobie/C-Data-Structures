@@ -75,7 +75,7 @@ TEST_F(DListTestSortFixture, SortAscending)
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
 
     int count = 0;
-    int node = *(int *)dlist_get_iter_value(iter);
+    int node = *(int *)iter_get_value(iter);
 
     while (count < (int)this->test_array.size() - 1)
     {
@@ -98,7 +98,7 @@ TEST_F(DListTestSortFixture, SortAscendingAdv)
     dlist_iter_t * iter = dlist_get_iterable(dlist2, ITER_HEAD);
 
     int count = 0;
-    int node = *(int *)dlist_get_iter_value(iter);
+    int node = *(int *)iter_get_value(iter);
 
     while (count < (int)this->test_array2.size() - 1)
     {
@@ -122,7 +122,7 @@ TEST_F(DListTestSortFixture, SortDescending)
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
 
     int count = 0;
-    int node = *(int *)dlist_get_iter_value(iter);
+    int node = *(int *)iter_get_value(iter);
 
     while (count < (int)this->test_array.size() - 1)
     {
@@ -147,7 +147,7 @@ TEST_F(DListTestSortFixture, SortDescendingAdv)
     dlist_iter_t * iter = dlist_get_iterable(dlist2, ITER_HEAD);
 
     int count = 0;
-    int node = *(int *)dlist_get_iter_value(iter);
+    int node = *(int *)iter_get_value(iter);
 
     while (count < (int)this->test_array2.size() - 1)
     {

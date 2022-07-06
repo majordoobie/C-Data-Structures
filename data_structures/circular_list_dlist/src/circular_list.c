@@ -143,7 +143,7 @@ clist_result_t clist_insert(clist_t * clist, void * node, int32_t index, clist_l
  */
 void * clist_get_value(clist_t * clist)
 {
-    return dlist_get_iter_value(clist->iter);
+    return iter_get_value(clist->iter);
 }
 
 /*!
@@ -159,7 +159,7 @@ void * clist_get_next(clist_t * clist)
     if (NULL == node)
     {
         dlist_set_iter_head(clist->iter);
-        return dlist_get_iter_value(clist->iter);
+        return iter_get_value(clist->iter);
     }
     return node;
 }

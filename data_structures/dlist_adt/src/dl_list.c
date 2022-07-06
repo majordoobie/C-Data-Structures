@@ -200,119 +200,6 @@ dlist_result_t dlist_insert(dlist_t * dlist, void * data, int32_t index)
 }
 
 /*!
- * @brief Creates an iterable object with a start node value of either head
- * or tail based on the iter_start_t position. The value is then extracted by
- * using the dlist_get_iter_value and iterated with the iter call
- *
- * @param dlist
- * @return dlist_iter_t object starting at head or tail
- */
-dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
-{
-    // verify that the dlist is a valid pointer
-    assert(dlist);
-    dlist_iter_t * iter = iter_get_iterable(
-        (ITER_HEAD == pos) ? dlist->head : dlist->tail,
-        dlist,
-        (ITER_HEAD == pos || 0 == dlist->length ) ? 0 : (int32_t)dlist->length - 1
-        );
-    return iter;
-}
-
-/*!
- * @brief Return the current index of the iter object
- * @param iter
- * @return int32_t index of the iterable
- */
-int32_t dlist_get_iter_index(dlist_iter_t * iter)
-{
-    assert(iter);
-    return iter_get_iter_index(iter);
-}
-
-/*!
- * @brief Reset the iterable to start with the head of the dlist
- * @param iter
- */
-void dlist_set_iter_head(dlist_iter_t * iter)
-{
-    assert(iter);
-
-    // Get the embedded dlist from iter
-    dlist_t * dlist = iter_get_dlist(iter);
-    assert(dlist);
-
-    iter_set_iter_node(iter, dlist->head, 0);
-}
-
-/*!
- * @brief Reset the iterable to start with the tail of the dlist
- * @param iter
- */
-void dlist_set_iter_tail(dlist_iter_t * iter)
-{
-    assert(iter);
-
-    // Get the embedded dlist from iter
-    dlist_t * dlist = iter_get_dlist(iter);
-    assert(dlist);
-
-    // length can never be less than 0. If length is already 0 then that
-    // means that the tail IS the head. So we set the index to 0 here
-    iter_set_iter_node(
-        iter,
-        dlist->tail,
-        (0 == dlist->length) ? 0 : (int32_t)dlist->length - 1
-        );
-}
-
-/*!
- * @brief Iterates over the iterable and returns the prev node. A NULL is
- * returned if the next node is NULL
- * @param dlist_iter
- * @return Returns the data pointer for the node. If the end of the linked
- * list is reached, then a NULL is returned.
- */
-void * dlist_get_iter_prev(dlist_iter_t * dlist_iter)
-{
-    dnode_t * data = iterate(dlist_iter, PREV);
-    if (NULL != data)
-    {
-        return data->data;
-    }
-    return NULL;
-
-}
-
-/*!
- * @brief Iterates over the iterable and returns the next node. A NULL is
- * returned if the next node is NULL
- * @param dlist_iter
- * @return Returns the data pointer for the node. If the end of the linked
- * list is reached, then a NULL is returned.
- */
-void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
-{
-    dnode_t * data = iterate(dlist_iter, NEXT);
-    if (NULL != data)
-    {
-        return data->data;
-    }
-    return NULL;
-}
-
-
-/*!
- * @brief Destroy the iterable
- * @param dlist_iter
- */
-void dlist_destroy_iter(dlist_iter_t * dlist_iter)
-{
-    iter_destroy_iterable(dlist_iter);
-}
-
-
-/*!
  * @brief Free the double linked list without freeing the satellite data.
  *
  * This function will leave the satellite data up to the user to free.
@@ -406,6 +293,126 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
 
     return remove_node(dlist, node);
 }
+
+/*********************************************************************************************
+ *
+ *                                 Iter API Section
+ *
+ * This section uses the iter API to interact with the iter object.
+ *
+ ********************************************************************************************/
+
+/*!
+ * @brief Creates an iterable object with a start node value of either head
+ * or tail based on the iter_start_t position. The value is then extracted by
+ * using the iter_get_value and iterated with the iter call
+ *
+ * @param dlist
+ * @return dlist_iter_t object starting at head or tail
+ */
+dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
+{
+    // verify that the dlist is a valid pointer
+    assert(dlist);
+
+    /*
+     * The index value is either going to be:
+     *  0           : Head when dlist is not empty
+     *  -1          : When dlist is empty
+     *  length - 1  : When tail
+     */
+    dlist_iter_t * iter = iter_get_iterable(
+        (ITER_HEAD == pos) ? dlist->head : dlist->tail,
+        dlist,
+        (ITER_HEAD == pos || 0 == dlist->length ) ? 0 : (int32_t)dlist->length - 1
+        );
+    return iter;
+}
+
+/*!
+ * @brief Destroy the iterable
+ * @param dlist_iter
+ */
+void dlist_destroy_iter(dlist_iter_t * dlist_iter)
+{
+    iter_destroy_iterable(dlist_iter);
+}
+
+
+/*!
+ * @brief Reset the iterable to start with the head of the dlist
+ * @param iter
+ */
+void dlist_set_iter_head(dlist_iter_t * iter)
+{
+    assert(iter);
+
+    // Get the embedded dlist from iter
+    dlist_t * dlist = iter_get_dlist(iter);
+    assert(dlist);
+
+    iter_set_iter_node(iter, dlist->head, 0);
+}
+
+/*!
+ * @brief Reset the iterable to start with the tail of the dlist
+ * @param iter
+ */
+void dlist_set_iter_tail(dlist_iter_t * iter)
+{
+    assert(iter);
+
+    // Get the embedded dlist from iter
+    dlist_t * dlist = iter_get_dlist(iter);
+    assert(dlist);
+
+    // length can never be less than 0. If length is already 0 then that
+    // means that the tail IS the head. So we set the index to 0 here
+    iter_set_iter_node(
+        iter,
+        dlist->tail,
+        (0 == dlist->length) ? 0 : (int32_t)dlist->length - 1
+        );
+}
+
+/*!
+ * @brief Iterates over the iterable and returns the prev node. A NULL is
+ * returned if the next node is NULL
+ * @param dlist_iter
+ * @return Returns the data pointer for the node. If the end of the linked
+ * list is reached, then a NULL is returned.
+ */
+void * dlist_get_iter_prev(dlist_iter_t * dlist_iter)
+{
+    dnode_t * data = iterate(dlist_iter, PREV);
+    if (NULL != data)
+    {
+        return data->data;
+    }
+    return NULL;
+
+}
+
+/*!
+ * @brief Iterates over the iterable and returns the next node. A NULL is
+ * returned if the next node is NULL
+ * @param dlist_iter
+ * @return Returns the data pointer for the node. If the end of the linked
+ * list is reached, then a NULL is returned.
+ */
+void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
+{
+    dnode_t * data = iterate(dlist_iter, NEXT);
+    if (NULL != data)
+    {
+        return data->data;
+    }
+    return NULL;
+}
+
+
+
+
 
 
 
@@ -559,7 +566,7 @@ static dnode_t * get_at_index(dlist_t * dlist, int32_t index)
     // create the iter object to start iterating
     dlist_iter_t * iter = dlist_get_iterable(dlist, flag);
 
-    while (target_index != iter_get_iter_index(iter))
+    while (target_index != iter_get_index(iter))
     {
         if (ITER_HEAD == flag)
         {
