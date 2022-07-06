@@ -44,7 +44,7 @@ dlist_match_t compare_payloads(void * data1, void * data2)
  */
 TEST(dlist_test, InitTest)
 {
-    dlist_t * dlist = dlist_init(0);
+    dlist_t * dlist = dlist_init(nullptr);
     ASSERT_NE(dlist, nullptr);
     EXPECT_EQ(dlist_get_length(dlist), 0);
     dlist_destroy(dlist);

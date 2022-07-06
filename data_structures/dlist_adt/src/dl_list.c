@@ -413,8 +413,22 @@ void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
 
 
 
+/*
+ * Is value in dlist
+ * Get item in dlist by value
+ * Get item in dlist by index
+ */
+
+void * dlist_get_by_value(dlist_t * dlist, void * data)
+{
+    // Assert values
+    assert(dlist);
+    assert(data);
+
+    iter_search_t * search = iter_init_search(NULL, 0, SEARCH_BY_INDEX);
 
 
+}
 
 
 /*!
@@ -442,7 +456,7 @@ dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
  * @param data
  * @return Pointer to the node if found else NULL
  */
-void * dlist_get_by_value(dlist_t * dlist, void * data)
+void * ldlist_get_by_value(dlist_t * dlist, void * data)
 {
     assert(dlist);
     assert(data);

@@ -154,3 +154,50 @@ dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch)
     }
     return iter->node;
 }
+
+/*
+ *
+typedef enum
+{
+    SEARCH_BY_INDEX,
+    SEARCH_BY_VALUE
+} iter_search_by;
+
+typedef struct
+{
+    dnode_t * target_node;
+    int32_t target_index;
+    dnode_t * found_node;
+    int32_t found_index;
+    iter_search_by search_by;
+} iter_search_t;
+*/
+
+iter_search_t * iter_init_search(void * data,
+                                 int32_t index,
+                                 iter_search_by search_by)
+{
+    iter_search_t * search = (iter_search_t *)malloc(sizeof(iter_search_t));
+    if (INVALID_PTR == verify_alloc(search))
+    {
+        return NULL;
+    }
+
+    * search = (iter_search_t){
+        .search_by      = search_by,
+        .target_data    = data,
+        .target_index   = index,
+        .found_node     = NULL,
+        .found_index    = -1,
+        .search_by      = search_by
+    };
+    return search;
+}
+
+
+
+
+
+
+
+
