@@ -11,12 +11,6 @@
 #define TEST
 #endif
 
-// Enum for determining if malloc calls were valid
-typedef enum
-{
-    VALID_PTR = 1,
-    INVALID_PTR = 0
-} valid_ptr_t;
 
 typedef enum
 {
@@ -45,7 +39,6 @@ typedef struct
 } quick_sort_t;
 
 static dnode_t * init_node(void * data);
-static valid_ptr_t verify_alloc(void * ptr);
 static dnode_t * get_value(dlist_t * dlist, void * data);
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
 static void * remove_node(dlist_t * dlist, dnode_t * node);
@@ -60,6 +53,21 @@ static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 static void swap_dnodes(dnode_t * left, dnode_t * right);
 static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 
+
+/*!
+ * @brief Check if allocation is valid
+ * @param ptr Any pointer
+ * @return valid_ptr_t : VALID_PTR or INVALID_PTR
+ */
+valid_ptr_t verify_alloc(void * ptr)
+{
+    if (NULL == ptr)
+    {
+        fprintf(stderr, "[!] Invalid allocation\n");
+        return INVALID_PTR;
+    }
+    return VALID_PTR;
+}
 
 /*!
  * @brief Perform a quick sort on the double linked list. The quick sort
@@ -400,20 +408,6 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
 }
 
 
-/*!
- * @brief Check if allocation is valid
- * @param ptr Any pointer
- * @return valid_ptr_t : VALID_PTR or INVALID_PTR
- */
-static valid_ptr_t verify_alloc(void * ptr)
-{
-    if (NULL == ptr)
-    {
-        fprintf(stderr, "[!] Invalid allocation\n");
-        return INVALID_PTR;
-    }
-    return VALID_PTR;
-}
 
 /*!
  * @brief Create the structure that is stored on each item in the linked list

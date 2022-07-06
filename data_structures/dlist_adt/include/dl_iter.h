@@ -21,6 +21,7 @@ typedef struct
     int32_t target_index;
     dnode_t * found_node;
     int32_t found_index;
+    inter_search_by search_by;
 } iter_search_t;
 
 // Create an iterable

@@ -24,14 +24,31 @@ void * dlist_get_iter_value(dlist_iter_t * iter)
     return iter->node->data;
 }
 
+/*!
+ * @brief Create an iterable object. The iterable is a structure capable of
+ * iterating through the instance of the dlist. Keep in mind that all iter
+ * objects share the same dlist. If you modify one iter object it will affect
+ * all iter objects and the dlist.
+ *
+ * The node parameter is the node to point at. This can be any value. The parent
+ * API should set this to either head or tail using an enum and the index is the
+ * index of the given  node.
+ *
+ * The dlist is provided to be able to interact with the dlist such as fetching
+ * the dlist length as it changes.
+ *
+ * @param node
+ * @param dlist
+ * @param index
+ * @return dlist_iter_t or NULL if failure to malloc
+ */
 dlist_iter_t * iter_get_iterable(dnode_t * node, dlist_t * dlist, int32_t index)
 {
     // verify that the dlist is a valid pointer
     assert(dlist);
     dlist_iter_t * iter = (dlist_iter_t *)malloc(sizeof(dlist_iter_t));
-    if (NULL == iter)
+    if (INVALID_PTR == verify_alloc(iter))
     {
-        fprintf(stderr, "[!] Unable to allocate memory for iter object\n");
         return NULL;
     }
 
