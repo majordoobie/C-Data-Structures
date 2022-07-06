@@ -43,6 +43,14 @@ dlist_iter_t * iter_get_iterable(dnode_t * node, dlist_t * dlist, int32_t index)
 
     return iter;
 }
+
+void iter_destroy_iterable(dlist_iter_t * iter)
+{
+    free(iter);
+}
+
+
+
 void iter_set_iter_node(dlist_iter_t * iter, dnode_t * node, int32_t index)
 {
     assert(iter);

@@ -37,12 +37,6 @@ typedef struct dlist_t
     dlist_match_t (* compare_func)(void *, void *);
 } dlist_t;
 
-//typedef struct dlist_iter_t
-//{
-//    dlist_t * dlist;
-//    dnode_t * node;
-//    int32_t index;
-//} dlist_iter_t;
 
 typedef struct
 {
@@ -214,35 +208,8 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
         dlist,
         (ITER_HEAD == pos || 0 == dlist->length ) ? 0 : (int32_t)dlist->length - 1
         );
-//    dlist_iter_t * iter = (dlist_iter_t *)malloc(sizeof(dlist_iter_t));
-//    if (INVALID_PTR == verify_alloc(iter))
-//    {
-//        return NULL;
-//    }
-//
-//    // Init the iter structure and return the pointer to it
-//    *iter = (dlist_iter_t){
-//        .node       = (ITER_HEAD == pos) ? dlist->head : dlist->tail,
-//        .dlist      = dlist,
-//        .index      = (ITER_HEAD == pos || 0 == dlist->length ) ? 0 :
-//                                                    (int32_t)dlist->length - 1
-//    };
     return iter;
 }
-
-///*!
-// * @brief Function returns the current value at the current index. For a
-// * newly created iter, this will either be the head or the tail based ont he
-// * end of the list that the iter object was created with.
-// *
-// * @param iter
-// * @return Pointer to the node data
-// */
-//void * dlist_get_iter_value(dlist_iter_t * iter)
-//{
-//    assert(iter);
-//    return iter->node->data;
-//}
 
 /*!
  * @brief Return the current index of the iter object
@@ -333,7 +300,7 @@ void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
  */
 void dlist_destroy_iter(dlist_iter_t * dlist_iter)
 {
-    free(dlist_iter);
+    iter_destroy_iterable(dlist_iter);
 }
 
 
@@ -432,23 +399,6 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
     return remove_node(dlist, node);
 }
 
-/*!
- * @brief Check if value is in the dlist
- * @param dlist
- * @param data
- * @return
- */
-dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
-{
-    assert(dlist);
-    assert(data);
-    dnode_t * node = get_value(dlist, data);
-    if (NULL == node)
-    {
-        return DLIST_MISS_MATCH;
-    }
-    return DLIST_MATCH;
-}
 
 /*!
  * @brief Check if allocation is valid
@@ -481,6 +431,24 @@ static dnode_t * init_node(void * data)
     return node;
 }
 
+
+/*!
+ * @brief Check if value is in the dlist
+ * @param dlist
+ * @param data
+ * @return
+ */
+dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
+{
+    assert(dlist);
+    assert(data);
+    dnode_t * node = get_value(dlist, data);
+    if (NULL == node)
+    {
+        return DLIST_MISS_MATCH;
+    }
+    return DLIST_MATCH;
+}
 
 /*!
  * @brief Fetch the node in the dlist by matching the the value using the
