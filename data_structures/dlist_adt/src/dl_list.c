@@ -523,6 +523,12 @@ void dlist_set_iter_tail(dlist_iter_t * iter)
     );
 }
 
+int32_t dlist_get_iter_index(dlist_iter_t * dlist_iter)
+{
+    return iter_get_index(dlist_iter);
+}
+
+
 /*!
  * @brief Iterates over the iterable and returns the prev node. A NULL is
  * returned if the next node is NULL
@@ -572,6 +578,8 @@ static dnode_t * get_by_index(dlist_t * dlist, int32_t index)
 
     return found_node;
 }
+
+
 
 /*!
  * @brief Create the structure that is stored on each item in the linked list

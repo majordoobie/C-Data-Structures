@@ -145,7 +145,7 @@ TEST_F(CListTestFixture, TestAbilityToDeleteAll)
     char * node = (char *)clist_get_value(this->clist);
     while (nullptr != node)
     {
-        clist_remove(this->clist, node);
+        free(clist_remove(this->clist, node));
         node = (char *)clist_get_value(this->clist);
     }
 
