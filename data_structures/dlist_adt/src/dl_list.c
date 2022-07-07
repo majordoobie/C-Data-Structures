@@ -46,7 +46,6 @@ static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 
 
 //Search functions
-static dnode_t * get_by_value(dlist_t * dlist, void * data);
 static dnode_t * get_at_index(dlist_t * dlist, int32_t index);
 
 /*!
@@ -258,29 +257,18 @@ void * dlist_pop_head(dlist_t * dlist)
     return remove_node(dlist, node);
 }
 
-
-
-int32_t dlist_get_index_of_value(dlist_t * dlist, void * data)
-{
-    assert(dlist);
-    assert(data);
-
-    return 32;
-
-}
-
-///*!
-// * @brief Remove node from the dlist using the value passed in
-// * @param dlist
-// * @param data
-// * @return NULL if item it not found. Otherwise, the pointer to the data is
-// * returned.
-// */
+/*!
+ * @brief Remove node from the dlist using the value passed in
+ * @param dlist
+ * @param data
+ * @return NULL if item it not found. Otherwise, the pointer to the data is
+ * returned.
+ */
 void * dlist_remove_value(dlist_t * dlist, void * data)
 {
     assert(dlist);
     assert(data);
-    dnode_t * node = get_by_value(dlist, data);
+    dnode_t * node = dlist_get_by_value(dlist, data);
     if (NULL == node)
     {
         return NULL;
@@ -410,38 +398,14 @@ void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
     return NULL;
 }
 
-
-
-
-/*
- * Is value in dlist
- * Get item in dlist by value
- * Get item in dlist by index
- */
-
-static dnode_t * get_by_value(dlist_t * dlist, void * data)
+void * dlist_get_by_value(dlist_t * dlist, void * data)
 {
     // Assert values
     assert(dlist);
     assert(data);
-    dnode_t * found_data = NULL;
 
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    iter_search_t * search = iter_init_search(iter, data, 0, SEARCH_BY_VALUE);
-    iter_search_result result = iter_search(search);
+    dnode_t * found_node = iter_search_by_value(dlist, data);
 
-    if (SEARCH_SUCCESS == result)
-    {
-        found_data = search->found_node;
-    }
-
-    iter_destroy_search(search);
-    return found_data;
-}
-
-void * dlist_get_by_value(dlist_t * dlist, void * data)
-{
-    dnode_t * found_node = get_by_value(dlist, data);
     if (NULL == found_node)
     {
         return NULL;
