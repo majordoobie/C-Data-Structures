@@ -80,6 +80,9 @@ bool dlist_is_empty(dlist_t * dlist);
 size_t dlist_get_length(dlist_t * dlist);
 dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data);
 
+// Iter functions
+dlist_match_t (* get_func(dlist_t * dlist))(void *, void *);
+
 // iterables
 dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos);
 void * iter_get_value(dlist_iter_t * iter);

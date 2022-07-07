@@ -289,6 +289,11 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
     return remove_node(dlist, node);
 }
 
+dlist_match_t (* get_func(dlist_t * dlist))(void *, void *)
+{
+    return dlist->compare_func;
+}
+
 /*********************************************************************************************
  *
  *                                 Iter API Section

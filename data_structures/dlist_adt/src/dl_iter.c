@@ -246,15 +246,16 @@ iter_search_result iter_search(iter_search_t * search)
 
     dnode_t * current_node = iter_get_node(search->iter);
     int32_t current_index = iter_get_index(search->iter);
+    dlist_match_t (* compare_func)(void *, void *) = get_func(search->iter->dlist);
 
     while (NULL != current_node)
     {
         if (SEARCH_BY_VALUE == search->search_by)
         {
-            if (current_node->data == search->target_data)
+            if (DLIST_MATCH == compare_func(current_node->data, search->target_data))
             {
-                search->target_data = current_node->data;
-                search->target_index = current_index;
+                search->found_node = current_node;
+                search->found_index = current_index;
                 return SEARCH_SUCCESS;
             }
         }
@@ -262,8 +263,8 @@ iter_search_result iter_search(iter_search_t * search)
         {
             if (current_index == search->target_index)
             {
-                search->target_data = current_node->data;
-                search->target_index = current_index;
+                search->found_node = current_node;
+                search->found_index = current_index;
                 return SEARCH_SUCCESS;
             }
         }
