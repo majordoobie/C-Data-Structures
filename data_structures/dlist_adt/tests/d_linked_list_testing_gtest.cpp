@@ -367,5 +367,25 @@ TEST_F(DListTestFixture, TestInsertAt)
         EXPECT_EQ(std::strcmp(val.c_str(), node), 0) << val.c_str() << " " << node;
         node = (char *)dlist_get_iter_next(this->iter);
     }
+}
 
+/*
+ * This test is the main reason for the massive refactor. An issue that was
+ * happening is that when an iter object is created it points to the current
+ * node. If that node were to get deleted from the dlist, then now the iter
+ * is pointing an invalid location. To fix this I needed to do a lot of
+ * refactoring and implement a list of iters to update
+ */
+TEST_F(DListTestFixture, TestUpdatingItersAfterRemoval)
+{
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_TAIL);
+    EXPECT_EQ(strcmp((char*)iter_get_value(iter), payload_last), 0);
+
+    char * removed_node = (char*)dlist_remove_value(dlist, payload_last);
+    EXPECT_EQ(strcmp(removed_node, payload_last), 0);
+
+    // This is where it should break. What we need it to do is move one index
+    // back to the previous value or the "new tail"
+    char * previous_payload = (char *)test_vector.at(test_vector.size() - 1).c_str();
+    EXPECT_EQ(strcmp(previous_payload, (char*)iter_get_value(iter)), 0);
 }
