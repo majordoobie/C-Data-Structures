@@ -163,24 +163,16 @@ dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch)
     return iter->node;
 }
 
-/*
+
+/*!
+ * @brief Create a search object to aid in the iteration of the linked list
  *
-typedef enum
-{
-    SEARCH_BY_INDEX,
-    SEARCH_BY_VALUE
-} iter_search_by;
-
-typedef struct
-{
-    dnode_t * target_node;
-    int32_t target_index;
-    dnode_t * found_node;
-    int32_t found_index;
-    iter_search_by search_by;
-} iter_search_t;
-*/
-
+ * @param iter iter object
+ * @param data
+ * @param index
+ * @param search_by Search type to perform: SEARCH_BY_INDEX || SEARCH_BY_VALUE
+ * @return Pointer to the search structure
+ */
 iter_search_t * iter_init_search(dlist_iter_t * iter,
                                  void * data,
                                  int32_t index,
@@ -203,14 +195,28 @@ iter_search_t * iter_init_search(dlist_iter_t * iter,
     return search;
 }
 
+/*!
+ * @brief Destroy the iter object
+ * @param search
+ */
 void iter_destroy_search(iter_search_t * search)
 {
     free(search);
 }
 
 
+/*!
+ * @brief Wrapper that creates a iter and search object and performs the search
+ * based on the index. The function will then cleanup after itself
+ *
+ * @param dlist
+ * @param index
+ * @return Pointer to the dnode_t in the dlist or NULL if it was not found
+ */
 dnode_t * iter_search_by_index(dlist_t * dlist, int32_t index)
 {
+    assert(dlist);
+
     // Create iter and search structures
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
     iter_search_t * search = iter_init_search(iter, NULL, index, SEARCH_BY_INDEX);
@@ -225,6 +231,14 @@ dnode_t * iter_search_by_index(dlist_t * dlist, int32_t index)
     return found_data;
 }
 
+/*!
+ * @brief Wrapper that creates a iter and search object and performs the search
+ * based on the index. The function will then cleanup after itself
+ *
+ * @param dlist
+ * @param data
+ * @return Pointer to the dnode_t in the dlist or NULL if it was not found
+ */
 dnode_t * iter_search_by_value(dlist_t * dlist, void * data)
 {
     // Create iter and search structures
@@ -241,6 +255,14 @@ dnode_t * iter_search_by_value(dlist_t * dlist, void * data)
     return found_data;
 }
 
+/*!
+ * @brief Perform an iter search based on the search structure. The function
+ * is capable of conversing a negative value into the proper index. If a negative
+ * is used then a reverse iteration is performed.
+ *
+ * @param search
+ * @return SEARCH_SUCCESS or SEARCH_FAILURE
+ */
 iter_search_result iter_search(iter_search_t * search)
 {
     assert(search);
