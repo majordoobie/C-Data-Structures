@@ -44,10 +44,7 @@ static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 static void swap_dnodes(dnode_t * left, dnode_t * right);
 static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 
-
-//Search functions
-static dnode_t * get_at_index(dlist_t * dlist, int32_t index);
-
+static dnode_t * get_by_index(dlist_t * dlist, int32_t index);
 /*!
  * @brief Check if allocation is valid
  * @param ptr Any pointer
@@ -416,28 +413,21 @@ void * dlist_get_by_value(dlist_t * dlist, void * data)
 
 void * dlist_get_by_index(dlist_t * dlist, int32_t index)
 {
-    dnode_t * node = get_at_index(dlist, index);
-    if (NULL == node)
-    {
-        return NULL;
-    }
-    return node->data;
+    return get_by_index(dlist, index);
 }
 
-static dnode_t * get_at_index(dlist_t * dlist, int32_t index)
+static dnode_t * get_by_index(dlist_t * dlist, int32_t index)
 {
     // Assert values
     assert(dlist);
-    dnode_t * found_node = NULL;
 
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    iter_search_t * search = iter_init_search(iter, NULL, index, SEARCH_BY_INDEX);
-    iter_search_result result = iter_search(search);
+    dnode_t * found_node = iter_search_by_index(dlist, index);
 
-    if (SEARCH_SUCCESS == result)
+    if (NULL == found_node)
     {
-        found_node = search->found_node;
+        return NULL;
     }
+
     return found_node;
 }
 
@@ -598,7 +588,7 @@ static dlist_result_t add_node(dlist_t * dlist,
     }
     else if (INSERT_AT == add_mode)
     {
-        dnode_t * child_node = get_at_index(dlist, at_index);
+        dnode_t * child_node = get_by_index(dlist, at_index);
         if (NULL == child_node)
         {
             return DLIST_FAIL;

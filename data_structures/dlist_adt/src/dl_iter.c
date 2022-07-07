@@ -208,6 +208,22 @@ void iter_destroy_search(iter_search_t * search)
     free(search);
 }
 
+
+dnode_t * iter_search_by_index(dlist_t * dlist, int32_t index)
+{
+    // Create iter and search structures
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
+    iter_search_t * search = iter_init_search(iter, NULL, index, SEARCH_BY_INDEX);
+
+    // Perform the search
+    iter_search(search);
+
+    // Fetch found data and return
+    dnode_t * found_data = search->found_node;
+    iter_destroy_search(search);
+    return found_data;
+}
+
 dnode_t * iter_search_by_value(dlist_t * dlist, void * data)
 {
     // Create iter and search structures

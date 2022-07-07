@@ -49,6 +49,7 @@ dlist_t * iter_get_dlist(dlist_iter_t * iter);
 // Search for values
 iter_search_result iter_search(iter_search_t * search);
 dnode_t * iter_search_by_value(dlist_t * dlist, void * data);
+dnode_t * iter_search_by_index(dlist_t * dlist, int32_t index);
 void iter_destroy_search(iter_search_t * search);
 iter_search_t * iter_init_search(dlist_iter_t * iter,
                                  void * data,
