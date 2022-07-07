@@ -238,7 +238,12 @@ iter_search_t * iter_search_by_value_plus(dlist_t * dlist, void * data)
     iter_search_t * search = iter_init_search(iter, data, 0, SEARCH_BY_VALUE);
 
     // Perform the search
-    iter_search(search);
+    iter_search_result result = iter_search(search);
+    if (SEARCH_FAILURE == result)
+    {
+        iter_destroy_search(search);
+        search = NULL;
+    }
 
     // Fetch found data and return
     iter_destroy_iterable(iter);
@@ -257,9 +262,14 @@ dnode_t * iter_search_by_value(dlist_t * dlist, void * data)
 {
     iter_search_t * search = iter_search_by_value_plus(dlist, data);
 
-    dnode_t * found_data = search->found_node;
-    iter_destroy_search(search);
-    return found_data;
+    if (NULL != search)
+    {
+        dnode_t * found_data = search->found_node;
+        iter_destroy_search(search);
+        return found_data;
+    }
+    return NULL;
+
 }
 
 /*!

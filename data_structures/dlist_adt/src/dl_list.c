@@ -240,17 +240,37 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
 {
     assert(dlist);
     assert(data);
-    dnode_t * node = iter_search_by_value(dlist, data);
-    if (NULL == node)
+    iter_search_t * search = iter_search_by_value_plus(dlist, data);
+    if (NULL == search)
     {
         return NULL;
     }
-
     /*
      * If we have a valid node, we need to make sure to update all the iter lists
      * so that they do not point to an invalid node before we remove this node
      */
 
+    if (NULL != dlist->iter_list)  // If here we are dealing with the master dlist iterlist
+    {
+        if (0 != dlist_get_length(dlist->iter_list))
+        {
+            dlist_iter_t * iter_list = dlist_get_iterable(dlist->iter_list, ITER_HEAD);
+
+            dlist_iter_t * iter = iter_get_value(iter_list);
+            while (NULL != iter)
+            {
+                if (iter_get_index(iter) == search->found_index)
+                {
+                    iterate(iter, PREV);
+                }
+                iter = (dlist_iter_t *)iterate(iter_list, NEXT);
+            }
+        }
+    }
+
+    // Extract the data and destroy the search
+    dnode_t * node = search->found_node;
+    iter_destroy_search(search);
 
     return remove_node(dlist, node);
 }
@@ -445,7 +465,10 @@ void dlist_destroy_iter(dlist_iter_t * iter)
 {
     // Get the ist of iter_list stored in the main dlist
     dlist_t * iters_list = get_iters_list(iter);
-    dlist_remove_value(iters_list, iter);
+    if (NULL != iters_list->iter_list)
+    {
+        dlist_remove_value(iters_list, iter);
+    }
 
     iter_destroy_iterable(iter);
 }
