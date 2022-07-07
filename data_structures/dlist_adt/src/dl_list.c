@@ -90,7 +90,7 @@ void dlist_quick_sort(dlist_t * dlist,
         return;
     }
 
-    // Initialize the sort structure with the comparison function and direction
+    // Initialize the sort structure with the comparison function and direction!
     * sort = (quick_sort_t) {
         .compare_func = compare_func,
         .direction    = direction
