@@ -246,6 +246,12 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
         return NULL;
     }
 
+    /*
+     * If we have a valid node, we need to make sure to update all the iter lists
+     * so that they do not point to an invalid node before we remove this node
+     */
+
+
     return remove_node(dlist, node);
 }
 

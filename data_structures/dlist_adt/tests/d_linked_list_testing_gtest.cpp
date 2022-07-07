@@ -388,10 +388,7 @@ TEST_F(DListTestFixture, TestNumberOfIters)
  */
 TEST_F(DListTestFixture, TestUpdatingItersAfterRemoval)
 {
-    // The fixture creates an iter so our start is one
-    EXPECT_EQ(dlist_get_active_iters(dlist), 1);
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_TAIL);
-
     EXPECT_EQ(dlist_get_active_iters(dlist), 2);
     EXPECT_EQ(strcmp((char*)iter_get_value(iter), payload_last), 0);
 

@@ -231,6 +231,20 @@ dnode_t * iter_search_by_index(dlist_t * dlist, int32_t index)
     return found_data;
 }
 
+iter_search_t * iter_search_by_value_plus(dlist_t * dlist, void * data)
+{
+    // Create iter and search structures
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
+    iter_search_t * search = iter_init_search(iter, data, 0, SEARCH_BY_VALUE);
+
+    // Perform the search
+    iter_search(search);
+
+    // Fetch found data and return
+    iter_destroy_iterable(iter);
+
+    return search;
+}
 /*!
  * @brief Wrapper that creates a iter and search object and performs the search
  * based on the index. The function will then cleanup after itself
@@ -241,17 +255,10 @@ dnode_t * iter_search_by_index(dlist_t * dlist, int32_t index)
  */
 dnode_t * iter_search_by_value(dlist_t * dlist, void * data)
 {
-    // Create iter and search structures
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    iter_search_t * search = iter_init_search(iter, data, 0, SEARCH_BY_VALUE);
+    iter_search_t * search = iter_search_by_value_plus(dlist, data);
 
-    // Perform the search
-    iter_search(search);
-
-    // Fetch found data and return
     dnode_t * found_data = search->found_node;
     iter_destroy_search(search);
-    iter_destroy_iterable(iter);
     return found_data;
 }
 
