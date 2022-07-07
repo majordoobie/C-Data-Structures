@@ -4,8 +4,7 @@
 #include <assert.h>
 #include <dl_iter.h>
 
-
-
+// Settings are used to reduce code complexity by setting a action flag
 typedef enum
 {
     FREE_NODES,
@@ -32,88 +31,30 @@ typedef struct
     dlist_compare_t (* compare_func)(void *, void *);
 } quick_sort_t;
 
-static dnode_t * init_node(void * data);
+
+// Sorting functions
+static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right);
+static void swap_dnodes(dnode_t * left, dnode_t * right);
+static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right);
+
+// Private fetch
+static dnode_t * get_by_index(dlist_t * dlist, int32_t index);
+
+// Node private functions
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
+static dnode_t * init_node(void * data);
 static void * remove_node(dlist_t * dlist, dnode_t * node);
 static dlist_result_t add_node(dlist_t * dlist,
                                void * data,
                                dlist_settings_t add_mode,
                                int32_t at_index);
 
-static bool do_swap(quick_sort_t * sort, dnode_t * left, dnode_t * right);
-static void swap_dnodes(dnode_t * left, dnode_t * right);
-static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right);
-
-static dnode_t * get_by_index(dlist_t * dlist, int32_t index);
 
 
 /*!
- * @brief Check if allocation is valid
- * @param ptr Any pointer
- * @return valid_ptr_t : VALID_PTR or INVALID_PTR
- */
-valid_ptr_t verify_alloc(void * ptr)
-{
-    if (NULL == ptr)
-    {
-        fprintf(stderr, "[!] Invalid allocation\n");
-        return INVALID_PTR;
-    }
-    return VALID_PTR;
-}
-
-/*!
- * @brief Perform a quick sort on the double linked list. The quick sort
- * relies on the comparison function passed. The sort does not create any new
- * data structures, the dnode_t data pointers are updated in place. The
- * algorithm sorts in O(n log(n)) in most cases unless the list is already
- * sorted in which case the algorithm will operate in O(n^2)
- *
- * @param dlist
- * @param direction
- * @param compare_func
- */
-void dlist_quick_sort(dlist_t * dlist,
-                      sort_direction_t direction,
-                      dlist_compare_t (* compare_func)(void *, void *))
-{
-    // Return if the is only one/none items in the linked list
-    if (2 > dlist->length)
-    {
-        return;
-    }
-
-    // Create the struct that will make it easier to manage the settings
-    quick_sort_t * sort = (quick_sort_t *)malloc(sizeof(quick_sort_t));
-    if (INVALID_PTR == verify_alloc(sort))
-    {
-        return;
-    }
-
-    // Initialize the sort structure with the comparison function and direction!
-    * sort = (quick_sort_t) {
-        .compare_func = compare_func,
-        .direction    = direction
-    };
-    quick_sort(sort, dlist->head, dlist->tail);
-
-    // free the sort structure
-    free(sort);
-}
-
-/*!
- * @brief Public function to check if the dlist is empty
- * @param dlist
- * @return
- */
-bool dlist_is_empty(dlist_t * dlist)
-{
-    assert(dlist);
-    return dlist->length == 0;
-}
-
-/*!
- * @brief Initialize the dlist with a function to perform the comparisons
+ * @brief Initialize the dlist with a function to perform the comparisons. The
+ * function parameter is used to perform search functionality and must use the
+ * dlist_match_t return types
  *
  * @param compare_func
  * @return Null if INVALID_PTR is returned from init or dlist_t pointer
@@ -132,10 +73,21 @@ dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
 }
 
 /*!
+ * @brief Public function to check if the dlist is empty
+ * @param dlist
+ * @return True if the dlist is empty else False
+ */
+bool dlist_is_empty(dlist_t * dlist)
+{
+    assert(dlist);
+    return dlist->length == 0;
+}
+
+/*!
  * @brief Return the number of items in the linked list
  *
  * @param dlist
- * @return
+ * @return Length of the dlist
  */
 size_t dlist_get_length(dlist_t * dlist)
 {
@@ -276,10 +228,79 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
     return remove_node(dlist, node);
 }
 
+/*!
+ * Function is used for the iter API since dlist is opaque
+ *
+ * @param dlist
+ */
 dlist_match_t (* get_func(dlist_t * dlist))(void *, void *)
 {
     return dlist->compare_func;
 }
+
+
+/*!
+ * @brief Check if allocation is valid
+ * @param ptr Any pointer
+ * @return valid_ptr_t : VALID_PTR or INVALID_PTR
+ */
+valid_ptr_t verify_alloc(void * ptr)
+{
+    if (NULL == ptr)
+    {
+        fprintf(stderr, "[!] Invalid allocation\n");
+        return INVALID_PTR;
+    }
+    return VALID_PTR;
+}
+
+/*!
+ * @brief Perform a quick sort on the double linked list. The quick sort
+ * relies on the comparison function passed. The sort does not create any new
+ * data structures, the dnode_t data pointers are updated in place. The
+ * algorithm sorts in O(n log(n)) in most cases unless the list is already
+ * sorted in which case the algorithm will operate in O(n^2)
+ *
+ * @param dlist
+ * @param direction
+ * @param compare_func
+ */
+void dlist_quick_sort(dlist_t * dlist,
+                      sort_direction_t direction,
+                      dlist_compare_t (* compare_func)(void *, void *))
+{
+    // Return if the is only one/none items in the linked list
+    if (2 > dlist->length)
+    {
+        return;
+    }
+
+    // Create the struct that will make it easier to manage the settings
+    quick_sort_t * sort = (quick_sort_t *)malloc(sizeof(quick_sort_t));
+    if (INVALID_PTR == verify_alloc(sort))
+    {
+        return;
+    }
+
+    // Initialize the sort structure with the comparison function and direction!
+    * sort = (quick_sort_t) {
+        .compare_func = compare_func,
+        .direction    = direction
+    };
+    quick_sort(sort, dlist->head, dlist->tail);
+
+    // free the sort structure
+    free(sort);
+}
+
+/*********************************************************************************************
+ *
+ *                                Search Section
+ *
+ * Section uses the iter API to find the value but abstracts the creation of the
+ * iter object
+ *
+ ********************************************************************************************/
 
 /*!
  * @brief Function returns true if the value passed in is found in the dlist
@@ -297,6 +318,48 @@ bool dlist_value_in_dlist(dlist_t * dlist, void * data)
         return false;
     }
     return true;
+}
+
+/*!
+ * @brief Return the data stored in the dlist by matching it with the value
+ * passed in.
+ *
+ * @param dlist
+ * @param data
+ * @return Pointer to the data stored in the dlist or NULL
+ */
+void * dlist_get_by_value(dlist_t * dlist, void * data)
+{
+    // Assert values
+    assert(dlist);
+    assert(data);
+
+    dnode_t * found_node = iter_search_by_value(dlist, data);
+
+    if (NULL == found_node)
+    {
+        return NULL;
+    }
+
+    return found_node->data;
+}
+
+/*!
+ * @brief Return the data stored in the dlist by matching with the index passed
+ * in
+ *
+ * @param dlist
+ * @param index
+ * @return Pointer to the data stored in the dlist or NULL
+ */
+void * dlist_get_by_index(dlist_t * dlist, int32_t index)
+{
+    dnode_t * node = get_by_index(dlist, index);
+    if (NULL == node)
+    {
+        return NULL;
+    }
+    return node->data;
 }
 
 /*********************************************************************************************
@@ -342,7 +405,6 @@ void dlist_destroy_iter(dlist_iter_t * dlist_iter)
 {
     iter_destroy_iterable(dlist_iter);
 }
-
 
 /*!
  * @brief Reset the iterable to start with the head of the dlist
@@ -415,32 +477,6 @@ void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
     return NULL;
 }
 
-void * dlist_get_by_value(dlist_t * dlist, void * data)
-{
-    // Assert values
-    assert(dlist);
-    assert(data);
-
-    dnode_t * found_node = iter_search_by_value(dlist, data);
-
-    if (NULL == found_node)
-    {
-        return NULL;
-    }
-
-    return found_node->data;
-}
-
-void * dlist_get_by_index(dlist_t * dlist, int32_t index)
-{
-    dnode_t * node = get_by_index(dlist, index);
-    if (NULL == node)
-    {
-        return NULL;
-    }
-    return node->data;
-}
-
 static dnode_t * get_by_index(dlist_t * dlist, int32_t index)
 {
     // Assert values
@@ -455,58 +491,6 @@ static dnode_t * get_by_index(dlist_t * dlist, int32_t index)
 
     return found_node;
 }
-
-
-
-
-
-
-///*!
-// * @brief Check if value is in the dlist
-// * @param dlist
-// * @param data
-// * @return
-// */
-//dlist_match_t dlist_value_in_dlist(dlist_t * dlist, void * data)
-//{
-//    assert(dlist);
-//    assert(data);
-//    dnode_t * node = get_value(dlist, data);
-//    if (NULL == node)
-//    {
-//        return DLIST_MISS_MATCH;
-//    }
-//    return DLIST_MATCH;
-//}
-//
-///*!
-// * @brief Fetch the node in the dlist by matching the the value using the
-// * comparison function massed in.
-// * @param dlist
-// * @param data
-// * @return Pointer to the node if found else NULL
-// */
-//void * ldlist_get_by_value(dlist_t * dlist, void * data)
-//{
-//    assert(dlist);
-//    assert(data);
-//    dnode_t * node = get_value(dlist, data);
-//    if (NULL == node)
-//    {
-//        return NULL;
-//    }
-//    else
-//    {
-//        return node->data;
-//    }
-//}
-//
-///*!
-// * @brief Get a dlist value by its index in the linked list
-// * @param dlist
-// * @param index
-// * @return void * pointer to the data
-// */
 
 /*!
  * @brief Create the structure that is stored on each item in the linked list

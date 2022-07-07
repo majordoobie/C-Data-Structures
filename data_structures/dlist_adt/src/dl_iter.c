@@ -240,6 +240,7 @@ dnode_t * iter_search_by_value(dlist_t * dlist, void * data)
     iter_destroy_iterable(iter);
     return found_data;
 }
+
 iter_search_result iter_search(iter_search_t * search)
 {
     assert(search);
