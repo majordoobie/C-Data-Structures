@@ -406,3 +406,25 @@ TEST_F(DListTestFixture, TestUpdatingItersAfterRemoval)
     dlist_destroy_iter(iter);
     free(removed_node);
 }
+
+TEST(TestIterClean, TestIter)
+{
+    char * target_node = get_payload(5);
+
+    dlist_t * dlist = dlist_init(compare_payloads);
+    dlist_append(dlist, target_node);
+
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
+    EXPECT_EQ(strcmp(target_node, (char*)iter_get_value(iter)), 0);
+
+    // remove the only node in the dlist this should force the iter to move left
+    // to a null value
+    dlist_remove_value(dlist, target_node);
+
+    EXPECT_EQ(iter_get_value(iter), nullptr);
+
+    // clean up
+    dlist_destroy_iter(iter);
+    dlist_destroy(dlist);
+    free(target_node);
+}

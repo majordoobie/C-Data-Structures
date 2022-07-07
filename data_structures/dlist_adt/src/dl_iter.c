@@ -76,6 +76,10 @@ void iter_destroy_iterable(dlist_iter_t * iter)
 void * iter_get_value(dlist_iter_t * iter)
 {
     assert(iter);
+    if (NULL == iter->node)
+    {
+        return NULL;
+    }
     return iter->node->data;
 }
 
