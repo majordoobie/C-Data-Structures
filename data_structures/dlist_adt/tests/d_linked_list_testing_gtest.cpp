@@ -369,16 +369,30 @@ TEST_F(DListTestFixture, TestInsertAt)
     }
 }
 
+TEST_F(DListTestFixture, TestNumberOfIters)
+{
+    // The fixture creates an iter so our start is one
+    EXPECT_EQ(dlist_get_active_iters(dlist), 1);
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_TAIL);
+
+    EXPECT_EQ(dlist_get_active_iters(dlist), 2);
+    dlist_destroy_iter(iter);
+    EXPECT_EQ(dlist_get_active_iters(dlist), 1);
+}
 /*
  * This test is the main reason for the massive refactor. An issue that was
  * happening is that when an iter object is created it points to the current
  * node. If that node were to get deleted from the dlist, then now the iter
  * is pointing an invalid location. To fix this I needed to do a lot of
- * refactoring and implement a list of iters to update
+ * refactoring and implement a list of iter_list to update
  */
 TEST_F(DListTestFixture, TestUpdatingItersAfterRemoval)
 {
+    // The fixture creates an iter so our start is one
+    EXPECT_EQ(dlist_get_active_iters(dlist), 1);
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_TAIL);
+
+    EXPECT_EQ(dlist_get_active_iters(dlist), 2);
     EXPECT_EQ(strcmp((char*)iter_get_value(iter), payload_last), 0);
 
     char * removed_node = (char*)dlist_remove_value(dlist, payload_last);

@@ -21,6 +21,7 @@ typedef struct dlist_t
     dnode_t * head;
     dnode_t * tail;
     size_t length;
+    dlist_t * iter_list;
     dlist_match_t (* compare_func)(void *, void *);
 } dlist_t;
 
@@ -39,6 +40,10 @@ static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 
 // Private fetch
 static dnode_t * get_by_index(dlist_t * dlist, int32_t index);
+static dlist_t * get_iters_list(dlist_iter_t * iter);
+
+// Private iter_list
+static dlist_match_t compare_iters(void * data1, void * data2);
 
 // Node private functions
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
@@ -68,7 +73,12 @@ dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
         return NULL;
     }
 
+    // Create the iter_list list dlist
+    dlist_t * iters = (dlist_t *)calloc(1, sizeof(dlist_t));
+    iters->compare_func = compare_iters;
+
     dlist->compare_func = compare_func;
+    dlist->iter_list = iters;
     return dlist;
 }
 
@@ -81,6 +91,17 @@ bool dlist_is_empty(dlist_t * dlist)
 {
     assert(dlist);
     return dlist->length == 0;
+}
+
+/*!
+ * @brief Return the number of active iter_list created with the dlist
+ *
+ * @param dlist
+ * @return
+ */
+size_t dlist_get_active_iters(dlist_t * dlist)
+{
+    return dlist_get_length(dlist->iter_list);
 }
 
 /*!
@@ -394,16 +415,33 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
         dlist,
         (ITER_HEAD == pos || 0 == dlist->length ) ? 0 : (int32_t)dlist->length - 1
         );
+
+    if (INVALID_PTR == verify_alloc(iter))
+    {
+        return NULL;
+    }
+
+    // Only add to iter list if the iter was created externally
+    if (NULL != dlist->iter_list)
+    {
+        // If valid, append the iter to the list of iter_list
+        dlist_append(dlist->iter_list, iter);
+    }
+
     return iter;
 }
 
 /*!
  * @brief Destroy the iterable
- * @param dlist_iter
+ * @param iter
  */
-void dlist_destroy_iter(dlist_iter_t * dlist_iter)
+void dlist_destroy_iter(dlist_iter_t * iter)
 {
-    iter_destroy_iterable(dlist_iter);
+    // Get the ist of iter_list stored in the main dlist
+    dlist_t * iters_list = get_iters_list(iter);
+    dlist_remove_value(iters_list, iter);
+
+    iter_destroy_iterable(iter);
 }
 
 /*!
@@ -739,5 +777,34 @@ static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void (*free
         free(node);
         node = next_node;
     }
+    if (NULL != dlist->iter_list)
+    {
+        dlist_destroy(dlist->iter_list);
+    }
     free(dlist);
 }
+
+/*!
+ * @brief Function to compare the iter_list stored in the dlist
+ *
+ * @param data1
+ * @param data2
+ * @return Match or missmatch
+ */
+static dlist_match_t compare_iters(void * data1, void * data2)
+{
+    if (data1 == data2)
+    {
+        return DLIST_MATCH;
+    }
+    return DLIST_MISS_MATCH;
+
+}
+
+static dlist_t * get_iters_list(dlist_iter_t * iter)
+{
+    dlist_t * main_dlist = iter_get_dlist(iter);
+    dlist_t * iters_dlist = main_dlist->iter_list;
+    return iters_dlist;
+}
+
