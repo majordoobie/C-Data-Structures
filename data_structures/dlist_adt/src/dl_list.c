@@ -22,6 +22,7 @@ typedef struct dlist_t
     dnode_t * tail;
     size_t length;
     dlist_t * iter_list;
+    bool dlist_mgr;
     dlist_match_t (* compare_func)(void *, void *);
 } dlist_t;
 
@@ -75,6 +76,7 @@ dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
 
     // Create the iter_list list dlist
     dlist_t * iters = (dlist_t *)calloc(1, sizeof(dlist_t));
+    iters->dlist_mgr = true;
     iters->compare_func = compare_iters;
 
     dlist->compare_func = compare_func;
@@ -468,12 +470,21 @@ void dlist_destroy_iter(dlist_iter_t * iter)
     dlist_t * iters_list = get_iters_list(iter);
 
     // If iter_list is NULL then we know this is the master iter list
+    if (NULL == iters_list)
+    {
+        iter_destroy_iterable(iter);
+        return;
+    }
+
     if (NULL == iters_list->iter_list)
     {
         dlist_remove_value(iters_list, iter);
     }
 
-    iter_destroy_iterable(iter);
+    if (NULL != iter)
+    {
+        iter_destroy_iterable(iter);
+    }
 }
 
 /*!
@@ -658,7 +669,25 @@ static dlist_result_t add_node(dlist_t * dlist,
     {
         dlist->head = node;
         dlist->tail = node;
+
+        if (NULL != dlist->iter_list)
+        {
+            // If we have inner iters then update them to point to the new value
+            if (0 != dlist_get_length(dlist->iter_list))
+            {
+                dlist_iter_t * iter_list = dlist_get_iterable(dlist->iter_list, ITER_HEAD);
+
+                dlist_iter_t * iter = iter_get_value(iter_list);
+                while (NULL != iter)
+                {
+                    dlist_set_iter_head(iter);
+                    iter = dlist_get_iter_next(iter_list);
+                }
+                iter_destroy_iterable(iter_list);
+            }
+        }
     }
+
     else if (PREPEND == add_mode)
     {
         node->next = dlist->head;

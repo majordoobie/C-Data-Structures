@@ -250,7 +250,7 @@ iter_search_t * iter_search_by_value_plus(dlist_t * dlist, void * data)
     }
 
     // Fetch found data and return
-    iter_destroy_iterable(iter);
+    dlist_destroy_iter(iter);
 
     return search;
 }
