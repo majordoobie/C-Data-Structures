@@ -185,18 +185,13 @@ TEST_F(DListTestFixture, TestRemoveValue)
 {
     // iter to test if this works
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    void * node;
 
     void * to_match = get_payload(5);
     void * the_match = dlist_remove_value(dlist, to_match);
 
     EXPECT_EQ(strcmp((char *)to_match, (char *)the_match), 0);
     EXPECT_EQ(dlist_get_length(dlist), length - 1);
-
-    while (NULL != (node = dlist_get_iter_next(iter)))
-    {
-        printf("%s", (char*)node);
-    }
+    EXPECT_EQ(dlist_value_in_dlist(dlist, to_match), false);
 
     free(to_match);
     free(the_match);

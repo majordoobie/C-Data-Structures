@@ -267,7 +267,7 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
 {
     assert(dlist);
     assert(data);
-    dnode_t * node = dlist_get_by_value(dlist, data);
+    dnode_t * node = iter_search_by_value(dlist, data);
     if (NULL == node)
     {
         return NULL;
