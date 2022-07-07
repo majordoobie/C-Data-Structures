@@ -281,6 +281,24 @@ dlist_match_t (* get_func(dlist_t * dlist))(void *, void *)
     return dlist->compare_func;
 }
 
+/*!
+ * @brief Function returns true if the value passed in is found in the dlist
+ * else a false is returned
+ *
+ * @param dlist
+ * @param data
+ * @return True if data is in dlist else false
+ */
+bool dlist_value_in_dlist(dlist_t * dlist, void * data)
+{
+    void * node = dlist_get_by_value(dlist, data);
+    if (NULL == node)
+    {
+        return false;
+    }
+    return true;
+}
+
 /*********************************************************************************************
  *
  *                                 Iter API Section
@@ -444,7 +462,7 @@ static dnode_t * get_by_index(dlist_t * dlist, int32_t index)
 // * @param data
 // * @return
 // */
-//dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data)
+//dlist_match_t dlist_value_in_dlist(dlist_t * dlist, void * data)
 //{
 //    assert(dlist);
 //    assert(data);

@@ -221,6 +221,7 @@ dnode_t * iter_search_by_index(dlist_t * dlist, int32_t index)
     // Fetch found data and return
     dnode_t * found_data = search->found_node;
     iter_destroy_search(search);
+    iter_destroy_iterable(iter);
     return found_data;
 }
 
@@ -236,6 +237,7 @@ dnode_t * iter_search_by_value(dlist_t * dlist, void * data)
     // Fetch found data and return
     dnode_t * found_data = search->found_node;
     iter_destroy_search(search);
+    iter_destroy_iterable(iter);
     return found_data;
 }
 iter_search_result iter_search(iter_search_t * search)

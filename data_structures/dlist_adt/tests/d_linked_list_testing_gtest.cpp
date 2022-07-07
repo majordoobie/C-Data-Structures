@@ -39,9 +39,7 @@ dlist_match_t compare_payloads(void * data1, void * data2)
  */
 
 
-/*
- * Basic tests to get up and running
- */
+// Basic testing to get up and running before fixture
 TEST(dlist_test, InitTest)
 {
     dlist_t * dlist = dlist_init(nullptr);
@@ -52,7 +50,7 @@ TEST(dlist_test, InitTest)
 
 TEST(dlist_test, InsertTest)
 {
-    dlist_t * dlist = dlist_init(0);
+    dlist_t * dlist = dlist_init(nullptr);
     ASSERT_NE(dlist, nullptr);
     dlist_append(dlist, get_payload(1));
     EXPECT_EQ(dlist_get_length(dlist), 1);
@@ -62,24 +60,35 @@ TEST(dlist_test, InsertTest)
 
 TEST(dlist_test, IterableTest)
 {
-    dlist_t * dlist = dlist_init(0);
+    dlist_t * dlist = dlist_init(nullptr);
     ASSERT_NE(dlist, nullptr);
-    dlist_append(dlist, get_payload(1));
-    dlist_append(dlist, get_payload(2));
-    dlist_append(dlist, get_payload(3));
+
+    std::vector<char *> vector = {
+        get_payload(1),
+        get_payload(2),
+        get_payload(3)
+    };
+
+    for (char *& val: vector)
+    {
+        dlist_append(dlist, val);
+    }
+
     EXPECT_EQ(dlist_get_length(dlist), 3);
 
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    char * node = (char*)dlist_get_iter_next(iter);
+    char * node = (char *)(iter_get_value(iter));
+    int index = 0;
+
     while (nullptr != node)
     {
-        printf("%s", node);
+        EXPECT_EQ(strcmp(node, vector.at(index)), 0);
         node = (char*)dlist_get_iter_next(iter);
+        index++;
     }
     dlist_destroy_iter(iter);
     dlist_destroy_free(dlist, free_payload);
 }
-
 
 
 
@@ -91,10 +100,10 @@ TEST(dlist_test, IterableTest)
 class DListTestFixture : public ::testing::Test
 {
  public:
-    dlist_t * dlist;
-    dlist_iter_t * iter;
-    char * payload_first;
-    char * payload_last;
+    dlist_t * dlist{};
+    dlist_iter_t * iter{};
+    char * payload_first{};
+    char * payload_last{};
     int length = 10;
     std::vector<std::string> test_vector;
 
@@ -147,16 +156,16 @@ TEST_F(DListTestFixture, TestPopHead)
     free(value);
 }
 
-// Test ability to find a match
-//TEST_F(DListTestFixture, TestFindInDlist)
-//{
-//    EXPECT_EQ(dlist_in_dlist(dlist, payload_last), DLIST_MATCH);
-//
-//    void * no_match_payload = get_payload(-1);
-//    EXPECT_NE(dlist_in_dlist(dlist, no_match_payload), DLIST_MATCH);
-//    EXPECT_EQ(dlist_get_length(dlist), length);
-//    free(no_match_payload);
-//}
+//Test ability to find a match
+TEST_F(DListTestFixture, TestFindInDlist)
+{
+    EXPECT_EQ(dlist_value_in_dlist(dlist, payload_last), true);
+
+    void * no_match_payload = get_payload(-1);
+    EXPECT_EQ(dlist_value_in_dlist(dlist, no_match_payload), false);
+    EXPECT_EQ(dlist_get_length(dlist), length);
+    free(no_match_payload);
+}
 
 // Test ability to fetch an item from the linked list
 TEST_F(DListTestFixture, TestGetInDList)

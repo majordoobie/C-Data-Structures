@@ -78,7 +78,7 @@ int32_t dlist_get_index_of_value(dlist_t * dlist, void * data);
 // metadata methods
 bool dlist_is_empty(dlist_t * dlist);
 size_t dlist_get_length(dlist_t * dlist);
-dlist_match_t dlist_in_dlist(dlist_t * dlist, void * data);
+bool dlist_value_in_dlist(dlist_t * dlist, void * data);
 
 // Iter functions
 dlist_match_t (* get_func(dlist_t * dlist))(void *, void *);
