@@ -45,6 +45,8 @@ static void swap_dnodes(dnode_t * left, dnode_t * right);
 static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right);
 
 static dnode_t * get_by_index(dlist_t * dlist, int32_t index);
+
+
 /*!
  * @brief Check if allocation is valid
  * @param ptr Any pointer
