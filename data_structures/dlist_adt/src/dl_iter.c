@@ -262,7 +262,7 @@ iter_search_result iter_search(iter_search_t * search)
         else // Target index is a negative integer
         {
             // If the inverse is greater than our length, return NULL
-            if ((size_t)get_inverse > dlist_length)
+            if ((size_t)get_inverse(search->target_index) > dlist_length)
             {
                 return SEARCH_FAILURE;
             }
@@ -272,6 +272,7 @@ iter_search_result iter_search(iter_search_t * search)
             // to search for an index from the end of the linked list
             search->target_index = (int32_t)dlist_length + search->target_index;
             iterate_to = PREV;
+            dlist_set_iter_tail(search->iter);
         }
     }
 

@@ -433,7 +433,12 @@ void * dlist_get_by_value(dlist_t * dlist, void * data)
 
 void * dlist_get_by_index(dlist_t * dlist, int32_t index)
 {
-    return get_by_index(dlist, index);
+    dnode_t * node = get_by_index(dlist, index);
+    if (NULL == node)
+    {
+        return NULL;
+    }
+    return node->data;
 }
 
 static dnode_t * get_by_index(dlist_t * dlist, int32_t index)
