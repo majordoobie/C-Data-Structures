@@ -261,10 +261,11 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
             {
                 if (iter_get_index(iter) == search->found_index)
                 {
-                    iterate(iter, PREV);
+                    dlist_get_iter_prev(iter);
                 }
-                iter = (dlist_iter_t *)iterate(iter_list, NEXT);
+                iter = dlist_get_iter_next(iter_list);
             }
+            iter_destroy_iterable(iter_list);
         }
     }
 
@@ -465,7 +466,9 @@ void dlist_destroy_iter(dlist_iter_t * iter)
 {
     // Get the ist of iter_list stored in the main dlist
     dlist_t * iters_list = get_iters_list(iter);
-    if (NULL != iters_list->iter_list)
+
+    // If iter_list is NULL then we know this is the master iter list
+    if (NULL == iters_list->iter_list)
     {
         dlist_remove_value(iters_list, iter);
     }
