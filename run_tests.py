@@ -2,7 +2,7 @@ import argparse
 import pathlib
 from pathlib import Path
 import subprocess
-from typing import Union
+from typing import Union, List
 
 
 def main() -> None:
@@ -40,7 +40,7 @@ def _get_gtest_binary(name: str) -> Union[pathlib.Path, None]:
     return None
 
 
-def _get_test_names() -> list[str]:
+def _get_test_names() -> List[str]:
     test_path = Path(".") / "data_structures"
     if not test_path.exists() or not test_path.is_dir():
         raise exit("Could not find the path to the data structures")
