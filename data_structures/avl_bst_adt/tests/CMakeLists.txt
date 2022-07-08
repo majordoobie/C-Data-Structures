@@ -1,6 +1,6 @@
 add_executable(
         bst_testing_gtest
-        bst_testing.cpp
+        avl_bst_adt_gtest.cpp
 )
 
 target_link_libraries(

@@ -1,7 +1,7 @@
 add_executable(
         d_linked_list_testing_gtest
-        d_linked_list_testing_gtest.cpp
-        d_linked_list_sort_testing.cpp
+        dlist_adt_list_testing_gtest.cpp
+        dlist_adt_sort_testing_gtest.cpp
 )
 
 target_link_libraries(

@@ -1,1 +1,0 @@
-ctest -j 100 --test-dir build

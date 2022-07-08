@@ -1,6 +1,6 @@
 add_executable(
         heap_testing_gtest
-        heap_testing_gtest.cpp
+        heap_adt_gtest.cpp
 )
 
 target_link_libraries(

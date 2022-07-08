@@ -2,7 +2,7 @@
 
 add_executable(
         avl_tree_map_testing_gtest
-        avl_map_test.cpp
+        treemap_avl_bst_gtest.cpp
 )
 
 target_link_libraries(

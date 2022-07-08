@@ -1,6 +1,6 @@
 add_executable(
         queue_testing_gtest
-        queue_testing_gtest.cpp
+        queue_dlist_gtest.cpp
 )
 
 target_link_libraries(
