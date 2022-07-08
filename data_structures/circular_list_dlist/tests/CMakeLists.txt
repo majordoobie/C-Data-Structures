@@ -1,6 +1,6 @@
 add_executable(
         circular_list_gtest
-        circular_list_gtest.cpp
+        circular_list_dlist_gtest.cpp
 )
 
 target_link_libraries(
