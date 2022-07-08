@@ -15,6 +15,9 @@ Use the provided python script to choose the tests you would like to run
 ```bash
 # Run all tests
 python3 run_tests.py -r
+
+# Or manually with
+ctest -j $(nproc) --test-dir build
 ```
 
 To run a specific test, first list the tests and use the name to run 
