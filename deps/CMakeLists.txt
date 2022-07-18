@@ -14,6 +14,7 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     )
     # GMock does not work in C only C++ so just disable
     set(BUILD_GMOCK OFF)
+    # Disable installing packing onto the system
     set(INSTALL_GTEST OFF)
 
     # Make available then include
