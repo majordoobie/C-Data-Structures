@@ -11,9 +11,3 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_subdirectory(tests)
 ENDIF()
 
-message("Path to that dir is ${dlist_include_dirs}")
-
-set(dlist_include_dirs
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        )
-include_directories(${dlist_include_dirs})
