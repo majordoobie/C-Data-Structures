@@ -13,7 +13,8 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
             GIT_TAG release-1.11.0
     )
     # GMock does not work in C only C++ so just disable
-    set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+    set(BUILD_GMOCK OFF)
+    set(INSTALL_GTEST OFF)
 
     # Make available then include
     FetchContent_MakeAvailable(googletest)
