@@ -1,7 +1,8 @@
 import argparse
 import pathlib
-from pathlib import Path
 import subprocess
+from multiprocessing import cpu_count
+from pathlib import Path
 from typing import Union, List
 
 
@@ -12,7 +13,7 @@ def main() -> None:
             print(test_name)
 
     elif args.run_all:
-        subprocess.run("ctest -j 100 --test-dir build", shell=True)
+        subprocess.run(f"ctest -j {cpu_count()} --test-dir build", shell=True)
 
     else:
         if args.type not in _get_test_names():
@@ -26,7 +27,7 @@ def main() -> None:
 
 
 def _get_gtest_binary(name: str) -> Union[pathlib.Path, None]:
-    test_path = Path(".") / "build/data_structures"
+    test_path = Path(".") / "build/src"
     if not test_path.exists() or not test_path.is_dir():
         raise exit("Could not find the path to the data structures")
 
@@ -41,7 +42,7 @@ def _get_gtest_binary(name: str) -> Union[pathlib.Path, None]:
 
 
 def _get_test_names() -> List[str]:
-    test_path = Path(".") / "data_structures"
+    test_path = Path(".") / "src"
     if not test_path.exists() or not test_path.is_dir():
         raise exit("Could not find the path to the data structures")
 
@@ -76,6 +77,12 @@ def _get_args() -> argparse.Namespace:
              "to get a listing of the available test names",
         type=str,
         dest="type"
+    )
+    group.add_argument(
+        "-b", "--build",
+        type=Path,
+        help="Build and compile the project into the build directory specified "
+             "(Default: %(default)s"
     )
 
     return parser.parse_args()

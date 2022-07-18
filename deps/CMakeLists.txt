@@ -1,4 +1,4 @@
-# File contains all the dependencies for the project to build properly
+# File contains all the deps for the project to build properly
 
 # The FetchContent module is capable of fetching git repositories and handling
 # the cloning of them so you do not have to deal with them
