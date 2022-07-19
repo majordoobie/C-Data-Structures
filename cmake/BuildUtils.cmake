@@ -15,11 +15,7 @@ function(set_custom_properties target_name target_include_dir)
     set_target_properties(
             ${target_name} PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-    )
-
-    target_compile_options(
-            ${target_name} PUBLIC
-            ${base_flags}
+            COMPILATION_FLAGS ${base_flags}
     )
 
 endfunction()
