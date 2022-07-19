@@ -10,5 +10,5 @@ target_link_libraries(
         dl_list
 )
 
-include(GTestConfig)
-AddTest(d_linked_list_testing_gtest)
+include(BuildUtils)
+GTest_add_target(d_linked_list_testing_gtest)

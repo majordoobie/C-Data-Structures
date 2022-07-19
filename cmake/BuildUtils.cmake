@@ -20,12 +20,18 @@ MACRO(set_compiler_flags)
 ENDMACRO()
 
 
-# Function populates the include directory and adds compilation flags
-FUNCTION(set_custom_properties target_name target_include_dir)
+#
+# set_project_properties the include directory using the relocatable generator
+# syntax which allows the --prefix syntax to be used without breaking where
+# the header files are located. Additionally, the function sets the compiler
+# flags for the target
+#
+FUNCTION(set_project_properties target_name target_include_dir)
     # Run macro to get the variables set
     set_compiler_flags()
 
-    # Set the include directory and use the header syntax to support relocation
+    # Separates the area of concern when it comes to the build files and the
+    # installation files by using the build in generator expression for relocation
     target_include_directories(
             ${target_name} PUBLIC
             "$<BUILD_INTERFACE:${target_include_dir}>"
@@ -41,7 +47,27 @@ FUNCTION(set_custom_properties target_name target_include_dir)
     )
 ENDFUNCTION()
 
-FUNCTION(GTest_add_target target_name)
 
+
+#
+# GTest_add_target sets the build path and flags for the gtest executable
+# and places the result in the ${CMAKE_BINARY_DIR}/test_bin for easy retrival
+#
+FUNCTION(GTest_add_target target_name)
+    # Include populates the scope of the caller
+    include(GoogleTest)
+
+    # run the flags macro
+    set_compiler_flags()
+
+    # Set flags and set the output of the binaries to a the test_bin
+    set_target_properties(
+            ${target_name} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin
+            COMPILE_OPTIONS "${base_flags}"
+            LINK_OPTIONS "${base_static_analysis}"
+    )
+    target_link_libraries(${target_name} PRIVATE gtest_main)
+    gtest_discover_tests(${target_name})
 
 ENDFUNCTION()

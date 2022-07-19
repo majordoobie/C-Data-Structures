@@ -183,8 +183,8 @@ TEST_F(DListTestFixture, TestGetInDList)
 // Test ability to properly remove a value by searching for it
 TEST_F(DListTestFixture, TestRemoveValue)
 {
-    // iter to test if this works
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
+    // iter_local to test if this works
+    dlist_iter_t * iter_local = dlist_get_iterable(dlist, ITER_HEAD);
 
     void * to_match = get_payload(5);
     void * the_match = dlist_remove_value(dlist, to_match);
@@ -195,7 +195,7 @@ TEST_F(DListTestFixture, TestRemoveValue)
 
     free(to_match);
     free(the_match);
-    dlist_destroy_iter(iter);
+    dlist_destroy_iter(iter_local);
 }
 
 // Test ability to prepend nodes by popping from the tail
@@ -371,12 +371,12 @@ TEST_F(DListTestFixture, TestInsertAt)
 
 TEST_F(DListTestFixture, TestNumberOfIters)
 {
-    // The fixture creates an iter so our start is one
+    // The fixture creates an iter_loca so our start is one
     EXPECT_EQ(dlist_get_active_iters(dlist), 1);
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_TAIL);
+    dlist_iter_t * iter_loca = dlist_get_iterable(dlist, ITER_TAIL);
 
     EXPECT_EQ(dlist_get_active_iters(dlist), 2);
-    dlist_destroy_iter(iter);
+    dlist_destroy_iter(iter_loca);
     EXPECT_EQ(dlist_get_active_iters(dlist), 1);
 }
 /*
@@ -388,12 +388,12 @@ TEST_F(DListTestFixture, TestNumberOfIters)
  */
 TEST_F(DListTestFixture, TestUpdatingItersAfterRemoval)
 {
-    // create a iter object
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_TAIL);
+    // create a iter_local object
+    dlist_iter_t * iter_local = dlist_get_iterable(dlist, ITER_TAIL);
 
     // comfirm that the last item is the last payload
     EXPECT_EQ(dlist_get_active_iters(dlist), 2);
-    EXPECT_EQ(strcmp((char*)iter_get_value(iter), payload_last), 0);
+    EXPECT_EQ(strcmp((char*)iter_get_value(iter_local), payload_last), 0);
 
     // remove the payload
     char * removed_node = (char*)dlist_remove_value(dlist, payload_last);
@@ -402,8 +402,8 @@ TEST_F(DListTestFixture, TestUpdatingItersAfterRemoval)
     // This is where it should break. What we need it to do is move one index
     // back to the previous value or the "new tail"
     char * previous_payload = (char *)test_vector.at(test_vector.size() - 1).c_str();
-    EXPECT_EQ(strcmp(previous_payload, (char*)iter_get_value(iter)), 1);
-    dlist_destroy_iter(iter);
+    EXPECT_EQ(strcmp(previous_payload, (char*)iter_get_value(iter_local)), 1);
+    dlist_destroy_iter(iter_local);
     free(removed_node);
 }
 
@@ -414,17 +414,17 @@ TEST(TestInnerIter, SingleNodeRemoval)
     dlist_t * dlist = dlist_init(compare_payloads);
     dlist_append(dlist, target_node);
 
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    EXPECT_EQ(strcmp(target_node, (char*)iter_get_value(iter)), 0);
+    dlist_iter_t * iter_local = dlist_get_iterable(dlist, ITER_HEAD);
+    EXPECT_EQ(strcmp(target_node, (char*)iter_get_value(iter_local)), 0);
 
     // remove the only node in the dlist this should force the iter to move left
     // to a null value
     dlist_remove_value(dlist, target_node);
 
-    EXPECT_EQ(iter_get_value(iter), nullptr);
+    EXPECT_EQ(iter_get_value(iter_local), nullptr);
 
     // clean up
-    dlist_destroy_iter(iter);
+    dlist_destroy_iter(iter_local);
     dlist_destroy(dlist);
     free(target_node);
 }
