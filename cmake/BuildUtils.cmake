@@ -1,21 +1,47 @@
-macro(set_compiler_flags)
-    set(base_flags "-Wall -Wshadow -Werror -Wconversion -Wpedantic -Wformat -Wvla
-                    -Wfloat-equal -D_FORTIFY_SOURCE=2 -fpie -Wl,-pie -shared")
+# Macro is used to set variables for compiler flags.
+# Macros scope populates inside the scope of the caller
+MACRO(set_compiler_flags)
+    # base flags for detecting errors
+    set(base_exceptions "-Wall;-Wshadow;-Werror;-Wconversion;-Wpedantic;-Wformat;-Wvla;-Wfloat-equal;-D_FORTIFY_SOURCE=2;-fpie;-Wl,-pie;-shared")
 
-endmacro()
+    # Base flags for static analysis. This should be added to both the
+    # compiler and linker options
+    set(base_static_analysis "-fno-omit-frame-pointer;-fsanitize=address;-fsanitize=undefined;-fno-sanitize-recover=all;-fsanitize=float-divide-by-zero;-fsanitize=float-cast-overflow;-fno-sanitize=null;-fno-sanitize=alignment")
 
-function(set_custom_properties target_name target_include_dir)
+
+    # Add debuging symbols if in debug mode
+    IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(debug_flag "-g3")
+    ENDIF()
+
+    # Create a base flags variable to be linked
+    set(base_flags ${base_exceptions} ${base_static_analysis} ${debug_flag})
+
+ENDMACRO()
+
+
+# Function populates the include directory and adds compilation flags
+FUNCTION(set_custom_properties target_name target_include_dir)
+    # Run macro to get the variables set
     set_compiler_flags()
+
+    # Set the include directory and use the header syntax to support relocation
     target_include_directories(
             ${target_name} PUBLIC
             "$<BUILD_INTERFACE:${target_include_dir}>"
             "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>"
     )
 
+    # set additional target properties to include flags for static analysis
     set_target_properties(
             ${target_name} PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-            COMPILATION_FLAGS ${base_flags}
+            COMPILE_OPTIONS "${base_flags}"
+            LINK_OPTIONS "${base_static_analysis}"
     )
+ENDFUNCTION()
 
-endfunction()
+FUNCTION(GTest_add_target target_name)
+
+
+ENDFUNCTION()
