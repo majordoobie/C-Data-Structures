@@ -1,7 +1,5 @@
 add_library(dl_list SHARED dl_list.c dl_iter.c)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}../include)
-
 target_include_directories(
         dl_list SYSTEM PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>"
