@@ -6,10 +6,10 @@ target_include_directories(
         "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-set_target_properties(
-        dl_list PROPERTIES
-        PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/../include
-)
+#set_target_properties(
+#        dl_list PROPERTIES
+#        PUBLIC_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/../include
+#)
 
 set_target_properties(
         dl_list PROPERTIES
