@@ -41,7 +41,6 @@ MACRO(set_compiler_flags)
 
 ENDMACRO()
 
-
 #
 # set_project_properties the include directory using the relocatable generator
 # syntax which allows the --prefix syntax to be used without breaking where
