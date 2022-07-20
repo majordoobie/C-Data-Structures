@@ -20,9 +20,9 @@ typedef struct dlist_t
 {
     dnode_t * head;
     dnode_t * tail;
-    size_t length;
-    dlist_t * iter_list;
-    bool dlist_mgr;
+    size_t length;          // number of nodes
+    dlist_t * iter_list;    // dlist of iter_t objects
+    bool list_of_iters;
     dlist_match_t (* compare_func)(void *, void *);
 } dlist_t;
 
@@ -45,6 +45,8 @@ static dlist_t * get_iters_list(dlist_iter_t * iter);
 
 // Private iter_list
 static dlist_match_t compare_iters(void * data1, void * data2);
+static dlist_iter_t * get_iter_of_iter_list(dlist_t * dlist);
+static bool is_iter_list_empty(dlist_t * dlist);
 
 // Node private functions
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
@@ -67,20 +69,36 @@ static dlist_result_t add_node(dlist_t * dlist,
  */
 dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
 {
+    // Create and verify that the dlist iter is allocated
     dlist_t * dlist = (dlist_t *)calloc(1, sizeof(dlist_t));
     valid_ptr_t result = verify_alloc(dlist);
-    if (result == INVALID_PTR)
+    if (INVALID_PTR == result)
     {
         return NULL;
     }
 
-    // Create the iter_list list dlist
-    dlist_t * iters = (dlist_t *)calloc(1, sizeof(dlist_t));
-    iters->dlist_mgr = true;
-    iters->compare_func = compare_iters;
+    // Every allocated dlist has a inner dlist used to keep track of all the
+    // iter objects created. This dlist is tagged with a bool "list_of_iters"
+    dlist_t * iter_list = (dlist_t *)calloc(1, sizeof(dlist_t));
+    result = verify_alloc(dlist);
+    if (INVALID_PTR == result)
+    {
+        dlist_destroy(dlist);
+        return NULL;
+    }
 
-    dlist->compare_func = compare_func;
-    dlist->iter_list = iters;
+    * iter_list = (dlist_t) {
+        .compare_func   = compare_iters,
+        .iter_list      = NULL,
+        .list_of_iters  = true
+    };
+
+    * dlist = (dlist_t) {
+        .compare_func   = compare_func,
+        .iter_list      = iter_list,
+        .list_of_iters  = false
+    };
+
     return dlist;
 }
 
@@ -466,7 +484,7 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
  */
 void dlist_destroy_iter(dlist_iter_t * iter)
 {
-    // Get the ist of iter_list stored in the main dlist
+    // Get the list of iter_list stored in the main dlist
     dlist_t * iters_list = get_iters_list(iter);
 
     // If iter_list is NULL then we know this is the master iter list
@@ -672,20 +690,22 @@ static dlist_result_t add_node(dlist_t * dlist,
     node->data = data;
 
     // If tail is None, then we know that there is no items in the linked
-    // list. So this item will be the very first item appended
+    // list. So this item will be the very first item appended.
     if (0 == dlist->length)
     {
         dlist->head = node;
         dlist->tail = node;
 
+        // Since the dlist was empty, we need to make sure that any allocated
+        // dlist_iter_t are updated to have their nodes point to the new node
         if (NULL != dlist->iter_list)
         {
-            // If we have inner iters then update them to point to the new value
-            if (0 != dlist_get_length(dlist->iter_list))
+            if (!is_iter_list_empty(dlist))
             {
-                dlist_iter_t * iter_list = dlist_get_iterable(dlist->iter_list, ITER_HEAD);
-
+                dlist_iter_t * iter_list = get_iter_of_iter_list(dlist);
                 dlist_iter_t * iter = iter_get_value(iter_list);
+
+                // iterate over each dlist_iter_t and set the node to head
                 while (NULL != iter)
                 {
                     dlist_set_iter_head(iter);
@@ -854,7 +874,9 @@ static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void (*free
 }
 
 /*!
- * @brief Function to compare the iter_list stored in the dlist
+ * @brief Function is meant to be used against the iters_list dlist to find
+ * a iter within that dlist. This is used when we are destroying an iter_list.
+ * When an iter_list is destroyed it must be removed from the iters_list.
  *
  * @param data1
  * @param data2
@@ -870,10 +892,36 @@ static dlist_match_t compare_iters(void * data1, void * data2)
 
 }
 
+/*!
+ * @brief Function is a wrapper for fetching the dlist that is stored in the
+ * iter_t object
+ *
+ * @param iter Pointer to the dlist_iter_t to fetch the dlist_t from
+ * @return Pointer to the dlist stoed in the dlist_iter_t
+ */
 static dlist_t * get_iters_list(dlist_iter_t * iter)
 {
     dlist_t * main_dlist = iter_get_dlist(iter);
     dlist_t * iters_dlist = main_dlist->iter_list;
     return iters_dlist;
+}
+
+/*!
+ * @brief Function is only used for readability
+ * @param dlist
+ * @return
+ */
+static dlist_iter_t * get_iter_of_iter_list(dlist_t * dlist)
+{
+    return dlist_get_iterable(dlist->iter_list, ITER_HEAD);
+}
+
+static bool is_iter_list_empty(dlist_t * dlist)
+{
+    if (0 == dlist_get_length(dlist->iter_list))
+    {
+        return true;
+    }
+    return false;
 }
 

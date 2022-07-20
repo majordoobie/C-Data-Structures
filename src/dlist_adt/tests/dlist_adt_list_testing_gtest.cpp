@@ -48,16 +48,17 @@ TEST(dlist_test, InitTest)
     dlist_destroy(dlist);
 }
 
+// Basic test to see if we can insert something into the dlist
 TEST(dlist_test, InsertTest)
 {
     dlist_t * dlist = dlist_init(nullptr);
     ASSERT_NE(dlist, nullptr);
     dlist_append(dlist, get_payload(1));
     EXPECT_EQ(dlist_get_length(dlist), 1);
-
     dlist_destroy_free(dlist, free_payload);
 }
 
+// Basic test to ensure that we can iterate over the dlist
 TEST(dlist_test, IterableTest)
 {
     dlist_t * dlist = dlist_init(nullptr);
@@ -82,7 +83,7 @@ TEST(dlist_test, IterableTest)
 
     while (nullptr != node)
     {
-        EXPECT_EQ(strcmp(node, vector.at(index)), 0);
+        EXPECT_EQ(strcmp(node, vector.at(static_cast<unsigned long>(index))), 0);
         node = (char*)dlist_get_iter_next(iter);
         index++;
     }
@@ -91,7 +92,53 @@ TEST(dlist_test, IterableTest)
 }
 
 
+// Test that removing a single node on a single node iter sets the pointer to null
+TEST(TestInnerIter, SingleNodeRemoval)
+{
+    char * target_node = get_payload(5);
 
+    dlist_t * dlist = dlist_init(compare_payloads);
+    dlist_append(dlist, target_node);
+
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
+    EXPECT_EQ(strcmp(target_node, (char*)iter_get_value(iter)), 0);
+
+    // remove the only node in the dlist this should force the iter to move left
+    // to a null value
+    dlist_remove_value(dlist, target_node);
+
+    EXPECT_EQ(iter_get_value(iter), nullptr);
+
+    // clean up
+    dlist_destroy_iter(iter);
+    dlist_destroy(dlist);
+    free(target_node);
+}
+
+// Ensure that when we remove the single node that we can reset the head value
+TEST(TestInnerIter, TestSingleRemoveAndAdd)
+{
+    char * target_node = get_payload(5);
+
+    dlist_t * dlist = dlist_init(compare_payloads);
+    dlist_append(dlist, target_node);
+
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
+    EXPECT_EQ(strcmp(target_node, (char*)iter_get_value(iter)), 0);
+
+    // remove the only node in the dlist this should force the iter to move left
+    // to a null value
+    dlist_remove_value(dlist, target_node);
+
+    EXPECT_EQ(iter_get_value(iter), nullptr);
+
+    dlist_append(dlist, target_node);
+    EXPECT_EQ(strcmp(target_node, (char*)iter_get_value(iter)), 0);
+
+    free(target_node);
+    dlist_destroy_iter(iter);
+    dlist_destroy(dlist);
+}
 /*
  * Test fixture to do more complicated testing
  *
@@ -180,23 +227,6 @@ TEST_F(DListTestFixture, TestGetInDList)
     free(to_match);
 }
 
-// Test ability to properly remove a value by searching for it
-TEST_F(DListTestFixture, TestRemoveValue)
-{
-    // iter_local to test if this works
-    dlist_iter_t * iter_local = dlist_get_iterable(dlist, ITER_HEAD);
-
-    void * to_match = get_payload(5);
-    void * the_match = dlist_remove_value(dlist, to_match);
-
-    EXPECT_EQ(strcmp((char *)to_match, (char *)the_match), 0);
-    EXPECT_EQ(dlist_get_length(dlist), length - 1);
-    EXPECT_EQ(dlist_value_in_dlist(dlist, to_match), false);
-
-    free(to_match);
-    free(the_match);
-    dlist_destroy_iter(iter_local);
-}
 
 // Test ability to prepend nodes by popping from the tail
 // prepending it
@@ -350,35 +380,6 @@ TEST_F(DListTestFixture, TestFetchByIndex)
 }
 
 
-TEST_F(DListTestFixture, TestInsertAt)
-{
-    // get a middle index
-    int32_t middle_index = (int32_t)this->test_vector.size() / 2;
-    void * middle_node = dlist_get_by_index(this->dlist, middle_index);
-    dlist_remove_value(this->dlist, middle_node);
-
-    // Now try to insert at the same location
-    dlist_insert(this->dlist, middle_node, middle_index);
-
-    // reset back to head
-    char * node = (char * )iter_get_value(this->iter);
-    for (std::string& val: this->test_vector)
-    {
-        EXPECT_EQ(std::strcmp(val.c_str(), node), 0) << val.c_str() << " " << node;
-        node = (char *)dlist_get_iter_next(this->iter);
-    }
-}
-
-TEST_F(DListTestFixture, TestNumberOfIters)
-{
-    // The fixture creates an iter_loca so our start is one
-    EXPECT_EQ(dlist_get_active_iters(dlist), 1);
-    dlist_iter_t * iter_loca = dlist_get_iterable(dlist, ITER_TAIL);
-
-    EXPECT_EQ(dlist_get_active_iters(dlist), 2);
-    dlist_destroy_iter(iter_loca);
-    EXPECT_EQ(dlist_get_active_iters(dlist), 1);
-}
 /*
  * This test is the main reason for the massive refactor. An issue that was
  * happening is that when an iter object is created it points to the current
@@ -407,48 +408,54 @@ TEST_F(DListTestFixture, TestUpdatingItersAfterRemoval)
     free(removed_node);
 }
 
-TEST(TestInnerIter, SingleNodeRemoval)
+
+
+
+// Test ability to properly remove a value by searching for it
+TEST_F(DListTestFixture, TestRemoveValue)
 {
-    char * target_node = get_payload(5);
+    // iter_local to test if this works
+    dlist_iter_t * iter_local = dlist_get_iterable(dlist, ITER_HEAD);
 
-    dlist_t * dlist = dlist_init(compare_payloads);
-    dlist_append(dlist, target_node);
+    void * to_match = get_payload(5);
+    void * the_match = dlist_remove_value(dlist, to_match);
 
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    EXPECT_EQ(strcmp(target_node, (char*)iter_get_value(iter)), 0);
+    EXPECT_EQ(strcmp((char *)to_match, (char *)the_match), 0);
+    EXPECT_EQ(dlist_get_length(dlist), length - 1);
+    EXPECT_EQ(dlist_value_in_dlist(dlist, to_match), false);
 
-    // remove the only node in the dlist this should force the iter to move left
-    // to a null value
-    dlist_remove_value(dlist, target_node);
-
-    EXPECT_EQ(iter_get_value(iter), nullptr);
-
-    // clean up
-    dlist_destroy_iter(iter);
-    dlist_destroy(dlist);
-    free(target_node);
+    free(to_match);
+    free(the_match);
+    dlist_destroy_iter(iter_local);
 }
 
-TEST(TestInnerIter, TestSingleRemoveAndAdd)
+TEST_F(DListTestFixture, TestInsertAt)
 {
-    char * target_node = get_payload(5);
+    // get a middle index
+    int32_t middle_index = (int32_t)this->test_vector.size() / 2;
+    void * middle_node = dlist_get_by_index(this->dlist, middle_index);
+    dlist_remove_value(this->dlist, middle_node);
 
-    dlist_t * dlist = dlist_init(compare_payloads);
-    dlist_append(dlist, target_node);
+    // Now try to insert at the same location
+    dlist_insert(this->dlist, middle_node, middle_index);
 
-    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
-    EXPECT_EQ(strcmp(target_node, (char*)iter_get_value(iter)), 0);
+    // reset back to head
+    char * node = (char * )iter_get_value(this->iter);
+    for (std::string& val: this->test_vector)
+    {
+        EXPECT_EQ(std::strcmp(val.c_str(), node), 0) << val.c_str() << " " << node;
+        node = (char *)dlist_get_iter_next(this->iter);
+    }
+}
 
-    // remove the only node in the dlist this should force the iter to move left
-    // to a null value
-    dlist_remove_value(dlist, target_node);
+// Test the number of iter_list that the dlist has
+TEST_F(DListTestFixture, TestNumberOfIters)
+{
+    // The fixture creates an iter_loca so our start is one
+    EXPECT_EQ(dlist_get_active_iters(dlist), 1);
+    dlist_iter_t * iter_loca = dlist_get_iterable(dlist, ITER_TAIL);
 
-    EXPECT_EQ(iter_get_value(iter), nullptr);
-
-    dlist_append(dlist, target_node);
-    EXPECT_EQ(strcmp(target_node, (char*)iter_get_value(iter)), 0);
-
-    free(target_node);
-    dlist_destroy_iter(iter);
-    dlist_destroy(dlist);
+    EXPECT_EQ(dlist_get_active_iters(dlist), 2);
+    dlist_destroy_iter(iter_loca);
+    EXPECT_EQ(dlist_get_active_iters(dlist), 1);
 }
