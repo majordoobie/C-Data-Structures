@@ -2,8 +2,8 @@
 # Macros scope populates inside the scope of the caller
 MACRO(set_compiler_flags)
     # base flags for detecting errors
-#    set(base_exceptions "-Wall;-Wshadow;-Werror;-Wconversion;-Wpedantic;-Wformat;-Wvla;-Wfloat-equal;-D_FORTIFY_SOURCE=2;-fpie;-Wl,-pie;-shared")
-    set(base_exceptions "-Wall"
+    set(base_exceptions
+            "-Wall"
             "-Werror"
             "-Wshadow"
             "-Wconversion"
@@ -14,11 +14,21 @@ MACRO(set_compiler_flags)
             "-D_FORTIFY_SOURCE=2"
             "-fpie"
             "-Wl,-pie"
-            "-shared")
+            "-shared"
+            )
 
     # Base flags for static analysis. This should be added to both the
     # compiler and linker options
-    set(base_static_analysis "-fno-omit-frame-pointer;-fsanitize=address;-fsanitize=undefined;-fno-sanitize-recover=all;-fsanitize=float-divide-by-zero;-fsanitize=float-cast-overflow;-fno-sanitize=null;-fno-sanitize=alignment")
+    set(base_static_analysis
+            "-fno-omit-frame-pointer"
+            "-fsanitize=address"
+            "-fsanitize=undefined"
+            "-fno-sanitize-recover=all"
+            "-fsanitize=float-divide-by-zero"
+            "-fsanitize=float-cast-overflow"
+            "-fno-sanitize=null"
+            "-fno-sanitize=alignment"
+    )
 
 
     # Add debuging symbols if in debug mode
