@@ -9,5 +9,5 @@ target_link_libraries(
         circular_list
 )
 
-include(GTestConfig)
-AddTest(circular_list_gtest)
+include(BuildUtils)
+GTest_add_target(circular_list_gtest)

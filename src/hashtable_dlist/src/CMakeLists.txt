@@ -1,12 +1,8 @@
+include(BuildUtils)
+
 add_library(hashtable SHARED heap.c)
+set_project_properties(hashtable ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
-# Test to public so that gtest can have access
-target_include_directories(
-        hashtable
-        PUBLIC
-        ${PROJECT_SOURCE_DIR}/include
-)
-
-# Add base flags
-include(BaseCompilerFlags)
-AddFlags(hashtable)
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_subdirectory(../tests ../tests)
+ENDIF()

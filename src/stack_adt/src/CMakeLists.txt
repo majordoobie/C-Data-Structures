@@ -1,12 +1,8 @@
+include(BuildUtils)
+
 add_library(stack SHARED stack.c)
+set_project_properties(stack ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
-# Test to public so that gtest can have access
-target_include_directories(
-        stack
-        PUBLIC
-        ${PROJECT_SOURCE_DIR}/include
-)
-
-# Add base flags
-include(BaseCompilerFlags)
-AddFlags(stack)
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_subdirectory(../tests ../tests)
+ENDIF()

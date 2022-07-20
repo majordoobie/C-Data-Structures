@@ -9,5 +9,5 @@ target_link_libraries(
         dl_queue
 )
 
-include(GTestConfig)
-AddTest(queue_testing_gtest)
+include(BuildUtils)
+GTest_add_target(queue_testing_gtest)

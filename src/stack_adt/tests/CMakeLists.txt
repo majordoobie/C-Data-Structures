@@ -8,6 +8,5 @@ target_link_libraries(
         PUBLIC
         stack
 )
-
-include(GTestConfig)
-AddTest(stack_testing_gtest)
+include(BuildUtils)
+GTest_add_target(stack_testing_gtest)

@@ -9,5 +9,5 @@ target_link_libraries(
         bst
 )
 
-include(GTestConfig)
-AddTest(bst_testing_gtest)
+include(BuildUtils)
+GTest_add_target(bst_testing_gtest)

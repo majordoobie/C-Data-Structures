@@ -9,5 +9,5 @@ target_link_libraries(
         heap
 )
 
-include(GTestConfig)
-AddTest(heap_testing_gtest)
+include(BuildUtils)
+GTest_add_target(heap_testing_gtest)

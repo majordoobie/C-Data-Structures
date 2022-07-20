@@ -1,19 +1,9 @@
-add_library(avl_map SHARED tree_map_avl.c)
+include(BuildUtils)
 
-# Include the location of the header file. The header of bst is not needed
-# because that target was built with PUBLIC qualifier
-target_include_directories(
-        avl_map
-        PUBLIC
-        ${PROJECT_SOURCE_DIR}/include
-)
+add_library(avl_map STATIC tree_map_avl.c)
+set_project_properties(avl_map ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+target_link_libraries(avl_map PUBLIC bst)
 
-# Target relies on the bst library since it uses bst as its backbone
-target_link_libraries(
-        avl_map
-        bst
-)
-
-# Add base flags
-include(BaseCompilerFlags)
-AddFlags(avl_map)
+IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_subdirectory(../tests ../tests)
+ENDIF()

@@ -54,7 +54,7 @@ class CListTestFixture : public ::testing::Test
  protected:
     void SetUp() override
     {
-        this->clist = clist_init(this->words.size(), match_payloads, free_payload);
+        this->clist = clist_init((uint32_t)this->words.size(), match_payloads, free_payload);
         for (std::string& val : this->words)
         {
             clist_insert(this->clist, get_payload(val.c_str()), 0, TAIL);

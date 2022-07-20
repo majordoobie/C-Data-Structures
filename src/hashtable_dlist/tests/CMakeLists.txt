@@ -9,6 +9,5 @@ target_link_libraries(
         gtest
         gtest_main
 )
-
-include(GoogleTest)
-gtest_discover_tests(hashtable_testing_gtest)
+include(BuildUtils)
+GTest_add_target(hashtable_testing_gtest)

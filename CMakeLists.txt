@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 # Add the cmake modules directory to call functions in them
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Create the variable for where all the tests will go in the build tree
 # this will make it easier to execute all the test binaries
@@ -20,11 +20,10 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
 ENDIF()
 
 add_subdirectory(deps)
+add_subdirectory(src/avl_bst_adt/src)
+add_subdirectory(src/treemap_avl_bst/src)
 add_subdirectory(src/dlist_adt/src)
-#add_subdirectory(src/avl_bst_adt)
-#add_subdirectory(src/treemap_avl_bst)
-#add_subdirectory(src/stack_adt)
-#add_subdirectory(src/heap_adt)
-#add_subdirectory(src/queue_dlist)
-#add_subdirectory(src/circular_list_dlist)
-# 619312681
+add_subdirectory(src/stack_adt/src)
+add_subdirectory(src/heap_adt/src)
+add_subdirectory(src/queue_dlist/src)
+add_subdirectory(src/circular_list_dlist/src)

@@ -11,5 +11,5 @@ target_link_libraries(
         avl_map
 )
 
-include(GTestConfig)
-AddTest(avl_tree_map_testing_gtest)
+include(BuildUtils)
+GTest_add_target(avl_tree_map_testing_gtest)
