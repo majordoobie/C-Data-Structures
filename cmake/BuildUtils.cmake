@@ -3,9 +3,9 @@
 MACRO(set_compiler_flags)
     # base flags for detecting errors
 #    set(base_exceptions "-Wall;-Wshadow;-Werror;-Wconversion;-Wpedantic;-Wformat;-Wvla;-Wfloat-equal;-D_FORTIFY_SOURCE=2;-fpie;-Wl,-pie;-shared")
-    #"-Wshadow"
     set(base_exceptions "-Wall"
             "-Werror"
+            "-Wshadow"
             "-Wconversion"
             "-Wpedantic"
             "-Wformat"
