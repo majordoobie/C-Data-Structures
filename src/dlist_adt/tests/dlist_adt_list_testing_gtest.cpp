@@ -105,7 +105,7 @@ TEST(TestInnerIter, SingleNodeRemoval)
 
     // remove the only node in the dlist this should force the iter to move left
     // to a null value
-    dlist_remove_value(dlist, target_node);
+   dlist_remove_value(dlist, target_node);
 
     EXPECT_EQ(iter_get_value(iter), nullptr);
 

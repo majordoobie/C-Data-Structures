@@ -47,6 +47,7 @@ static dlist_t * get_iters_list(dlist_iter_t * iter);
 static dlist_match_t compare_iters(void * data1, void * data2);
 static dlist_iter_t * get_iter_of_iter_list(dlist_t * dlist);
 static bool is_iter_list_empty(dlist_t * dlist);
+static bool is_iter_list(dlist_iter_t * iter);
 
 // Node private functions
 static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
@@ -265,29 +266,32 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
     {
         return NULL;
     }
-    /*
-     * If we have a valid node, we need to make sure to update all the iter lists
-     * so that they do not point to an invalid node before we remove this node
-     */
 
-    if (NULL != dlist->iter_list)  // If here we are dealing with the master dlist iterlist
+    // If search came back with a value. We need to see if the value is set
+    // to the tail. If it is, we need to update all the iters in iter_list to
+    // point to the previous index. Otherwise, they will point to a null value
+    iter_search_t * tail_node = iter_search_by_value_plus(dlist, dlist->tail->data);
+    if (tail_node->found_index == search->found_index)
     {
-        if (0 != dlist_get_length(dlist->iter_list))
+        if (!is_iter_list_empty(dlist))
         {
-            dlist_iter_t * iter_list = dlist_get_iterable(dlist->iter_list, ITER_HEAD);
+            dlist_iter_t * iter_list = get_iter_of_iter_list(dlist);
+            dlist_iter_t * iter_to_update = iter_get_value(iter_list);
 
-            dlist_iter_t * iter = iter_get_value(iter_list);
-            while (NULL != iter)
+            // while there is data in the iter->node member, keep iterating
+            while (NULL != iter_to_update)
             {
-                if (iter_get_index(iter) == search->found_index)
+                // if the iter is currently pointing at the tail, update it to
+                // point at the previous
+                if (iter_get_index(iter_to_update) == search->found_index)
                 {
-                    dlist_get_iter_prev(iter);
+                    dlist_get_iter_prev(iter_to_update);
                 }
-                iter = dlist_get_iter_next(iter_list);
+                iter_to_update = dlist_get_iter_next(iter_list);
             }
-            iter_destroy_iterable(iter_list);
         }
     }
+    iter_destroy_search(tail_node);
 
     // Extract the data and destroy the search
     dnode_t * node = search->found_node;
@@ -468,12 +472,8 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
         return NULL;
     }
 
-    // Only add to iter list if the iter was created externally
-    if (NULL != dlist->iter_list)
-    {
-        // If valid, append the iter to the list of iter_list
-        dlist_append(dlist->iter_list, iter);
-    }
+    // If valid, append the iter to the list of iter_list
+    dlist_append(dlist->iter_list, iter);
 
     return iter;
 }
@@ -484,25 +484,16 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
  */
 void dlist_destroy_iter(dlist_iter_t * iter)
 {
-    // Get the list of iter_list stored in the main dlist
-    dlist_t * iters_list = get_iters_list(iter);
+    assert(iter);
 
-    // If iter_list is NULL then we know this is the master iter list
-    if (NULL == iters_list)
+    // if the iter is not the unique iter of iters then proceed to removing
+    // the value.
+    if (!(is_iter_list(iter)))
     {
-        iter_destroy_iterable(iter);
-        return;
-    }
-
-    if (NULL == iters_list->iter_list)
-    {
+        dlist_t * iters_list = get_iters_list(iter);
         dlist_remove_value(iters_list, iter);
     }
-
-    if (NULL != iter)
-    {
-        iter_destroy_iterable(iter);
-    }
+    iter_destroy_iterable(iter);
 }
 
 /*!
@@ -573,7 +564,7 @@ void * dlist_get_iter_prev(dlist_iter_t * dlist_iter)
  * list is reached, then a NULL is returned.
  */
 void * dlist_get_iter_next(dlist_iter_t * dlist_iter)
-{
+  {
     dnode_t * data = iterate(dlist_iter, NEXT);
     if (NULL != data)
     {
@@ -925,3 +916,7 @@ static bool is_iter_list_empty(dlist_t * dlist)
     return false;
 }
 
+static bool is_iter_list(dlist_iter_t * iter)
+{
+    return get_iters_list(iter)->list_of_iters;
+}

@@ -242,6 +242,7 @@ iter_search_t * iter_search_by_value_plus(dlist_t * dlist, void * data)
     iter_search_t * search = iter_init_search(iter, data, 0, SEARCH_BY_VALUE);
 
     // Perform the search
+    //TODO: We have to destroy this iter but it is embeded in the search!!!!!
     iter_search_result result = iter_search(search);
     if (SEARCH_FAILURE == result)
     {
