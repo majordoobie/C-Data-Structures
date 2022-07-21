@@ -62,7 +62,8 @@ TEST_F(GraphDlistFixture, AddEdgeTestFailure)
     int * invalid_node2 = get_payload(2);
     uint32_t weight = 0;
 
-    graph_add_edge(this->graph, invalid_node1, invalid_node2, weight);
+    graph_opt_t result = graph_add_edge(this->graph, invalid_node1, invalid_node2, weight);
+    EXPECT_EQ(result, GRAPH_FAIL_NODE_NODE_FOUND);
 
     free_payload(invalid_node1);
     free_payload(invalid_node2);
