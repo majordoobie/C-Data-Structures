@@ -55,32 +55,47 @@ graph_opt_t graph_add_edge(graph_t * graph,
                            void * target_node_p,
                            uint32_t weight)
 {
+    assert(graph);
     assert(source_node_p);
     assert(target_node_p);
 
     // first step is finding if the source_node exists
-    node_t * source_node = dlist_get_by_value(graph->nodes, source_node);
-    if (NULL == source_node_p)
+    node_t * source_node = dlist_get_by_value(graph->nodes, source_node_p);
+    if (NULL == source_node)
     {
         return GRAPH_FAIL_NODE_NODE_FOUND;
     }
 
     // next find if the target_node exists
-    node_t * target_node = dlist_get_by_value(graph->nodes, target_node);
-    if (NULL == source_node_p)
+    node_t * target_node = dlist_get_by_value(graph->nodes, target_node_p);
+    if (NULL == target_node)
     {
         return GRAPH_FAIL_NODE_NODE_FOUND;
     }
 
-    // final step is to add the is to add the edge with its weight
+    // next step is to add the edge between the source and target node if
+    // the edge does not already exist
     if (NULL == dlist_get_by_value(source_node->edges, target_node))
     {
         edge_t * edge = get_edge(target_node, weight);
         dlist_append(source_node->edges, edge);
     }
+    else
+    {
+        return GRAPH_EDGE_ALREADY_EXISTS;
+    }
 
-
-
+    // finally, if the graph mode is unidirectional, then add the edge
+    // going the opposite direction
+    if (GRAPH_DIRECTIONAL_FALSE == graph->graph_mode)
+    {
+        // only add it if the edge does not exist
+        if (NULL == dlist_get_by_value(target_node->edges, source_node))
+        {
+            edge_t * edge = get_edge(source_node, weight);
+            dlist_append(target_node->edges, edge);
+        }
+    }
 
     return GRAPH_SUCCESS;
 }

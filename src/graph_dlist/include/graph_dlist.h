@@ -11,6 +11,7 @@ typedef enum
 {
     GRAPH_SUCCESS,
     GRAPH_FAIL_NODE_NODE_FOUND,
+    GRAPH_EDGE_ALREADY_EXISTS
 } graph_opt_t;
 
 typedef enum

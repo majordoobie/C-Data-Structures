@@ -4,13 +4,12 @@
 /*
  * Helper Functions for testing
  */
-// Creates a simple payload for the linked list
-char * get_payload(int num)
+// creates a payload for the graph
+int * get_payload(int num)
 {
-    const int size = 20;
-    char buff[size];
-    snprintf(buff, size, "Hello world: %d\n", num);
-    return strdup(buff);
+    int * payload = (int *)(malloc(sizeof(int)));
+    *payload = num;
+    return payload;
 }
 
 // frees the payload inserted into the linked list
@@ -22,7 +21,7 @@ void free_payload(void * data)
 // function for comparing nodes
 dlist_match_t compare_payloads(void * data1, void * data2)
 {
-    if (0 == strcmp((char*)data1, (char*)data2))
+    if ((int*)data1 == (int*)data2)
     {
         return DLIST_MATCH;
     }
@@ -36,3 +35,36 @@ TEST(GraphBasic, TestBasicStartUp)
     EXPECT_NE(graph, nullptr);
     graph_destroy(graph);
 }
+
+class GraphDlistFixture : public ::testing::Test
+{
+ public:
+    graph_t * graph{};
+
+ protected:
+    void SetUp() override
+    {
+        graph = graph_init(GRAPH_DIRECTIONAL_TRUE, compare_payloads);
+    }
+
+    void TearDown() override
+    {
+        graph_destroy(graph);
+    }
+};
+
+
+// Test that we error out properly when trying to add an edge with nodes that
+// do not exist
+TEST_F(GraphDlistFixture, AddEdgeTestFailure)
+{
+    int * invalid_node1 = get_payload(1);
+    int * invalid_node2 = get_payload(2);
+    uint32_t weight = 0;
+
+    graph_add_edge(this->graph, invalid_node1, invalid_node2, weight);
+
+    free_payload(invalid_node1);
+    free_payload(invalid_node2);
+}
+
