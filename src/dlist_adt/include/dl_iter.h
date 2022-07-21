@@ -45,6 +45,7 @@ void iter_destroy_iterable(dlist_iter_t * iter);
 int32_t iter_get_index(dlist_iter_t * iter);
 dnode_t * iter_get_node(dlist_iter_t * iter);
 dlist_t * iter_get_dlist(dlist_iter_t * iter);
+void iter_update_index(dlist_iter_t * iter, int index);
 
 // Search for values
 iter_search_t * iter_search_by_value_plus(dlist_t * dlist, void * data);

@@ -22,7 +22,7 @@ typedef struct dlist_t
     dnode_t * tail;
     size_t length;          // number of nodes
     dlist_t * iter_list;    // dlist of iter_t objects
-    bool list_of_iters;
+    bool is_iter_mgr;
     dlist_match_t (* compare_func)(void *, void *);
 } dlist_t;
 
@@ -79,7 +79,7 @@ dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
     }
 
     // Every allocated dlist has a inner dlist used to keep track of all the
-    // iter objects created. This dlist is tagged with a bool "list_of_iters"
+    // iter objects created. This dlist is tagged with a bool "is_iter_mgr"
     dlist_t * iter_list = (dlist_t *)calloc(1, sizeof(dlist_t));
     result = verify_alloc(dlist);
     if (INVALID_PTR == result)
@@ -91,13 +91,13 @@ dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
     * iter_list = (dlist_t) {
         .compare_func   = compare_iters,
         .iter_list      = NULL,
-        .list_of_iters  = true
+        .is_iter_mgr  = true
     };
 
     * dlist = (dlist_t) {
         .compare_func   = compare_func,
         .iter_list      = iter_list,
-        .list_of_iters  = false
+        .is_iter_mgr  = false
     };
 
     return dlist;
@@ -267,32 +267,61 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
         return NULL;
     }
 
-    // If search came back with a value. We need to see if the value is set
-    // to the tail. If it is, we need to update all the iters in iter_list to
-    // point to the previous index. Otherwise, they will point to a null value
-    iter_search_t * tail_node = iter_search_by_value_plus(dlist, dlist->tail->data);
-    if ((false == dlist->list_of_iters) && (tail_node->found_index == search->found_index))
+    // If the current iter is not the iter manager, then check to see if
+    // all the iters need to change the node pointer to point to a proper
+    // value before removing the node
+    if (false == dlist->is_iter_mgr)
     {
-        if (!is_iter_list_empty(dlist))
+        iter_search_t * tail_node = iter_search_by_value_plus(dlist, dlist->tail->data);
+        if (tail_node->found_index == search->found_index)
         {
-            dlist_iter_t * iter_list = get_iter_of_iter_list(dlist);
-            dlist_iter_t * iter_to_update = iter_get_value(iter_list);
-
-            // while there is data in the iter->node member, keep iterating
-            while (NULL != iter_to_update)
+            if (!is_iter_list_empty(dlist))
             {
-                // if the iter is currently pointing at the tail, update it to
-                // point at the previous
-                if (iter_get_index(iter_to_update) == search->found_index)
+                dlist_iter_t * iter_list = get_iter_of_iter_list(dlist);
+                dlist_iter_t * iter_to_update = iter_get_value(iter_list);
+
+                // while there is data in the iter->node member, keep iterating
+                while (NULL != iter_to_update)
                 {
-                    dlist_get_iter_prev(iter_to_update);
+                    // if the iter is currently pointing at the tail, update it to
+                    // point at the previous
+                    if (iter_get_index(iter_to_update) == search->found_index)
+                    {
+                        dlist_get_iter_prev(iter_to_update);
+                        iter_update_index(iter_to_update, -1);
+                    }
+                    iter_to_update = dlist_get_iter_next(iter_list);
                 }
-                iter_to_update = dlist_get_iter_next(iter_list);
+                dlist_destroy_iter(iter_list);
             }
-            dlist_destroy_iter(iter_list);
         }
+        iter_destroy_search(tail_node);
+
+        iter_search_t * head_node = iter_search_by_value_plus(dlist, dlist->head->data);
+        if (head_node->found_index == search->found_index)
+        {
+            if (!is_iter_list_empty(dlist))
+            {
+                dlist_iter_t * iter_list = get_iter_of_iter_list(dlist);
+                dlist_iter_t * iter_to_update = iter_get_value(iter_list);
+
+                // while there is data in the iter->node member, keep iterating
+                while (NULL != iter_to_update)
+                {
+                    // if the iter is currently pointing at the tail, update it to
+                    // point at the previous
+                    if (iter_get_index(iter_to_update) == search->found_index)
+                    {
+                        dlist_get_iter_next(iter_to_update);
+                        iter_update_index(iter_to_update, -1);
+                    }
+                    iter_to_update = dlist_get_iter_next(iter_list);
+                }
+                dlist_destroy_iter(iter_list);
+            }
+        }
+        iter_destroy_search(head_node);
     }
-    iter_destroy_search(tail_node);
 
     // Extract the data and destroy the search
     dnode_t * node = search->found_node;
@@ -474,7 +503,7 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
     }
 
     // Only add to non iter_list dlist which is a special dlist inside the dlist
-    if (false == dlist->list_of_iters)
+    if (false == dlist->is_iter_mgr)
     {
         dlist_append(dlist->iter_list, iter);
     }
@@ -923,5 +952,5 @@ static bool is_iter_list_empty(dlist_t * dlist)
 static bool is_iter_list(dlist_iter_t * iter)
 {
     dlist_t * dlist = iter_get_dlist(iter);
-    return dlist->list_of_iters;
+    return dlist->is_iter_mgr;
 }

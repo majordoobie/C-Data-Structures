@@ -191,16 +191,7 @@ void * clist_remove(clist_t * clist, void * node)
 {
     // get the index of the node in the iter if any to understand if we need
     // to manipulate the iter object
-    void * data = dlist_remove_value(clist->dlist, node);
-
-    if (NULL == data)
-    {
-        return data;
-    }
-
-
-
-    return data;
+    return dlist_remove_value(clist->dlist, node);
 }
 
 void clist_quick_sort(clist_t * clist,

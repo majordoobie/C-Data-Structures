@@ -167,6 +167,11 @@ dnode_t * iterate(dlist_iter_t * iter, iter_fetch_t fetch)
     return iter->node;
 }
 
+void iter_update_index(dlist_iter_t * iter, int index)
+{
+    iter->index += index;
+}
+
 
 /*!
  * @brief Create a search object to aid in the iteration of the linked list
