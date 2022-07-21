@@ -22,7 +22,7 @@ typedef struct dlist_t
     dnode_t * tail;
     size_t length;          // number of nodes
     dlist_t * iter_list;    // dlist of iter_t objects
-    bool is_iter_mgr;
+    bool is_iter_mgr;       // bool indicating if the dlist is a special internal dlist
     dlist_match_t (* compare_func)(void *, void *);
 } dlist_t;
 
@@ -91,7 +91,7 @@ dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
     * iter_list = (dlist_t) {
         .compare_func   = compare_iters,
         .iter_list      = NULL,
-        .is_iter_mgr  = true
+        .is_iter_mgr    = true
     };
 
     * dlist = (dlist_t) {
@@ -895,7 +895,8 @@ static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void (*free
         free(node);
         node = next_node;
     }
-    if (NULL != dlist->iter_list)
+
+    if (false == dlist->is_iter_mgr)
     {
         dlist_destroy(dlist->iter_list);
     }
