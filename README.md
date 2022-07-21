@@ -1,20 +1,20 @@
 # How to compile
 You compile the whole project with:
 ```bash
-./build_all.sh
+python3 builder.py --build
 ```
 
 Or manually with:
 ```bash
 cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
-cmake --build build
+cmake --build build -j $(nproc)
 ```
 # Run all unit test
 Use the provided python script to choose the tests you would like to run
 
 ```bash
 # Run all tests
-python3 run_tests.py -r
+python3 builder.py -r
 
 # Or manually with
 ctest -j $(nproc) --test-dir build
@@ -23,7 +23,7 @@ ctest -j $(nproc) --test-dir build
 To run a specific test, first list the tests and use the name to run 
 the test you are looking for
 ```bash
-$ python3 run_tests.py -l 
+$ python3 builder.py -l 
 
 circular_list_dlist
 hashtable_dlist
@@ -37,7 +37,7 @@ treemap_avl_bst
 
 The use the name to run the test
 ```bash
-$ python3 run_tests.py -t stack_adt 
+$ python3 builder.py -t stack_adt 
 
 [==========] Running 5 tests from 1 test suite.
 [----------] Global test environment set-up.
