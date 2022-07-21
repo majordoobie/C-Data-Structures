@@ -23,6 +23,7 @@ typedef struct
 
 static edge_t * get_edge(node_t * to_node, uint32_t weight);
 static dlist_match_t compare_nodes(void * left, void * right);
+static bool node_in_graph(graph_t * graph, node_t * node);
 
 /*!
  * @brief Initialize a adjacency list graph structure that uses a double linked
@@ -59,6 +60,36 @@ graph_t * graph_init(graph_mode_t graph_mode,
     return graph;
 }
 
+graph_opt_t graph_add_value(graph_t * graph, void * value)
+{
+    node_t * node = graph_create_node(value);
+    graph_opt_t result = graph_add_node(graph, node);
+
+    // If the node already exists in the graph then free the node created
+    // and return the error
+    if (GRAPH_FAIL_NODE_ALREADY_EXISTS == result)
+    {
+        graph_destroy_node(node, NULL);
+    }
+
+    return result;
+}
+
+graph_opt_t graph_add_node(graph_t  * graph, node_t * node)
+{
+    assert(graph);
+    assert(node);
+
+    void * graph_node = dlist_get_by_value(graph->nodes, node);
+    if (NULL != graph_node)
+    {
+        return GRAPH_FAIL_NODE_ALREADY_EXISTS;
+    }
+
+    dlist_append(graph->nodes, node);
+    return GRAPH_SUCCESS;
+}
+
 node_t * graph_create_node(void * data)
 {
     node_t * node = (node_t *)malloc(sizeof(node_t));
@@ -70,7 +101,7 @@ node_t * graph_create_node(void * data)
     dlist_t * dlist = dlist_init(compare_nodes);
     if (NULL == dlist)
     {
-        destroy_node(node, NULL);
+        graph_destroy_node(node, NULL);
     }
 
     * node = (node_t) {
@@ -81,7 +112,7 @@ node_t * graph_create_node(void * data)
     return node;
 }
 
-void destroy_node(node_t * node, void (*free_func)(void *))
+void graph_destroy_node(node_t * node, void (*free_func)(void *))
 {
     if (NULL != free_func)
     {
@@ -100,8 +131,10 @@ void destroy_node(node_t * node, void (*free_func)(void *))
  * @param target_node Pointer to the node_t object
  * @param weight Value of the edge weight. Use NO_WEIGHT for default weight of 0
  * @return
- * GRAPH_SUCCESS  If operation was successful. GRAPH_EDGE_ALREADY_EXISTS if
- * the edge already exists.
+ * GRAPH_SUCCESS If operation was successful.
+ * GRAPH_EDGE_ALREADY_EXISTS if the edge already exists.
+ * GRAPH_NODE_NOT_FOUND if node is the node attempting to link is not in the
+ * graph
  */
 graph_opt_t graph_add_edge(graph_t * graph,
                            node_t * source_node,
@@ -111,6 +144,13 @@ graph_opt_t graph_add_edge(graph_t * graph,
     assert(graph);
     assert(source_node);
     assert(target_node);
+
+    // First make sure that both nodes are already in the graph
+    if (!(node_in_graph(graph, source_node)) || !(node_in_graph(graph, target_node)))
+    {
+        return GRAPH_NODE_NOT_FOUND;
+    }
+
 
     // First step is to see if the source node already has the edge for that
     // target node
@@ -192,4 +232,14 @@ static dlist_match_t compare_nodes(void * left, void * right)
         return DLIST_MATCH;
     }
     return DLIST_MISS_MATCH;
+}
+
+static bool node_in_graph(graph_t * graph, node_t * node)
+{
+    void * data = dlist_get_by_value(graph->nodes, node);
+    if (NULL == data)
+    {
+        return false;
+    }
+    return true;
 }

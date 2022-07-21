@@ -59,13 +59,14 @@ class GraphDlistFixture : public ::testing::Test
 TEST_F(GraphDlistFixture, AddEdgeTestFailure)
 {
     node_t * node1 = graph_create_node(get_payload(1));
+    graph_add_node(this->graph, node1);
     node_t * node2 = graph_create_node(get_payload(2));
+
     uint32_t weight = 0;
 
     graph_opt_t result = graph_add_edge(this->graph, node1, node2, weight);
-    EXPECT_EQ(result, GRAPH_FAIL_NODE_NODE_FOUND);
+    EXPECT_EQ(result, GRAPH_NODE_NOT_FOUND);
 
-    free_payload(invalid_node1);
-    free_payload(invalid_node2);
+    graph_destroy_node(node2, free_payload);
 }
 
