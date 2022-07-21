@@ -267,59 +267,64 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
         return NULL;
     }
 
-    // If the current iter is not the iter manager, then check to see if
-    // all the iters need to change the node pointer to point to a proper
-    // value before removing the node
-    if (false == dlist->is_iter_mgr)
+    /*
+     * If the current iter being compared is not the iter manager, we need to
+     * see if the node being removed is either a head or tail value. If it is
+     * we need to iterate over all the iter lists created and update their
+     * node pointers IF they are pointing to either the trial or head.
+     *
+     * If an iter node is pointing at a tail node, we need to move that node
+     * to the left so that when the node is removed, the iter node does not
+     * point to a NULL value.
+     *
+     * If the iter node is pointing at a head node, we need to move that node
+     * to the right but not increment the index.
+     */
+    if ((false == dlist->is_iter_mgr) && (false == is_iter_list_empty(dlist)))
     {
-        iter_search_t * tail_node = iter_search_by_value_plus(dlist, dlist->tail->data);
-        if (tail_node->found_index == search->found_index)
+        iter_search_t
+            * tail_node = iter_search_by_value_plus(dlist, dlist->tail->data);
+        iter_search_t
+            * head_node = iter_search_by_value_plus(dlist, dlist->head->data);
+
+        // If either the head or tail are the value being removed
+        if ((tail_node->found_index == search->found_index)
+            || (head_node->found_index == search->found_index))
         {
-            if (!is_iter_list_empty(dlist))
+            // Create an iterable object containing all the iters created by user
+            dlist_iter_t * iter_list = get_iter_of_iter_list(dlist);
+            dlist_iter_t * iter_to_update = iter_get_value(iter_list);
+
+            // while there is data in the iter->node member, keep iterating
+            while (NULL != iter_to_update)
             {
-                dlist_iter_t * iter_list = get_iter_of_iter_list(dlist);
-                dlist_iter_t * iter_to_update = iter_get_value(iter_list);
-
-                // while there is data in the iter->node member, keep iterating
-                while (NULL != iter_to_update)
+                // If the iter node points at the value about to be removed
+                // continue to process that node in the iter
+                if (iter_get_index(iter_to_update) == search->found_index)
                 {
-                    // if the iter is currently pointing at the tail, update it to
-                    // point at the previous
-                    if (iter_get_index(iter_to_update) == search->found_index)
-                    {
-                        dlist_get_iter_prev(iter_to_update);
-                        iter_update_index(iter_to_update, -1);
-                    }
-                    iter_to_update = dlist_get_iter_next(iter_list);
-                }
-                dlist_destroy_iter(iter_list);
-            }
-        }
-        iter_destroy_search(tail_node);
-
-        iter_search_t * head_node = iter_search_by_value_plus(dlist, dlist->head->data);
-        if (head_node->found_index == search->found_index)
-        {
-            if (!is_iter_list_empty(dlist))
-            {
-                dlist_iter_t * iter_list = get_iter_of_iter_list(dlist);
-                dlist_iter_t * iter_to_update = iter_get_value(iter_list);
-
-                // while there is data in the iter->node member, keep iterating
-                while (NULL != iter_to_update)
-                {
-                    // if the iter is currently pointing at the tail, update it to
-                    // point at the previous
-                    if (iter_get_index(iter_to_update) == search->found_index)
+                    // if the current iters node points at the head, move it
+                    // to the right and decrement the index since it gets auto
+                    // updated with the iterate function
+                    if (head_node->found_index == search->found_index)
                     {
                         dlist_get_iter_next(iter_to_update);
                         iter_update_index(iter_to_update, -1);
                     }
-                    iter_to_update = dlist_get_iter_next(iter_list);
+                    // same as head but for tail
+                    if (tail_node->found_index == search->found_index)
+                    {
+                        dlist_get_iter_prev(iter_to_update);
+                        iter_update_index(iter_to_update, -1);
+                    }
                 }
-                dlist_destroy_iter(iter_list);
+                iter_to_update = dlist_get_iter_next(iter_list);
             }
+
+            // Destroy the iterlist after done being used
+            dlist_destroy_iter(iter_list);
         }
+
+        iter_destroy_search(tail_node);
         iter_destroy_search(head_node);
     }
 
