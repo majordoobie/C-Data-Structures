@@ -32,7 +32,7 @@ dlist_match_t compare_payloads(void * data1, void * data2)
 
 TEST(GraphBasic, TestBasicStartUp)
 {
-    graph_t * graph = graph_init(compare_payloads);
+    graph_t * graph = graph_init(GRAPH_DIRECTIONAL_FALSE, compare_payloads);
     EXPECT_NE(graph, nullptr);
     graph_destroy(graph);
 }

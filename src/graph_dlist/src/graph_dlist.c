@@ -1,9 +1,11 @@
 #include <graph_dlist.h>
 #include <stdlib.h>
+#include <assert.h>
 
 typedef struct graph_t
 {
     dlist_t * nodes;
+    graph_mode_t graph_mode;
     dlist_match_t (* compare_func)(void *, void *);
 } graph_t;
 
@@ -19,7 +21,10 @@ typedef struct
     node_t * to_node;
 } edge_t;
 
-graph_t * graph_init(dlist_match_t (* compare_func)(void *, void *))
+static edge_t * get_edge(node_t * to_node, uint32_t weight);
+
+graph_t * graph_init(graph_mode_t graph_mode,
+                     dlist_match_t (* compare_func)(void *, void *))
 {
     graph_t * graph = (graph_t *)malloc(sizeof(graph_t));
     if (INVALID_PTR == verify_alloc(graph))
@@ -34,8 +39,50 @@ graph_t * graph_init(dlist_match_t (* compare_func)(void *, void *))
         return NULL;
     }
 
-    graph->nodes = dlist;
+    *graph = (graph_t){
+        .nodes          = dlist,
+        .compare_func   = compare_func,
+        .graph_mode     = graph_mode
+    };
+
     return graph;
+}
+
+
+
+graph_opt_t graph_add_edge(graph_t * graph,
+                           void * source_node_p,
+                           void * target_node_p,
+                           uint32_t weight)
+{
+    assert(source_node_p);
+    assert(target_node_p);
+
+    // first step is finding if the source_node exists
+    node_t * source_node = dlist_get_by_value(graph->nodes, source_node);
+    if (NULL == source_node_p)
+    {
+        return GRAPH_FAIL_NODE_NODE_FOUND;
+    }
+
+    // next find if the target_node exists
+    node_t * target_node = dlist_get_by_value(graph->nodes, target_node);
+    if (NULL == source_node_p)
+    {
+        return GRAPH_FAIL_NODE_NODE_FOUND;
+    }
+
+    // final step is to add the is to add the edge with its weight
+    if (NULL == dlist_get_by_value(source_node->edges, target_node))
+    {
+        edge_t * edge = get_edge(target_node, weight);
+        dlist_append(source_node->edges, edge);
+    }
+
+
+
+
+    return GRAPH_SUCCESS;
 }
 
 void graph_destroy(graph_t * graph)
@@ -46,4 +93,29 @@ void graph_destroy(graph_t * graph)
     }
     free(graph);
 }
+
+static edge_t * get_edge(node_t * to_node, uint32_t weight)
+{
+    edge_t * edge = (edge_t*)malloc(sizeof(edge_t));
+    if (INVALID_PTR == verify_alloc(edge))
+    {
+        return NULL;
+    }
+
+    *edge = (edge_t) {
+        .to_node    = to_node,
+        .weight     = weight
+    };
+    return edge;
+}
+
+
+
+
+
+
+
+
+
+
 
