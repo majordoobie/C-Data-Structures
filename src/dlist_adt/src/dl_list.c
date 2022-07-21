@@ -271,7 +271,7 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
     // to the tail. If it is, we need to update all the iters in iter_list to
     // point to the previous index. Otherwise, they will point to a null value
     iter_search_t * tail_node = iter_search_by_value_plus(dlist, dlist->tail->data);
-    if (tail_node->found_index == search->found_index)
+    if ((false == dlist->list_of_iters) && (tail_node->found_index == search->found_index))
     {
         if (!is_iter_list_empty(dlist))
         {
@@ -289,6 +289,7 @@ void * dlist_remove_value(dlist_t * dlist, void * data)
                 }
                 iter_to_update = dlist_get_iter_next(iter_list);
             }
+            dlist_destroy_iter(iter_list);
         }
     }
     iter_destroy_search(tail_node);
@@ -472,8 +473,11 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
         return NULL;
     }
 
-    // If valid, append the iter to the list of iter_list
-    dlist_append(dlist->iter_list, iter);
+    // Only add to non iter_list dlist which is a special dlist inside the dlist
+    if (false == dlist->list_of_iters)
+    {
+        dlist_append(dlist->iter_list, iter);
+    }
 
     return iter;
 }
@@ -918,5 +922,6 @@ static bool is_iter_list_empty(dlist_t * dlist)
 
 static bool is_iter_list(dlist_iter_t * iter)
 {
-    return get_iters_list(iter)->list_of_iters;
+    dlist_t * dlist = iter_get_dlist(iter);
+    return dlist->list_of_iters;
 }
