@@ -6,7 +6,6 @@ extern "C" {
 #endif
 #include <dl_list.h>
 
-typedef struct graph_t graph_t;
 typedef enum
 {
     GRAPH_SUCCESS,
@@ -20,13 +19,21 @@ typedef enum
     GRAPH_DIRECTIONAL_FALSE
 } graph_mode_t;
 
+typedef enum
+{
+    NO_WEIGHT = 0
+} graph_defaults_t;
+
+typedef struct graph_t graph_t;
+typedef struct node_t node_t;
+
 graph_t * graph_init(graph_mode_t graph_mode,
                      dlist_match_t (* compare_func)(void *, void *));
-void graph_destroy(graph_t * graph);
+void graph_destroy(graph_t * graph, void (* free_func)(void * data));
 
 graph_opt_t graph_add_edge(graph_t * graph,
-                           void * source_node_p,
-                           void * target_node_p,
+                           node_t * source_node,
+                           node_t * target_node,
                            uint32_t weight);
 
 #ifdef __cplusplus
