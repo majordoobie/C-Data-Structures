@@ -33,7 +33,7 @@ TEST(GraphBasic, TestBasicStartUp)
 {
     graph_t * graph = graph_init(GRAPH_DIRECTIONAL_FALSE, compare_payloads);
     EXPECT_NE(graph, nullptr);
-    graph_destroy(graph);
+    graph_destroy(graph, NULL);
 }
 
 class GraphDlistFixture : public ::testing::Test
@@ -49,7 +49,7 @@ class GraphDlistFixture : public ::testing::Test
 
     void TearDown() override
     {
-        graph_destroy(graph);
+        graph_destroy(graph, free_payload);
     }
 };
 
@@ -58,11 +58,11 @@ class GraphDlistFixture : public ::testing::Test
 // do not exist
 TEST_F(GraphDlistFixture, AddEdgeTestFailure)
 {
-    int * invalid_node1 = get_payload(1);
-    int * invalid_node2 = get_payload(2);
+    node_t * node1 = graph_create_node(get_payload(1));
+    node_t * node2 = graph_create_node(get_payload(2));
     uint32_t weight = 0;
 
-    graph_opt_t result = graph_add_edge(this->graph, invalid_node1, invalid_node2, weight);
+    graph_opt_t result = graph_add_edge(this->graph, node1, node2, weight);
     EXPECT_EQ(result, GRAPH_FAIL_NODE_NODE_FOUND);
 
     free_payload(invalid_node1);

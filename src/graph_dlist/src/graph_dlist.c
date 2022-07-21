@@ -22,6 +22,7 @@ typedef struct
 } edge_t;
 
 static edge_t * get_edge(node_t * to_node, uint32_t weight);
+static dlist_match_t compare_nodes(void * left, void * right);
 
 /*!
  * @brief Initialize a adjacency list graph structure that uses a double linked
@@ -45,7 +46,7 @@ graph_t * graph_init(graph_mode_t graph_mode,
     dlist_t * dlist = dlist_init(compare_func);
     if (NULL == dlist)
     {
-        graph_destroy(graph);
+        graph_destroy(graph, NULL);
         return NULL;
     }
 
@@ -56,6 +57,37 @@ graph_t * graph_init(graph_mode_t graph_mode,
     };
 
     return graph;
+}
+
+node_t * graph_create_node(void * data)
+{
+    node_t * node = (node_t *)malloc(sizeof(node_t));
+    if (INVALID_PTR == verify_alloc(node))
+    {
+        return NULL;
+    }
+
+    dlist_t * dlist = dlist_init(compare_nodes);
+    if (NULL == dlist)
+    {
+        destroy_node(node, NULL);
+    }
+
+    * node = (node_t) {
+        .data   = data,
+        .edges  = dlist
+    };
+
+    return node;
+}
+
+void destroy_node(node_t * node, void (*free_func)(void *))
+{
+    if (NULL != free_func)
+    {
+        free_func(node->data);
+    }
+    free(node);
 }
 
 /*!
@@ -153,11 +185,11 @@ static edge_t * get_edge(node_t * to_node, uint32_t weight)
 
 
 
-
-
-
-
-
-
-
-
+static dlist_match_t compare_nodes(void * left, void * right)
+{
+    if (left == right)
+    {
+        return DLIST_MATCH;
+    }
+    return DLIST_MISS_MATCH;
+}

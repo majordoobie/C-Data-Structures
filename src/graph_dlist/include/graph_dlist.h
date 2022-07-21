@@ -10,7 +10,7 @@ typedef enum
 {
     GRAPH_SUCCESS,
     GRAPH_FAIL_NODE_NODE_FOUND,
-    GRAPH_EDGE_ALREADY_EXISTS
+    GRAPH_EDGE_ALREADY_EXISTS,
 } graph_opt_t;
 
 typedef enum
@@ -29,6 +29,8 @@ typedef struct node_t node_t;
 
 graph_t * graph_init(graph_mode_t graph_mode,
                      dlist_match_t (* compare_func)(void *, void *));
+void destroy_node(node_t * node, void (*free_func)(void *));
+node_t * graph_create_node(void * data);
 void graph_destroy(graph_t * graph, void (* free_func)(void * data));
 
 graph_opt_t graph_add_edge(graph_t * graph,
