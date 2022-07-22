@@ -60,6 +60,7 @@ TEST_F(GraphDlistFixture, AddEdgeTestFailure)
 {
     node_t * node1 = graph_create_node(get_payload(1));
     graph_add_node(this->graph, node1);
+
     node_t * node2 = graph_create_node(get_payload(2));
 
     uint32_t weight = 0;
