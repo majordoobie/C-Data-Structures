@@ -21,7 +21,7 @@ typedef struct
     node_t * to_node;
 } edge_t;
 
-static edge_t * get_edge(node_t * to_node, uint32_t weight);
+static edge_t * create_edge(node_t * to_node, uint32_t weight);
 static dlist_match_t compare_nodes(void * left, void * right);
 static bool node_in_graph(graph_t * graph, node_t * node);
 static void free_node(void * node);
@@ -62,6 +62,14 @@ graph_t * graph_init(graph_mode_t graph_mode,
     return graph;
 }
 
+/*!
+ * @brief Wrapper for graph_add_node while also creating a node for the data
+ * passed in.
+ *
+ * @param graph Pointer to the graph object
+ * @param value Pointer to the value being stored in the graph
+ * @return GRAPH_SUCCESS or GRAPH_FAIL_NODE_ALREADY_EXISTS
+ */
 graph_opt_t graph_add_value(graph_t * graph, void * value)
 {
     node_t * node = graph_create_node(value);
@@ -77,6 +85,13 @@ graph_opt_t graph_add_value(graph_t * graph, void * value)
     return result;
 }
 
+/*!
+ * @brief Adds the provided node to the graph.
+ *
+ * @param graph Pointer to the graph object
+ * @param node Pointer to the node object
+ * @return GRAPH_SUCCESS or GRAPH_FAIL_NODE_ALREADY_EXISTS
+ */
 graph_opt_t graph_add_node(graph_t  * graph, node_t * node)
 {
     assert(graph);
@@ -92,6 +107,11 @@ graph_opt_t graph_add_node(graph_t  * graph, node_t * node)
     return GRAPH_SUCCESS;
 }
 
+/*!
+ * @brief Creates a node object with the provided node data
+ * @param data Pointer to the data being stored in the graph
+ * @return Pointer to the node object or NULL if invalid with a stderr message
+ */
 node_t * graph_create_node(void * data)
 {
     node_t * node = (node_t *)malloc(sizeof(node_t));
@@ -114,6 +134,17 @@ node_t * graph_create_node(void * data)
     return node;
 }
 
+/*!
+ * @brief Destroy the given node object with the option to also free the data
+ * stored in the graph using th function pointer provided. If the function
+ * pointer is set to NULL then the function will not attempt to free the
+ * data pointer.
+ *
+ * @param node Pointer to the node object being freed
+ * @param free_func Function pointer to the free function to free the data
+ * stored in the node. Set to NULL to prevent freeing of the data stored in
+ * the node.
+ */
 void graph_destroy_node(node_t * node, void (*free_func)(void *))
 {
     if (NULL != free_func)
@@ -159,7 +190,7 @@ graph_opt_t graph_add_edge(graph_t * graph,
     // target node
     if (NULL == dlist_get_by_value(source_node->edges, target_node))
     {
-        edge_t * edge = get_edge(target_node, weight);
+        edge_t * edge = create_edge(target_node, weight);
         dlist_append(source_node->edges, edge);
     }
     else
@@ -174,7 +205,7 @@ graph_opt_t graph_add_edge(graph_t * graph,
         // only add it if the edge does not exist
         if (NULL == dlist_get_by_value(target_node->edges, source_node))
         {
-            edge_t * edge = get_edge(source_node, weight);
+            edge_t * edge = create_edge(source_node, weight);
             dlist_append(target_node->edges, edge);
         }
     }
@@ -225,7 +256,7 @@ void graph_destroy(graph_t * graph, void (*free_func)(void *))
  * @return Pointer to a edge object or NULL if invalid with a error message to
  * stderr.
  */
-static edge_t * get_edge(node_t * to_node, uint32_t weight)
+static edge_t * create_edge(node_t * to_node, uint32_t weight)
 {
     edge_t * edge = (edge_t *)malloc(sizeof(edge_t));
     if (INVALID_PTR == verify_alloc(edge))
