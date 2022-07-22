@@ -26,21 +26,26 @@ typedef enum
 } graph_defaults_t;
 
 typedef struct graph_t graph_t;
-typedef struct node_t node_t;
+typedef struct gnode_t gnode_t;
 
 graph_t * graph_init(graph_mode_t graph_mode,
                      dlist_match_t (* compare_func)(void *, void *));
-void graph_destroy_node(node_t * node, void (*free_func)(void *));
-node_t * graph_create_node(void * data);
+void graph_destroy_node(gnode_t * node, void (*free_func)(void *));
 void graph_destroy(graph_t * graph, void (* free_func)(void * data));
 
 graph_opt_t graph_add_edge(graph_t * graph,
-                           node_t * source_node,
-                           node_t * target_node,
+                           gnode_t * source_node,
+                           gnode_t * target_node,
                            uint32_t weight);
 
-graph_opt_t graph_add_node(graph_t  * graph, node_t * node);
+graph_opt_t graph_add_node(graph_t  * graph, gnode_t * node);
 graph_opt_t graph_add_value(graph_t * graph, void * value);
+
+// nodes
+gnode_t * graph_create_node(void * data);
+gnode_t * graph_get_node_by_value(graph_t * graph, void * data);
+bool value_in_graph(graph_t * graph, void * data);
+bool node_in_graph(graph_t * graph, gnode_t * node);
 
 #ifdef __cplusplus
 }

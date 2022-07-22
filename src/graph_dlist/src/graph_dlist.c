@@ -9,21 +9,20 @@ typedef struct graph_t
     dlist_match_t (* compare_func)(void *, void *);
 } graph_t;
 
-typedef struct node_t
+typedef struct gnode_t
 {
     void * data;
     dlist_t * edges;
-} node_t;
+} gnode_t;
 
 typedef struct
 {
     uint32_t weight;
-    node_t * to_node;
+    gnode_t * to_node;
 } edge_t;
 
-static edge_t * create_edge(node_t * to_node, uint32_t weight);
+static edge_t * create_edge(gnode_t * to_node, uint32_t weight);
 static dlist_match_t compare_nodes(void * left, void * right);
-static bool node_in_graph(graph_t * graph, node_t * node);
 static void free_node(void * node);
 static void free_edge(void * edge);
 
@@ -72,7 +71,7 @@ graph_t * graph_init(graph_mode_t graph_mode,
  */
 graph_opt_t graph_add_value(graph_t * graph, void * value)
 {
-    node_t * node = graph_create_node(value);
+    gnode_t * node = graph_create_node(value);
     graph_opt_t result = graph_add_node(graph, node);
 
     // If the node already exists in the graph then free the node created
@@ -92,13 +91,12 @@ graph_opt_t graph_add_value(graph_t * graph, void * value)
  * @param node Pointer to the node object
  * @return GRAPH_SUCCESS or GRAPH_FAIL_NODE_ALREADY_EXISTS
  */
-graph_opt_t graph_add_node(graph_t  * graph, node_t * node)
+graph_opt_t graph_add_node(graph_t  * graph, gnode_t * node)
 {
     assert(graph);
     assert(node);
 
-    void * graph_node = dlist_get_by_value(graph->nodes, node);
-    if (NULL != graph_node)
+    if (true == node_in_graph(graph, node))
     {
         return GRAPH_FAIL_NODE_ALREADY_EXISTS;
     }
@@ -112,9 +110,9 @@ graph_opt_t graph_add_node(graph_t  * graph, node_t * node)
  * @param data Pointer to the data being stored in the graph
  * @return Pointer to the node object or NULL if invalid with a stderr message
  */
-node_t * graph_create_node(void * data)
+gnode_t * graph_create_node(void * data)
 {
-    node_t * node = (node_t *)malloc(sizeof(node_t));
+    gnode_t * node = (gnode_t *)malloc(sizeof(gnode_t));
     if (INVALID_PTR == verify_alloc(node))
     {
         return NULL;
@@ -126,13 +124,48 @@ node_t * graph_create_node(void * data)
         graph_destroy_node(node, NULL);
     }
 
-    * node = (node_t) {
+    * node = (gnode_t) {
         .data   = data,
         .edges  = dlist
     };
 
     return node;
 }
+
+gnode_t * graph_get_node_by_value(graph_t * graph, void * data)
+{
+    dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
+    gnode_t * node = iter_get_value(nodes);
+    dlist_match_t result;
+
+    while (NULL != node)
+    {
+        result = graph->compare_func(node->data, data);
+        if (DLIST_MATCH == result)
+        {
+            break;
+        }
+        node = dlist_get_iter_next(nodes);
+    }
+    dlist_destroy_iter(nodes);
+    return node;
+}
+
+bool node_in_graph(graph_t * graph, gnode_t * node)
+{
+    return value_in_graph(graph, node->data);
+}
+
+bool value_in_graph(graph_t * graph, void * data)
+{
+    gnode_t * graph_node = graph_get_node_by_value(graph, data);
+    if (NULL == graph_node)
+    {
+        return false;
+    }
+    return true;
+}
+
 
 /*!
  * @brief Destroy the given node object with the option to also free the data
@@ -145,7 +178,7 @@ node_t * graph_create_node(void * data)
  * stored in the node. Set to NULL to prevent freeing of the data stored in
  * the node.
  */
-void graph_destroy_node(node_t * node, void (*free_func)(void *))
+void graph_destroy_node(gnode_t * node, void (*free_func)(void *))
 {
     if (NULL != free_func)
     {
@@ -161,8 +194,8 @@ void graph_destroy_node(node_t * node, void (*free_func)(void *))
  * omited with the NO_WEIGHT enum.
  *
  * @param graph Pointer to graph object
- * @param source_node Pointer to the node_t object
- * @param target_node Pointer to the node_t object
+ * @param source_node Pointer to the gnode_t object
+ * @param target_node Pointer to the gnode_t object
  * @param weight Value of the edge weight. Use NO_WEIGHT for default weight of 0
  * @return
  * GRAPH_SUCCESS If operation was successful.
@@ -171,8 +204,8 @@ void graph_destroy_node(node_t * node, void (*free_func)(void *))
  * graph
  */
 graph_opt_t graph_add_edge(graph_t * graph,
-                           node_t * source_node,
-                           node_t * target_node,
+                           gnode_t * source_node,
+                           gnode_t * target_node,
                            uint32_t weight)
 {
     assert(graph);
@@ -229,7 +262,7 @@ void graph_destroy(graph_t * graph, void (*free_func)(void *))
         if (NULL != free_func)
         {
             dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
-            node_t * node = iter_get_value(nodes);
+            gnode_t * node = iter_get_value(nodes);
             while (NULL != node)
             {
                 if (NULL != free_func)
@@ -251,12 +284,12 @@ void graph_destroy(graph_t * graph, void (*free_func)(void *))
 
 /*!
  * @brief Create an edge object
- * @param to_node Pointer to the node_t object that the edge leads to
+ * @param to_node Pointer to the gnode_t object that the edge leads to
  * @param weight Weight of the edge
  * @return Pointer to a edge object or NULL if invalid with a error message to
  * stderr.
  */
-static edge_t * create_edge(node_t * to_node, uint32_t weight)
+static edge_t * create_edge(gnode_t * to_node, uint32_t weight)
 {
     edge_t * edge = (edge_t *)malloc(sizeof(edge_t));
     if (INVALID_PTR == verify_alloc(edge))
@@ -292,12 +325,5 @@ static dlist_match_t compare_nodes(void * left, void * right)
     return DLIST_MISS_MATCH;
 }
 
-static bool node_in_graph(graph_t * graph, node_t * node)
-{
-    void * data = dlist_get_by_value(graph->nodes, node);
-    if (NULL == data)
-    {
-        return false;
-    }
-    return true;
-}
+
+
