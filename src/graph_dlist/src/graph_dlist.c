@@ -16,13 +16,10 @@ typedef struct gnode_t
     dlist_t * edges;
 } gnode_t;
 
-typedef struct
-{
-    uint32_t weight;
-    gnode_t * to_node;
-} edge_t;
 
-static edge_t * create_edge(gnode_t * to_node, uint32_t weight);
+static edge_t * create_edge(gnode_t * from_node,
+                            gnode_t * to_node,
+                            uint32_t weight);
 static dlist_match_t compare_nodes(void * left, void * right);
 static void free_edge_dnode(void * node);
 static void free_edges(dlist_t * edge);
@@ -282,7 +279,7 @@ graph_opt_t graph_add_edge(graph_t * graph,
     // target node
     if (NULL == dlist_get_by_value(source_node->edges, target_node))
     {
-        edge_t * edge = create_edge(target_node, weight);
+        edge_t * edge = create_edge( source_node, target_node, weight);
         dlist_append(source_node->edges, edge);
     }
     else
@@ -297,13 +294,81 @@ graph_opt_t graph_add_edge(graph_t * graph,
         // only add it if the edge does not exist
         if (NULL == dlist_get_by_value(target_node->edges, source_node))
         {
-            edge_t * edge = create_edge(source_node, weight);
+            edge_t * edge = create_edge(target_node, source_node, weight);
             dlist_append(target_node->edges, edge);
         }
     }
 
     return GRAPH_SUCCESS;
 }
+
+graph_opt_t graph_remove_edge(graph_t * graph, gnode_t * source_node,
+                              gnode_t * target_node)
+{
+    assert(graph);
+    assert(source_node);
+    assert(target_node);
+
+    // First make sure that both nodes are already in the graph
+    if (!(node_in_graph(graph, source_node)) || !(node_in_graph(graph, target_node)))
+    {
+        fprintf(stderr, "[!] Graph nodes not found\n");
+        return GRAPH_NODE_NOT_FOUND;
+    }
+
+    edge_t * edge = graph_get_edge(graph, source_node, target_node);
+    if (NULL == edge)
+    {
+        return GRAPH_EDGE_NOT_FOUND;
+    }
+
+    dlist_remove_value(source_node->edges, edge);
+    free_edge_dnode(edge);
+    return GRAPH_SUCCESS;
+}
+
+/*!
+ * @brief Attempt to find the edge between two gnode_t
+ * @param graph Pointer to graph object
+ * @param source_node Pointer to the gnode_t object
+ * @param target_node Pointer to the gnode_t object
+ * @return Pointer to edge_t if found else NULL
+ */
+edge_t * graph_get_edge(graph_t * graph, gnode_t * source_node,
+                              gnode_t * target_node)
+{
+    assert(graph);
+    assert(source_node);
+    assert(target_node);
+
+    // First make sure that both nodes are already in the graph
+    if (!(node_in_graph(graph, source_node))
+        || !(node_in_graph(graph, target_node)))
+    {
+        return NULL;
+    }
+
+    dlist_iter_t * edges = dlist_get_iterable(source_node->edges, ITER_HEAD);
+    edge_t * edge = iter_get_value(edges);
+    bool found = false;
+    while (NULL != edge)
+    {
+        if (edge->to_node == target_node)
+        {
+            found = true;
+            break;
+        }
+        edge = dlist_get_iter_next(edges);
+    }
+
+    dlist_destroy_iter(edges);
+    if (found)
+    {
+        return edge;
+    }
+    return NULL;
+}
+
 
 /*!
  * @brief Destroy the graph object with the option to free the data nodes in the
@@ -344,7 +409,9 @@ void graph_destroy(graph_t * graph, void (*free_func)(void *))
  * @return Pointer to a edge object or NULL if invalid with a error message to
  * stderr.
  */
-static edge_t * create_edge(gnode_t * to_node, uint32_t weight)
+static edge_t * create_edge(gnode_t * from_node,
+                            gnode_t * to_node,
+                            uint32_t weight)
 {
     edge_t * edge = (edge_t *)malloc(sizeof(edge_t));
     if (INVALID_PTR == verify_alloc(edge))
@@ -353,6 +420,7 @@ static edge_t * create_edge(gnode_t * to_node, uint32_t weight)
     }
 
     * edge = (edge_t){
+        .from_node  = from_node,
         .to_node    = to_node,
         .weight     = weight
     };

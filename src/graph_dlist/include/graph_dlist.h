@@ -12,6 +12,7 @@ typedef enum
     GRAPH_NODE_NOT_FOUND,
     GRAPH_FAIL_NODE_ALREADY_EXISTS,
     GRAPH_EDGE_ALREADY_EXISTS,
+    GRAPH_EDGE_NOT_FOUND,
 } graph_opt_t;
 
 typedef enum
@@ -25,8 +26,16 @@ typedef enum
     NO_WEIGHT = 0
 } graph_defaults_t;
 
+
 typedef struct graph_t graph_t;
 typedef struct gnode_t gnode_t;
+
+typedef struct
+{
+    uint32_t weight;
+    gnode_t * from_node;
+    gnode_t * to_node;
+} edge_t;
 
 graph_t * graph_init(graph_mode_t graph_mode,
                      dlist_match_t (* compare_func)(void *, void *));
@@ -37,6 +46,9 @@ graph_opt_t graph_add_edge(graph_t * graph,
                            gnode_t * source_node,
                            gnode_t * target_node,
                            uint32_t weight);
+graph_opt_t graph_remove_edge(graph_t * graph,
+                              gnode_t * source_node,
+                              gnode_t * target_node);
 
 graph_opt_t graph_add_node(graph_t  * graph, gnode_t * node);
 graph_opt_t graph_add_value(graph_t * graph, void * value);
@@ -51,6 +63,8 @@ bool value_in_graph(graph_t * graph, void * data);
 bool node_in_graph(graph_t * graph, gnode_t * node);
 bool graph_node_contain_edges(gnode_t * node);
 size_t graph_edge_count(gnode_t * node);
+edge_t * graph_get_edge(graph_t * graph, gnode_t * source_node,
+                        gnode_t * target_node);
 #ifdef __cplusplus
 }
 #endif // end __cplusplus
