@@ -91,12 +91,17 @@ TEST_F(GraphDlistFixture, AddEdgeTest)
 {
     gnode_t * node1 = graph_get_node_by_value(this->graph, &this->graph_data.at(0));
     gnode_t * node2 = graph_get_node_by_value(this->graph, &this->graph_data.at(1));
-//    gnode_t * node3 = graph_get_node_by_value(this->graph, &this->graph_data.at(2));
+    gnode_t * node3 = graph_get_node_by_value(this->graph, &this->graph_data.at(2));
     uint32_t weight = 0;
+
     EXPECT_EQ(graph_add_edge(this->graph, node1, node2, weight), GRAPH_SUCCESS);
-//    EXPECT_EQ(graph_add_edge(this->graph, node2, node1, weight), GRAPH_SUCCESS);
-//
-//    EXPECT_EQ(graph_add_edge(this->graph, node1, node3, weight), GRAPH_SUCCESS);
-//    EXPECT_EQ(graph_add_edge(this->graph, node3, node2, weight), GRAPH_SUCCESS);
-//    graph_print(graph);
+    EXPECT_EQ(1, graph_edge_count(node1));
+
+    EXPECT_EQ(graph_add_edge(this->graph, node2, node1, weight), GRAPH_SUCCESS);
+    EXPECT_EQ(1, graph_edge_count(node2));
+
+    EXPECT_EQ(graph_add_edge(this->graph, node1, node3, weight), GRAPH_SUCCESS);
+    EXPECT_EQ(2, graph_edge_count(node1));
+    EXPECT_EQ(graph_add_edge(this->graph, node3, node2, weight), GRAPH_SUCCESS);
+    graph_print(graph);
 }

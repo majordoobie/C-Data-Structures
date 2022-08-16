@@ -50,6 +50,7 @@ void graph_print(graph_t * graph);
 bool value_in_graph(graph_t * graph, void * data);
 bool node_in_graph(graph_t * graph, gnode_t * node);
 bool graph_node_contain_edges(gnode_t * node);
+size_t graph_edge_count(gnode_t * node);
 #ifdef __cplusplus
 }
 #endif // end __cplusplus

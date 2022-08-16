@@ -69,6 +69,10 @@ static void get_hex_value(void * ptr, char * string, size_t buff_size)
 
 }
 
+/*!
+ * @brief Printout the adjacency-list representation
+ * @param graph
+ */
 void graph_print(graph_t * graph)
 {
     dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
@@ -77,12 +81,25 @@ void graph_print(graph_t * graph)
     while (NULL != node)
     {
         get_hex_value(node, buff, sizeof(buff));
-        printf("%s\n", buff);
+        printf("[%s]", buff);
         if (!graph_node_contain_edges(node))
         {
-            printf("has edges");
-
+            printf(" -> ");
+            dlist_iter_t * edges = dlist_get_iterable(node->edges, ITER_HEAD);
+            edge_t * edge = iter_get_value(edges);
+            while (NULL != edge)
+            {
+                get_hex_value(edge->to_node, buff, sizeof(buff));
+                printf("(%s)", buff);
+                edge = dlist_get_iter_next(edges);
+                if (NULL != edge)
+                {
+                    printf(" | ");
+                }
+            }
+            dlist_destroy_iter(edges);
         }
+        printf("\n");
         node = dlist_get_iter_next(nodes);
     }
     dlist_destroy_iter(nodes);
@@ -191,6 +208,11 @@ bool value_in_graph(graph_t * graph, void * data)
         return false;
     }
     return true;
+}
+
+size_t graph_edge_count(gnode_t * node)
+{
+    return dlist_get_length(node->edges);
 }
 
 /*!
