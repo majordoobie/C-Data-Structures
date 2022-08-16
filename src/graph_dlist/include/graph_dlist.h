@@ -65,6 +65,7 @@ bool graph_node_contain_edges(gnode_t * node);
 size_t graph_edge_count(gnode_t * node);
 edge_t * graph_get_edge(graph_t * graph, gnode_t * source_node,
                         gnode_t * target_node);
+bool graph_edge_in_graph(graph_t * graph, edge_t * edge);
 #ifdef __cplusplus
 }
 #endif // end __cplusplus

@@ -369,6 +369,26 @@ edge_t * graph_get_edge(graph_t * graph, gnode_t * source_node,
     return NULL;
 }
 
+bool graph_edge_in_graph(graph_t * graph, edge_t * edge)
+{
+    if (!node_in_graph(graph, edge->from_node))
+    {
+        return false;
+    }
+    else if (!node_in_graph(graph, edge->to_node))
+    {
+        return false;
+    }
+
+    dlist_iter_t * edges = dlist_get_iterable(edge->from_node->edges, ITER_HEAD);
+    edge_t * to_edge = iter_get_value(edges);
+    while (NULL != to_edge)
+    {
+        if (to_edge == edge->to_node)
+    }
+
+
+}
 
 /*!
  * @brief Destroy the graph object with the option to free the data nodes in the

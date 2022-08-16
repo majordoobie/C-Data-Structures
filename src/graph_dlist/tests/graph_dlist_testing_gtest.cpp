@@ -125,7 +125,7 @@ TEST_F(GraphDlistFixture, RemoveEdgeTest)
     EXPECT_EQ(graph_remove_edge(this->graph, node1, node2), GRAPH_EDGE_NOT_FOUND);
 }
 
-//Test ability to find an edge that exists and one that does not
+// Test ability to fetch an edge from the graph
 TEST_F(GraphDlistFixture, FindEdgeTest)
 {
     gnode_t * node1 = graph_get_node_by_value(this->graph, &this->graph_data.at(0));
