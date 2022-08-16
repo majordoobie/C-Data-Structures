@@ -24,8 +24,8 @@ typedef struct
 
 static edge_t * create_edge(gnode_t * to_node, uint32_t weight);
 static dlist_match_t compare_nodes(void * left, void * right);
-static void free_node(void * node);
-static void free_edge(void * edge);
+//static void free_node(dlist_t * node);
+static void free_edges(dlist_t * edge);
 
 /*!
  * @brief Initialize a adjacency list graph structure that uses a double linked
@@ -221,7 +221,7 @@ void graph_destroy_node(gnode_t * node, void (*free_func)(void *))
     {
         free_func(node->data);
     }
-    free_edge(node->edges);
+    free_edges(node->edges);
     free(node);
 }
 
@@ -299,23 +299,19 @@ void graph_destroy(graph_t * graph, void (*free_func)(void *))
         if (NULL != free_func)
         {
             dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
-            gnode_t * node = iter_get_value(nodes);
-            while (NULL != node)
+            gnode_t * g_node = iter_get_value(nodes);
+            while (NULL != g_node)
             {
-                if (NULL != free_func)
-                {
-                    free_func(node->data);
-                }
-                node = dlist_get_iter_next(nodes);
-
+                graph_destroy_node(g_node, free_func);
+                g_node = dlist_get_iter_next(nodes);
             }
             dlist_destroy_iter(nodes);
         }
-
-
-        // free the graph structure
-        dlist_destroy_free(graph->nodes, free_node);
     }
+    // free the graph structure
+//    dlist_destroy_free(graph->nodes, NULL);
+    dlist_destroy(graph->nodes);
+
     free(graph);
 }
 
@@ -343,15 +339,15 @@ static edge_t * create_edge(gnode_t * to_node, uint32_t weight)
 
 
 
-static void free_edge(void * edge)
+static void free_edges(dlist_t * edge)
 {
     dlist_destroy(edge);
 }
 
-static void free_node(void * node)
-{
-    graph_destroy_node(node, NULL);
-}
+//static void free_node(dlist_t * node)
+//{
+//    dlist_destroy(node);
+//}
 
 static dlist_match_t compare_nodes(void * left, void * right)
 {
