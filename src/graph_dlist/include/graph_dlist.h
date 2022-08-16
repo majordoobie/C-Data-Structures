@@ -44,9 +44,12 @@ graph_opt_t graph_add_value(graph_t * graph, void * value);
 // nodes
 gnode_t * graph_create_node(void * data);
 gnode_t * graph_get_node_by_value(graph_t * graph, void * data);
+void graph_print(graph_t * graph);
+
+// Queries
 bool value_in_graph(graph_t * graph, void * data);
 bool node_in_graph(graph_t * graph, gnode_t * node);
-
+bool graph_node_contain_edges(gnode_t * node);
 #ifdef __cplusplus
 }
 #endif // end __cplusplus

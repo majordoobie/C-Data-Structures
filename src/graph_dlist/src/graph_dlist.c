@@ -1,6 +1,7 @@
 #include <graph_dlist.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
 
 typedef struct graph_t
 {
@@ -59,6 +60,32 @@ graph_t * graph_init(graph_mode_t graph_mode,
     };
 
     return graph;
+}
+
+static void get_hex_value(void * ptr, char * string, size_t buff_size)
+{
+    snprintf(string, buff_size, "%02hhX%02hhX",
+             ((unsigned char *)&ptr)[1], ((unsigned char *)&ptr)[0]);
+
+}
+
+void graph_print(graph_t * graph)
+{
+    dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
+    gnode_t * node = iter_get_value(nodes);
+    char buff[5];
+    while (NULL != node)
+    {
+        get_hex_value(node, buff, sizeof(buff));
+        printf("%s\n", buff);
+        if (!graph_node_contain_edges(node))
+        {
+            printf("has edges");
+
+        }
+        node = dlist_get_iter_next(nodes);
+    }
+    dlist_destroy_iter(nodes);
 }
 
 /*!
@@ -164,6 +191,16 @@ bool value_in_graph(graph_t * graph, void * data)
         return false;
     }
     return true;
+}
+
+/*!
+ * @brief Check weather the gnode has any edges
+ * @param node Pointer to a gnode_t
+ * @return Bool indication if there are any edges for the given gnode
+ */
+bool graph_node_contain_edges(gnode_t * node)
+{
+    return dlist_is_empty(node->edges);
 }
 
 
