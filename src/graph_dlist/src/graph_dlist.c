@@ -24,7 +24,7 @@ typedef struct
 
 static edge_t * create_edge(gnode_t * to_node, uint32_t weight);
 static dlist_match_t compare_nodes(void * left, void * right);
-//static void free_node(dlist_t * node);
+static void free_edge_dnode(void * node);
 static void free_edges(dlist_t * edge);
 
 /*!
@@ -341,13 +341,13 @@ static edge_t * create_edge(gnode_t * to_node, uint32_t weight)
 
 static void free_edges(dlist_t * edge)
 {
-    dlist_destroy(edge);
+    dlist_destroy_free(edge, free_edge_dnode);
 }
 
-//static void free_node(dlist_t * node)
-//{
-//    dlist_destroy(node);
-//}
+static void free_edge_dnode(void * node)
+{
+    free(node);
+}
 
 static dlist_match_t compare_nodes(void * left, void * right)
 {
