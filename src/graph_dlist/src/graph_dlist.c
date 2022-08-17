@@ -70,7 +70,7 @@ static void get_hex_value(void * ptr, char * string, size_t buff_size)
  * @brief Printout the adjacency-list representation
  * @param graph
  */
-void graph_print(graph_t * graph)
+void graph_print(graph_t * graph, char *(node_data_repr(void *)))
 {
     dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
     gnode_t * node = iter_get_value(nodes);
@@ -78,7 +78,16 @@ void graph_print(graph_t * graph)
     while (NULL != node)
     {
         get_hex_value(node, buff, sizeof(buff));
-        printf("[%s]", buff);
+        if (NULL != node_data_repr)
+        {
+            char * node_repr = node_data_repr(node->data);
+            printf("<%s>[%s]", node_repr, buff);
+            free(node_repr);
+        }
+        else
+        {
+            printf("[%s]", buff);
+        }
         if (!graph_node_contain_edges(node))
         {
             printf(" -> ");
@@ -87,7 +96,16 @@ void graph_print(graph_t * graph)
             while (NULL != edge)
             {
                 get_hex_value(edge->to_node, buff, sizeof(buff));
-                printf("(%s)", buff);
+                if (NULL != node_data_repr)
+                {
+                    char * node_repr = node_data_repr(edge->to_node->data);
+                    printf("<%s>(%s)", node_repr, buff);
+                    free(node_repr);
+                }
+                else
+                {
+                    printf("(%s)", buff);
+                }
                 edge = dlist_get_iter_next(edges);
                 if (NULL != edge)
                 {
@@ -100,6 +118,7 @@ void graph_print(graph_t * graph)
         node = dlist_get_iter_next(nodes);
     }
     dlist_destroy_iter(nodes);
+    printf("\n");
 }
 
 /*!
@@ -321,9 +340,19 @@ graph_opt_t graph_remove_edge(graph_t * graph, gnode_t * source_node,
     {
         return GRAPH_EDGE_NOT_FOUND;
     }
-
     dlist_remove_value(source_node->edges, edge);
     free_edge_dnode(edge);
+
+    if (graph->graph_mode == GRAPH_DIRECTIONAL_FALSE)
+    {
+        edge = NULL;
+        edge = graph_get_edge(graph, target_node, source_node);
+        if (NULL != edge)
+        {
+            dlist_remove_value(target_node->edges, edge);
+            free_edge_dnode(edge);
+        }
+    }
     return GRAPH_SUCCESS;
 }
 
@@ -380,14 +409,37 @@ bool graph_edge_in_graph(graph_t * graph, edge_t * edge)
         return false;
     }
 
-    dlist_iter_t * edges = dlist_get_iterable(edge->from_node->edges, ITER_HEAD);
-    edge_t * to_edge = iter_get_value(edges);
-    while (NULL != to_edge)
+    bool edge_in_graph = false;
+    // Grab all the source_node_edges from the source node of the edge we are looking for
+    dlist_iter_t * source_node_edges = dlist_get_iterable(edge->from_node->edges, ITER_HEAD);
+    edge_t * source_node_edge = iter_get_value(source_node_edges);
+    while (NULL != source_node_edge)
     {
-        if (to_edge == edge->to_node)
+        if (source_node_edge->to_node == edge->to_node)
+        {
+            edge_in_graph = true;
+            break;
+        }
     }
+    dlist_destroy_iter(source_node_edges);
+    return edge_in_graph;
+}
 
-
+bool graph_edge_in_node(gnode_t * source_node, gnode_t * target_node)
+{
+    dlist_iter_t * edges = dlist_get_iterable(source_node->edges, ITER_HEAD);
+    edge_t * edge = iter_get_value(edges);
+    bool edge_in_node = false;
+    while (NULL != edge)
+    {
+        if (target_node == edge->to_node)
+        {
+            edge_in_node = true;
+            break;
+        }
+    }
+    dlist_destroy_iter(edges);
+    return edge_in_node;
 }
 
 /*!

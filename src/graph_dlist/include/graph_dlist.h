@@ -56,7 +56,7 @@ graph_opt_t graph_add_value(graph_t * graph, void * value);
 // nodes
 gnode_t * graph_create_node(void * data);
 gnode_t * graph_get_node_by_value(graph_t * graph, void * data);
-void graph_print(graph_t * graph);
+void graph_print(graph_t * graph, char *(node_data_repr(void *)));
 
 // Queries
 bool value_in_graph(graph_t * graph, void * data);
@@ -66,6 +66,7 @@ size_t graph_edge_count(gnode_t * node);
 edge_t * graph_get_edge(graph_t * graph, gnode_t * source_node,
                         gnode_t * target_node);
 bool graph_edge_in_graph(graph_t * graph, edge_t * edge);
+bool graph_edge_in_node(gnode_t * source_node, gnode_t * target_node);
 #ifdef __cplusplus
 }
 #endif // end __cplusplus
