@@ -42,7 +42,7 @@ char * print_callback(void * node)
 
 TEST(GraphBasic, TestBasicStartUp)
 {
-    graph_t * graph = graph_init(GRAPH_DIRECTIONAL_FALSE, compare_payloads);
+    graph_t * graph = graph_init(GRAPH_DIRECTED, compare_payloads);
     EXPECT_NE(graph, nullptr);
     graph_destroy(graph, nullptr);
 }
@@ -58,7 +58,7 @@ class GraphDlistFixture : public ::testing::Test
  protected:
     void SetUp() override
     {
-        graph = graph_init(GRAPH_DIRECTIONAL_FALSE, compare_payloads);
+        graph = graph_init(GRAPH_DIRECTED, compare_payloads);
         for (auto& value: graph_data)
         {
             graph_add_value(graph, get_payload(value));
@@ -199,11 +199,54 @@ TEST_F(GraphDlistFixture, EdgeInGraph)
     EXPECT_EQ(true, graph_edge_in_graph(this->graph, edge));
 }
 
-//// Test ability to get all edges of a node and also see if a node has an edge
-//// to another node
-//TEST_F(GraphDlistFixture, EdgeInNode)
-//{
-//    gnode_t * node0 = graph_get_node_by_value(this->graph, &this->graph_data.at(0));
-//    gnode_t * node1 = graph_get_node_by_value(this->graph, &this->graph_data.at(1));
-//
-//}
+// Test ability to get all edges of a node and also see if a node has an edge
+// to another node
+TEST_F(GraphDlistFixture, EdgeInNode)
+{
+    gnode_t * node0 = graph_get_node_by_value(this->graph, &this->graph_data.at(0));
+    gnode_t * node1 = graph_get_node_by_value(this->graph, &this->graph_data.at(1));
+    gnode_t * node6 = graph_get_node_by_value(this->graph, &this->graph_data.at(6));
+
+    EXPECT_EQ(true, graph_node_a_neighbor(node0, node1));
+    EXPECT_EQ(false, graph_node_a_neighbor(node0, node6));
+}
+
+// Test ability to iterate over the neighbors of a node
+TEST_F(GraphDlistFixture, IterateNeighbors)
+{
+    gnode_t * node0 = graph_get_node_by_value(this->graph, &this->graph_data.at(0));
+    dlist_iter_t * neighbors = graph_get_neighbors_list(node0);
+    edge_t * neighbor = (edge_t *)(iter_get_value(neighbors));
+    int value = 1;
+    while (NULL != neighbor)
+    {
+        EXPECT_EQ(value, *(int*)graph_get_node_value(neighbor->to_node));
+        neighbor = (edge_t *)dlist_get_iter_next(neighbors);
+        value = value + 2; // The next neighbor is 3
+    }
+
+    graph_destroy_neighbors_list(neighbors);
+}
+
+// Test ability to remove a node and all its edges
+TEST_F(GraphDlistFixture, TestNodeRemoval)
+{
+    EXPECT_EQ(this->graph_data.size(), graph_node_count(this->graph));
+    gnode_t * node4 = graph_get_node_by_value(this->graph, &this->graph_data.at(4));
+    gnode_t * node1 = graph_get_node_by_value(this->graph, &this->graph_data.at(1));
+    gnode_t * node5 = graph_get_node_by_value(this->graph, &this->graph_data.at(5));
+    gnode_t * node8 = graph_get_node_by_value(this->graph, &this->graph_data.at(8));
+
+    EXPECT_EQ(3, graph_edge_count(node4));
+    EXPECT_EQ(3, graph_edge_count(node1));
+    EXPECT_EQ(3, graph_edge_count(node5));
+    EXPECT_EQ(3, graph_edge_count(node8));
+
+    graph_remove_node(this->graph, node4, free_payload);
+
+    EXPECT_EQ(this->graph_data.size() - 1, graph_node_count(this->graph));
+    EXPECT_EQ(2, graph_edge_count(node1));
+    EXPECT_EQ(2, graph_edge_count(node5));
+    EXPECT_EQ(2, graph_edge_count(node8));
+}
+

@@ -16,7 +16,6 @@ typedef struct gnode_t
     dlist_t * edges;
 } gnode_t;
 
-
 static edge_t * create_edge(gnode_t * from_node,
                             gnode_t * to_node,
                             uint32_t weight);
@@ -62,15 +61,20 @@ graph_t * graph_init(graph_mode_t graph_mode,
 static void get_hex_value(void * ptr, char * string, size_t buff_size)
 {
     snprintf(string, buff_size, "%02hhX%02hhX",
-             ((unsigned char *)&ptr)[1], ((unsigned char *)&ptr)[0]);
+             ((unsigned char *)& ptr)[1], ((unsigned char *)& ptr)[0]);
 
+}
+
+size_t graph_node_count(graph_t * graph)
+{
+    return dlist_get_length(graph->nodes);
 }
 
 /*!
  * @brief Printout the adjacency-list representation
  * @param graph
  */
-void graph_print(graph_t * graph, char *(node_data_repr(void *)))
+void graph_print(graph_t * graph, char * (node_data_repr(void *)))
 {
     dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
     gnode_t * node = iter_get_value(nodes);
@@ -121,6 +125,15 @@ void graph_print(graph_t * graph, char *(node_data_repr(void *)))
     printf("\n");
 }
 
+dlist_iter_t * graph_get_neighbors_list(gnode_t * node)
+{
+    return dlist_get_iterable(node->edges, ITER_HEAD);
+}
+void graph_destroy_neighbors_list(dlist_iter_t * neighbors)
+{
+    dlist_destroy_iter(neighbors);
+}
+
 /*!
  * @brief Wrapper for graph_add_node while also creating a node for the data
  * passed in.
@@ -151,17 +164,55 @@ graph_opt_t graph_add_value(graph_t * graph, void * value)
  * @param node Pointer to the node object
  * @return GRAPH_SUCCESS or GRAPH_FAIL_NODE_ALREADY_EXISTS
  */
-graph_opt_t graph_add_node(graph_t  * graph, gnode_t * node)
+graph_opt_t graph_add_node(graph_t * graph, gnode_t * node)
 {
     assert(graph);
     assert(node);
 
-    if (true == node_in_graph(graph, node))
+    if (true == graph_node_in_graph(graph, node))
     {
         return GRAPH_FAIL_NODE_ALREADY_EXISTS;
     }
 
     dlist_append(graph->nodes, node);
+    return GRAPH_SUCCESS;
+}
+
+void * graph_get_node_value(gnode_t * node)
+{
+    return node->data;
+}
+
+graph_opt_t graph_remove_node(graph_t * graph, gnode_t * node, void(free_func(void *)))
+{
+    if (!graph_node_in_graph(graph, node))
+    {
+        return GRAPH_NODE_NOT_FOUND;
+    }
+
+    //First remove the edges
+    dlist_iter_t * neighbors = graph_get_neighbors_list(node);
+    edge_t * neighbor = iter_get_value(neighbors);
+    while (0 == dlist_get_iter_index(neighbors))
+    {
+        if (GRAPH_DIRECTED == graph->graph_mode)
+        {
+            graph_remove_edge(graph, node, neighbor->to_node);
+        }
+        else
+        {
+            // If graph is not directional, and attempt to remove edge from
+            // both sides
+            graph_remove_edge(graph, neighbor->to_node, node);
+            graph_remove_edge(graph, node, neighbor->to_node);
+        }
+        neighbor = iter_get_value(neighbors);
+    }
+    graph_destroy_neighbors_list(neighbors);
+
+    // Now we just remove the node from the graph
+    dlist_remove_value(graph->nodes, node);
+    graph_destroy_node(node, free_func);
     return GRAPH_SUCCESS;
 }
 
@@ -184,7 +235,7 @@ gnode_t * graph_create_node(void * data)
         graph_destroy_node(node, NULL);
     }
 
-    * node = (gnode_t) {
+    * node = (gnode_t){
         .data   = data,
         .edges  = dlist
     };
@@ -211,12 +262,12 @@ gnode_t * graph_get_node_by_value(graph_t * graph, void * data)
     return node;
 }
 
-bool node_in_graph(graph_t * graph, gnode_t * node)
+bool graph_node_in_graph(graph_t * graph, gnode_t * node)
 {
-    return value_in_graph(graph, node->data);
+    return graph_value_in_graph(graph, node->data);
 }
 
-bool value_in_graph(graph_t * graph, void * data)
+bool graph_value_in_graph(graph_t * graph, void * data)
 {
     gnode_t * graph_node = graph_get_node_by_value(graph, data);
     if (NULL == graph_node)
@@ -241,7 +292,6 @@ bool graph_node_contain_edges(gnode_t * node)
     return dlist_is_empty(node->edges);
 }
 
-
 /*!
  * @brief Destroy the given node object with the option to also free the data
  * stored in the graph using th function pointer provided. If the function
@@ -253,7 +303,7 @@ bool graph_node_contain_edges(gnode_t * node)
  * stored in the node. Set to NULL to prevent freeing of the data stored in
  * the node.
  */
-void graph_destroy_node(gnode_t * node, void (*free_func)(void *))
+void graph_destroy_node(gnode_t * node, void (* free_func)(void *))
 {
     if (NULL != free_func)
     {
@@ -288,7 +338,8 @@ graph_opt_t graph_add_edge(graph_t * graph,
     assert(target_node);
 
     // First make sure that both nodes are already in the graph
-    if (!(node_in_graph(graph, source_node)) || !(node_in_graph(graph, target_node)))
+    if (!(graph_node_in_graph(graph, source_node))
+        || !(graph_node_in_graph(graph, target_node)))
     {
         return GRAPH_NODE_NOT_FOUND;
     }
@@ -298,7 +349,7 @@ graph_opt_t graph_add_edge(graph_t * graph,
     // target node
     if (NULL == dlist_get_by_value(source_node->edges, target_node))
     {
-        edge_t * edge = create_edge( source_node, target_node, weight);
+        edge_t * edge = create_edge(source_node, target_node, weight);
         dlist_append(source_node->edges, edge);
     }
     else
@@ -308,7 +359,7 @@ graph_opt_t graph_add_edge(graph_t * graph,
 
     // finally, if the graph mode is unidirectional, then add the edge
     // going the opposite direction
-    if (GRAPH_DIRECTIONAL_FALSE == graph->graph_mode)
+    if (GRAPH_DIRECTED == graph->graph_mode)
     {
         // only add it if the edge does not exist
         if (NULL == dlist_get_by_value(target_node->edges, source_node))
@@ -329,9 +380,9 @@ graph_opt_t graph_remove_edge(graph_t * graph, gnode_t * source_node,
     assert(target_node);
 
     // First make sure that both nodes are already in the graph
-    if (!(node_in_graph(graph, source_node)) || !(node_in_graph(graph, target_node)))
+    if (!(graph_node_in_graph(graph, source_node))
+        || !(graph_node_in_graph(graph, target_node)))
     {
-        fprintf(stderr, "[!] Graph nodes not found\n");
         return GRAPH_NODE_NOT_FOUND;
     }
 
@@ -343,7 +394,7 @@ graph_opt_t graph_remove_edge(graph_t * graph, gnode_t * source_node,
     dlist_remove_value(source_node->edges, edge);
     free_edge_dnode(edge);
 
-    if (graph->graph_mode == GRAPH_DIRECTIONAL_FALSE)
+    if (graph->graph_mode == GRAPH_DIRECTED)
     {
         edge = NULL;
         edge = graph_get_edge(graph, target_node, source_node);
@@ -364,15 +415,15 @@ graph_opt_t graph_remove_edge(graph_t * graph, gnode_t * source_node,
  * @return Pointer to edge_t if found else NULL
  */
 edge_t * graph_get_edge(graph_t * graph, gnode_t * source_node,
-                              gnode_t * target_node)
+                        gnode_t * target_node)
 {
     assert(graph);
     assert(source_node);
     assert(target_node);
 
     // First make sure that both nodes are already in the graph
-    if (!(node_in_graph(graph, source_node))
-        || !(node_in_graph(graph, target_node)))
+    if (!(graph_node_in_graph(graph, source_node))
+        || !(graph_node_in_graph(graph, target_node)))
     {
         return NULL;
     }
@@ -400,18 +451,19 @@ edge_t * graph_get_edge(graph_t * graph, gnode_t * source_node,
 
 bool graph_edge_in_graph(graph_t * graph, edge_t * edge)
 {
-    if (!node_in_graph(graph, edge->from_node))
+    if (!graph_node_in_graph(graph, edge->from_node))
     {
         return false;
     }
-    else if (!node_in_graph(graph, edge->to_node))
+    else if (!graph_node_in_graph(graph, edge->to_node))
     {
         return false;
     }
 
     bool edge_in_graph = false;
     // Grab all the source_node_edges from the source node of the edge we are looking for
-    dlist_iter_t * source_node_edges = dlist_get_iterable(edge->from_node->edges, ITER_HEAD);
+    dlist_iter_t * source_node_edges =
+        dlist_get_iterable(edge->from_node->edges, ITER_HEAD);
     edge_t * source_node_edge = iter_get_value(source_node_edges);
     while (NULL != source_node_edge)
     {
@@ -425,7 +477,7 @@ bool graph_edge_in_graph(graph_t * graph, edge_t * edge)
     return edge_in_graph;
 }
 
-bool graph_edge_in_node(gnode_t * source_node, gnode_t * target_node)
+bool graph_node_a_neighbor(gnode_t * source_node, gnode_t * target_node)
 {
     dlist_iter_t * edges = dlist_get_iterable(source_node->edges, ITER_HEAD);
     edge_t * edge = iter_get_value(edges);
@@ -437,6 +489,7 @@ bool graph_edge_in_node(gnode_t * source_node, gnode_t * target_node)
             edge_in_node = true;
             break;
         }
+        edge = dlist_get_iter_next(edges);
     }
     dlist_destroy_iter(edges);
     return edge_in_node;
@@ -448,7 +501,7 @@ bool graph_edge_in_node(gnode_t * source_node, gnode_t * target_node)
  *
  * @param graph Pointer to the graph object
  */
-void graph_destroy(graph_t * graph, void (*free_func)(void *))
+void graph_destroy(graph_t * graph, void (* free_func)(void *))
 {
     // If for some reason nodes is null, just free the graph
     if (NULL != graph->nodes)
@@ -498,8 +551,6 @@ static edge_t * create_edge(gnode_t * from_node,
     };
     return edge;
 }
-
-
 
 static void free_edges(dlist_t * edge)
 {
