@@ -221,8 +221,8 @@ static uint64_t hash_key(const char * key)
     uint64_t hash = FNV_OFFSET;
     for (const char * byte = key; '\0' != *byte; byte++)
     {
-        // Algorithm multiplies the hash by the FNV_PRIME then the
-        // hash is XOR'd by the byte
+        // Algorithm XOR's the key with the hash then the data is multiplied
+        // by the FNV prime
         hash ^= (uint64_t)(unsigned char)(* byte);
         hash *= FNV_PRIME;
     }
