@@ -181,34 +181,6 @@ size_t hashtable_length(hashtable_t * table)
     return table->length;
 }
 
-hashtable_iter_t hashtable_iterator(hashtable_t * table)
-{
-    hashtable_iter_t it;
-    it._table = table;
-    it._index = 0;
-    return it;
-}
-
-bool hashtable_next(hashtable_iter_t* it)
-{
-    // Loop till we've hit end of entries array.
-    hashtable_t* table = it->_table;
-    while (it->_index < table->capacity)
-    {
-        size_t i = it->_index;
-        it->_index++;
-        if (table->entries[i].key != NULL)
-        {
-            // Found next non-empty item, update iterator key and value.
-            hashtable_entry_t entry = table->entries[i];
-            it->key = entry.key;
-            it->value = entry.value;
-            return true;
-        }
-    }
-    return false;
-}
-
 /*!
  * @brief Run the key through Fowler–Noll–Vo (FNV-1a variant)
  * hash function returning a 64 bit hash. The hash uses a static FNV_OFFSET
