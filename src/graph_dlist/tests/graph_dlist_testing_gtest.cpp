@@ -64,14 +64,13 @@ class GraphDlistFixture : public ::testing::Test
             graph_add_value(graph, get_payload(value));
         }
         /*
-         * 0 ---- 1 ---- 4 ---- 5 ---- 6
-         * |	  |      \      |      |
-         * |      |       \     |      |
-         * 3 ---- 2        \___ 8 ---- 7
-         *
-         *
+         * (0)--2--(1)--5--(4)--2--(5)--2--(6)
+         *  |	    |       \       |       |
+         *  3       1       1       1       1
+         *  |       |        \      |       |
+         * (3)--2--(2)        \____(8)--1--(7)
          */
-        uint32_t weight = 0;
+
         gnode_t * node0 = graph_get_node_by_value(this->graph, &this->graph_data.at(0));
         gnode_t * node1 = graph_get_node_by_value(this->graph, &this->graph_data.at(1));
         gnode_t * node2 = graph_get_node_by_value(this->graph, &this->graph_data.at(2));
@@ -83,31 +82,31 @@ class GraphDlistFixture : public ::testing::Test
         gnode_t * node8 = graph_get_node_by_value(this->graph, &this->graph_data.at(8));
 
         // 0 -> 1/3
-        graph_add_edge(graph, node0, node1, weight);
-        graph_add_edge(graph, node0, node3, weight);
+        graph_add_edge(graph, node0, node1, 2);
+        graph_add_edge(graph, node0, node3, 3);
 
         // 3 -> 2
-        graph_add_edge(graph, node3, node2, weight);
+        graph_add_edge(graph, node3, node2, 2);
 
         //2 -> 1
-        graph_add_edge(graph, node2, node1, weight);
+        graph_add_edge(graph, node2, node1, 1);
 
         // 1 -> 4
-        graph_add_edge(graph, node1, node4, weight);
+        graph_add_edge(graph, node1, node4, 5);
 
         // 4 -> 5/8
-        graph_add_edge(graph, node4, node5, weight);
-        graph_add_edge(graph, node4, node8, weight);
+        graph_add_edge(graph, node4, node5, 2);
+        graph_add_edge(graph, node4, node8, 1);
 
         // 8 -> 7/5
-        graph_add_edge(graph, node8, node7, weight);
-        graph_add_edge(graph, node8, node5, weight);
+        graph_add_edge(graph, node8, node7, 1);
+        graph_add_edge(graph, node8, node5, 1);
 
         // 7 -> 6
-        graph_add_edge(graph, node7, node6, weight);
+        graph_add_edge(graph, node7, node6, 1);
 
         // 6 -> 5
-        graph_add_edge(graph, node6, node5, weight);
+        graph_add_edge(graph, node6, node5, 1);
 
 
     }
@@ -231,6 +230,7 @@ TEST_F(GraphDlistFixture, IterateNeighbors)
 // Test ability to remove a node and all its edges
 TEST_F(GraphDlistFixture, TestNodeRemoval)
 {
+    graph_print(this->graph, print_callback);
     EXPECT_EQ(this->graph_data.size(), graph_node_count(this->graph));
     gnode_t * node4 = graph_get_node_by_value(this->graph, &this->graph_data.at(4));
     gnode_t * node1 = graph_get_node_by_value(this->graph, &this->graph_data.at(1));
@@ -248,5 +248,6 @@ TEST_F(GraphDlistFixture, TestNodeRemoval)
     EXPECT_EQ(2, graph_edge_count(node1));
     EXPECT_EQ(2, graph_edge_count(node5));
     EXPECT_EQ(2, graph_edge_count(node8));
+    graph_print(this->graph, print_callback);
 }
 

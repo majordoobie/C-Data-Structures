@@ -75,6 +75,9 @@ edge_t * graph_get_edge(graph_t * graph, gnode_t * source_node,
 bool graph_edge_in_graph(graph_t * graph, edge_t * edge);
 bool graph_node_a_neighbor(gnode_t * source_node, gnode_t * target_node);
 size_t graph_node_count(graph_t * graph);
+
+dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * target_node);
+
 #ifdef __cplusplus
 }
 #endif // end __cplusplus

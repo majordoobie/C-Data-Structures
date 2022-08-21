@@ -7,6 +7,7 @@ target_link_libraries(
         graph_dlist_testing_gtest
         PUBLIC
         graph_dlist
+        heap
 )
 
 include(BuildUtils)

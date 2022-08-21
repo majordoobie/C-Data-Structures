@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
+#include <heap.h>
 
 typedef struct graph_t
 {
@@ -16,13 +17,24 @@ typedef struct gnode_t
     dlist_t * edges;
 } gnode_t;
 
+
+typedef struct dijkstra_t dijkstra_t;
+typedef struct dijkstra_t
+{
+    gnode_t * self;
+    uint32_t distance;
+    dijkstra_t * prev;
+} dijkstra_t;
+
 static edge_t * create_edge(gnode_t * from_node,
                             gnode_t * to_node,
                             uint32_t weight);
 static dlist_match_t compare_nodes(void * left, void * right);
 static void free_edge_dnode(void * node);
 static void free_edges(dlist_t * edge);
-
+static heap_compare_t heap_ptr_cmp(void * left, void * right);
+static dijkstra_t * get_dijkstra_node(gnode_t * self_node);
+static void init_min_heap(heap_t * heap, graph_t * graph, gnode_t * source);
 /*!
  * @brief Initialize a adjacency list graph structure that uses a double linked
  * list for both the nodes and edges. When time allows, it will be best to
@@ -70,6 +82,7 @@ size_t graph_node_count(graph_t * graph)
     return dlist_get_length(graph->nodes);
 }
 
+
 /*!
  * @brief Printout the adjacency-list representation
  * @param graph
@@ -79,6 +92,12 @@ void graph_print(graph_t * graph, char * (node_data_repr(void *)))
     dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
     gnode_t * node = iter_get_value(nodes);
     char buff[5];
+
+    puts("<#>:          Node value if available by callback repr");
+    puts("<#>[#] ->:    Node value if available followed by the last two bytes of the pointer");
+    puts("-> <#>(#)[5]: Node value if available followed by the last\n"
+         "              2 bytes of the pointer followed by the weight of the edge");
+
     while (NULL != node)
     {
         get_hex_value(node, buff, sizeof(buff));
@@ -103,12 +122,12 @@ void graph_print(graph_t * graph, char * (node_data_repr(void *)))
                 if (NULL != node_data_repr)
                 {
                     char * node_repr = node_data_repr(edge->to_node->data);
-                    printf("<%s>(%s)", node_repr, buff);
+                    printf("<%s>(%s)[%d]", node_repr, buff, edge->weight);
                     free(node_repr);
                 }
                 else
                 {
-                    printf("(%s)", buff);
+                    printf("(%s)[%d]", buff, edge->weight);
                 }
                 edge = dlist_get_iter_next(edges);
                 if (NULL != edge)
@@ -525,6 +544,140 @@ void graph_destroy(graph_t * graph, void (* free_func)(void *))
     dlist_destroy(graph->nodes);
 
     free(graph);
+}
+
+/*
+ * Djisktra section
+ */
+dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * target_node)
+{
+    // First make sure that both nodes are already in the graph
+    if (!(graph_node_in_graph(graph, source_node))
+        || !(graph_node_in_graph(graph, target_node)))
+    {
+        return NULL;
+    }
+
+    // Create the queue that contains all the paths
+    heap_t * heap = heap_init(MIN_HEAP,
+                             HEAP_PTR,
+                             0,
+                             NULL,
+                             heap_ptr_cmp);
+
+
+    // This will be a list of the visited nodes and gets added as we pop from queue
+    dlist_t * visited = dlist_init(graph->compare_func);
+
+    // Populate the heap structure
+    init_min_heap(heap, graph, source_node);
+
+    while (!heap_is_empty(heap))
+    {
+        dijkstra_t * curr_node = (dijkstra_t *)heap_pop(heap);
+        dlist_append(visited, curr_node->self);
+
+        dlist_iter_t * neighbors = graph_get_neighbors_list(curr_node->self);
+        gnode_t * neighbor = iter_get_value(neighbors);
+        while (NULL != neighbor)
+        {
+
+            neighbor = dlist_get_iter_next(neighbors);
+        }
+    }
+
+
+    bool found_target = false;
+    while ((!found_target) && !heap_is_empty(heap))
+    {
+
+        // Check if the dij_node pulled is the target, if it is we are done
+        if (DLIST_MATCH == (graph->compare_func(dij_node->self->data, target_node->data)))
+        {
+            found_target = true;
+            continue;
+        }
+
+        // Add the current node to the visited list
+        dlist_append(visited, dij_node->self);
+
+        // If the node has no neighbors, then continue to the next one
+        if (!graph_node_contain_edges(dij_node->self))
+        {
+            continue;
+        }
+
+        dlist_iter_t * neighbors = graph_get_neighbors_list(dij_node->self);
+        edge_t * neighbor = iter_get_value(neighbors);
+        while (NULL != neighbor)
+        {
+            dijkstra_t * neighbor_dij = get_dijkstra_node(neighbor->from_node);
+
+            uint32_t distance = neighbor->weight + dij_node->distance;
+
+            neighbor = dlist_get_iter_next(neighbors);
+        }
+    }
+
+
+
+}
+
+/*!
+ * @brief Iterate over all the nodes in the graph and create dijsktra_t path
+ * nodes while setting the source to 0.
+ *
+ * @param heap Min priority heap of all the dijkstra nodes
+ * @param graph Graph of all the nodes
+ * @param source The source node to start searching from.
+ */
+static void init_min_heap(heap_t * heap, graph_t * graph, gnode_t * source)
+{
+    dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
+    gnode_t * node = iter_get_value(nodes);
+    while (NULL != node)
+    {
+        dijkstra_t * dj_node = get_dijkstra_node(node);
+        if (node == source)
+        {
+            // Set the source nodes distance to 0 since it is the start
+            dj_node->distance = 0;
+        }
+        heap_insert(heap, dj_node);
+        node = dlist_get_iter_next(nodes);
+    }
+}
+
+static heap_compare_t heap_ptr_cmp(void * left, void * right)
+{
+    dijkstra_t * d_left = (dijkstra_t *)left;
+    dijkstra_t * d_right = (dijkstra_t *)right;
+
+    if (d_left->distance > d_right->distance)
+    {
+        return HEAP_GT;
+    }
+    else if (d_left->distance < d_right->distance)
+    {
+        return HEAP_LT;
+    }
+    return HEAP_EQ;
+}
+
+
+static dijkstra_t * get_dijkstra_node(gnode_t * self_node)
+{
+    dijkstra_t * node = (dijkstra_t *)malloc(sizeof(dijkstra_t));
+    if (INVALID_PTR == verify_alloc(node))
+    {
+        return NULL;
+    }
+    * node = (dijkstra_t){
+        .distance = UINT32_MAX,
+        .self     = self_node,
+        .prev     = NULL
+    };
+    return node;
 }
 
 /*!
