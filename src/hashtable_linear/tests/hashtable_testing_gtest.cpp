@@ -19,7 +19,15 @@ class HashtableGtest : public ::testing::Test
         std::string("First"),
         std::string("Second"),
         std::string("Third"),
-        std::string("Fourth")
+        std::string("Fourth"),
+        std::string("Fifth"),
+        std::string("Sixth"),
+        std::string("Seventh"),
+        std::string("Eight"),
+        std::string("9"),
+        std::string("10"),
+        std::string("11"),
+        std::string("12"),
     };
 
  protected:

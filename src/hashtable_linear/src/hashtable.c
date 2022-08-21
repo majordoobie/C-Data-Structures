@@ -8,6 +8,7 @@
 
 #define INITIAL_CAPACITY 16
 #define GROWTH_CAPACITY 4
+#define PERTURB_SHIFT 5
 // The below values are from the algorithm specifications
 // https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1_hash
 #define FNV_OFFSET 0xCBF29CE484222325
@@ -30,8 +31,8 @@ typedef struct hashtable_t
 
 static uint64_t hash_key(const char * key);
 static bool hashtable_expand(hashtable_t* table);
-static const char* hashtable_set_entry(hashtable_entry_t* entries, size_t capacity,
-                                       const char* key, void* value, size_t* plength);
+static void * hashtable_set_entry(hashtable_entry_t* entries, size_t capacity,
+                                  const char* key, void* value, size_t* plength);
 
 
 /*!
@@ -142,9 +143,10 @@ void * hashtable_get(hashtable_t * table, const char * key)
  * @param table Pointer to the hashtable structure
  * @param key Pointer to the key passed in (Should not be allocated)
  * @param value Pointer to the value to store in the hashtable
- * @return Returns the allocated pointer to the key
+ * @return Returns the pointer to the value. This is useful for when replacing
+ * values with new ones and needing a way to free the old value replaced.
  */
-const char * hashtable_set(hashtable_t* table, const char * key, void * value)
+void * hashtable_set(hashtable_t* table, const char * key, void * value)
 {
     assert(value != NULL);
     if (value == NULL)
@@ -227,16 +229,26 @@ static uint64_t hash_key(const char * key)
     return hash;
 }
 
-// Internal function to set an entry (without expanding table).
-static const char * hashtable_set_entry(hashtable_entry_t * entries,
-                                        size_t capacity,
-                                        const char * key,
-                                        void * value,
-                                        size_t * plength)
+/*!
+ * @brief Set the entry value and return the old one if there was a value there
+ * @param entries
+ * @param capacity
+ * @param key
+ * @param value
+ * @param plength
+ * @return Returns the pointer to the value. This is useful for when replacing
+ * values with new ones and needing a way to free the old value replaced.
+ */
+static void * hashtable_set_entry(hashtable_entry_t * entries,
+                                  size_t capacity,
+                                  const char * key,
+                                  void * value,
+                                  size_t * plength)
 {
     // AND hash with capacity-1 to ensure it's within entries array.
     uint64_t hash = hash_key(key);
     size_t slot = (size_t)(hash & (uint64_t)(capacity - 1));
+    uint64_t perturb = hash;
 
     // Loop till we find an empty entry.
     while (entries[slot].key != NULL)
@@ -244,16 +256,13 @@ static const char * hashtable_set_entry(hashtable_entry_t * entries,
         if (strcmp(key, entries[slot].key) == 0)
         {
             // Found key (it already exists), update value.
+            void * old_value = entries[slot].value;
             entries[slot].value = value;
-            return entries[slot].key;
+            return old_value;
         }
-        // Key wasn't in this slot, move to next (linear probing).
-        slot++;
-        if (slot >= capacity)
-        {
-            // At end of entries array, wrap around.
-            slot = 0;
-        }
+        perturb >>= PERTURB_SHIFT;
+        slot = (PERTURB_SHIFT * slot) + 1 + perturb;
+        slot = slot % capacity - 1;
     }
 
     // Didn't find key, allocate+copy if needed, then insert it.
@@ -266,9 +275,10 @@ static const char * hashtable_set_entry(hashtable_entry_t * entries,
         }
         (*plength)++;
     }
+    void * old_value = entries[slot].value;
     entries[slot].key = (char*)key;
     entries[slot].value = value;
-    return key;
+    return old_value;
 }
 
 // Expand hash table to twice its current size. Return true on success,

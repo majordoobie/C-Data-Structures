@@ -44,7 +44,7 @@ bool hashtable_key_exists(hashtable_t * table, const char * key);
 // be NULL). If not already present in table, key is copied to newly
 // allocated memory (keys are freed automatically when hashtable_destroy is
 // called). Return address of copied key, or NULL if out of memory.
-const char * hashtable_set(hashtable_t * table, const char * key, void * value);
+void * hashtable_set(hashtable_t * table, const char * key, void * value);
 
 
 
