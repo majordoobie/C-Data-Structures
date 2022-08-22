@@ -231,6 +231,11 @@ void * htable_set(htable_t * table, const char * key, void * value)
 
 }
 
+/*!
+ * @brief Create an iter object
+ * @param table Pointer to the hashtable object
+ * @return Pointer to the iter object
+ */
 htable_iter_t * htable_get_iter(htable_t * table)
 {
     assert(table);
@@ -243,12 +248,22 @@ htable_iter_t * htable_get_iter(htable_t * table)
     iter->table = table;
     return iter;
 }
+
+/*!
+ * @brief Destroy the iter object
+ * @param iter Pointer to the iter object
+ */
 void htable_destroy_iter(htable_iter_t * iter)
 {
     assert(iter);
     free(iter);
 }
 
+/*!
+ * @brief Get the entry pointer from
+ * @param iter Pointer to the iterable object
+ * @return The next available entry or NULL if the end of the array is reached
+ */
 htable_entry_t * htable_iter_get_entry(htable_iter_t * iter)
 {
     assert(iter);
@@ -260,6 +275,11 @@ htable_entry_t * htable_iter_get_entry(htable_iter_t * iter)
     return entry;
 }
 
+/*!
+ * @brief
+ * @param iter
+ * @return
+ */
 htable_entry_t * htable_iter_get_next(htable_iter_t * iter)
 {
     assert(iter);
