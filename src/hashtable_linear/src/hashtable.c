@@ -40,6 +40,7 @@ typedef struct htable_iter_t
 
 valid_ptr_t verify_alloc(void * ptr);
 static uint64_t hash_key(const char * key, htable_key_type key_type);
+static char * ptr_to_str(void * ptr);
 static bool htable_expand(htable_t * table);
 static htable_entry_t * get_entry(htable_t * table,
                                   const char * key,
@@ -215,10 +216,10 @@ void * htable_del(htable_t * table, const char * key, htable_key_type key_type)
  * @return Returns the pointer to the value. This is useful for when replacing
  * values with new ones and needing a way to free the old value replaced.
  */
-void * htable_set_str(htable_t * table,
-                      const char * key,
-                      htable_key_type key_type,
-                      void * value)
+void * htable_set(htable_t * table,
+                  const char * key,
+                  htable_key_type key_type,
+                  void * value)
 {
     assert(value != NULL);
     assert(table);
@@ -425,6 +426,11 @@ static htable_entry_t * get_entry(htable_t * table,
                                   const char * key,
                                   htable_key_type key_type)
 {
+    if (HT_KEY_AS_PTR == key_type)
+    {
+        key = ptr_to_str((void *)key);
+    }
+
     // AND the hash and capacity so that it fits within the range of slots
     // this is similar to doing a mod
     uint64_t hash = hash_key(key, key_type);
@@ -435,6 +441,10 @@ static htable_entry_t * get_entry(htable_t * table,
     {
         if (strcmp(key, table->entries[slot]->key) == 0)
         {
+            if (HT_KEY_AS_PTR == key_type)
+            {
+                free((void *)key);
+            }
             return table->entries[slot];
         }
 
@@ -445,6 +455,10 @@ static htable_entry_t * get_entry(htable_t * table,
         slot = slot % table->capacity - 1;
     }
 
+    if (HT_KEY_AS_PTR == key_type)
+    {
+        free((void *)key);
+    }
     return NULL;
 }
 
@@ -485,6 +499,12 @@ void * htable_set_entry(htable_entry_t ** entries,
         return NULL;
     }
 
+    if (HT_KEY_AS_PTR == key_type)
+    {
+        key = ptr_to_str((void *)key);
+    }
+
+
     // AND hash with capacity-1 to ensure it's within entries array.
     uint64_t hash = hash_key(key, key_type);
     size_t slot = (size_t)(hash & (uint64_t)(capacity - 1));
@@ -499,6 +519,12 @@ void * htable_set_entry(htable_entry_t ** entries,
             // the old value
             void * old_value = entries[slot]->value;
             entries[slot]->value = value;
+
+            if (HT_KEY_AS_PTR == key_type)
+            {
+                free((void *)key);
+            }
+
             return old_value;
         }
         // Perform the python style probing
@@ -507,9 +533,14 @@ void * htable_set_entry(htable_entry_t ** entries,
         slot = slot % capacity - 1;
     }
 
-    key = strdup(key);
-    if (INVALID_PTR == verify_alloc((void *)key))
+    char * str_key = strdup(key);
+
+    if (INVALID_PTR == verify_alloc((void *)str_key))
     {
+        if (HT_KEY_AS_PTR == key_type)
+        {
+            free((void *)key);
+        }
         return NULL;
     }
     // Update the number of slots used up by keys
@@ -517,8 +548,40 @@ void * htable_set_entry(htable_entry_t ** entries,
     (* slots_filled)++;
 
     void * old_value = entries[slot]->value;
-    entries[slot]->key = (char *)key;
+    entries[slot]->key = str_key;
     entries[slot]->value = value;
     entries[slot]->key_type = key_type;
+
+    if (HT_KEY_AS_PTR == key_type)
+    {
+        free((void *)key);
+    }
+
     return old_value;
+}
+
+/*!
+ * @brief Function makes it possible to turn a pointer address into a string
+ * if the user decides to use that as a key value
+ * @param ptr Any pointer address
+ * @return Pointer to the newly allocated string containing the address of the
+ * pointer
+ */
+static char * ptr_to_str(void * ptr)
+{
+    // Calculate the size of a void pointer multiplied by two
+    // to store each letter of a byte plus 1 for the null terminator
+    size_t buffer_size = sizeof(void *) * 2 + 1;
+    int position = 0;
+    char * buffer = (char *)calloc(1, buffer_size);
+
+    // Cast the void ptr to a uintptr_t to get fixed width
+    uintptr_t ptr_addr = (uintptr_t)ptr;
+    for(size_t index = 0; index < sizeof(void *); ++index)
+    {
+        position += snprintf(buffer + position, buffer_size, "%2.2X", (unsigned int)(unsigned char)(ptr_addr & 0xff));
+        ptr_addr >>= 8;
+    }
+
+    return buffer;
 }

@@ -44,10 +44,10 @@ bool htable_key_exists(htable_t * table,
 
 void * htable_get(htable_t * table, const char * key, htable_key_type key_type);
 
-void * htable_set_str(htable_t * table,
-                      const char * key,
-                      htable_key_type key_type,
-                      void * value);
+void * htable_set(htable_t * table,
+                  const char * key,
+                  htable_key_type key_type,
+                  void * value);
 
 void * htable_del(htable_t * table, const char * key, htable_key_type key_type);
 size_t htable_get_slots(htable_t * table);

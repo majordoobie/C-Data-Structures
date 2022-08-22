@@ -659,7 +659,7 @@ static void init_min_heap(heap_t * heap,
             dj_node->distance = 0;
         }
         heap_insert(heap, dj_node);
-        htable_set_str(table, node, HT_KEY_AS_STR, sizeof(gnode_t));
+        htable_set(table, node, HT_KEY_AS_STR, sizeof(gnode_t));
         node = dlist_get_iter_next(nodes);
     }
 }
