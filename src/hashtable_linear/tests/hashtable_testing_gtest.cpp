@@ -14,7 +14,7 @@ void free_payload(void * payload)
 class HashtableGtest : public ::testing::Test
 {
  public:
-    hashtable_t * dict;
+    htable_t * dict;
     std::vector<std::string> keys = {
         std::string("First"),
         std::string("Second"),
@@ -33,15 +33,15 @@ class HashtableGtest : public ::testing::Test
  protected:
     void SetUp() override
     {
-        dict = hashtable_create(free_payload);
+        dict = htable_create(free_payload);
         for (auto& key: keys)
         {
-            hashtable_set(dict, key.c_str(), get_payload(key));
+            htable_set(dict, key.c_str(), get_payload(key));
         }
     }
     void TearDown() override
     {
-        hashtable_destroy(dict, HT_FREE_VALUES_TRUE);
+        htable_destroy(dict, HT_FREE_VALUES_TRUE);
     }
 
 };
@@ -50,16 +50,16 @@ class HashtableGtest : public ::testing::Test
 // Test that our keys are being populated
 TEST_F(HashtableGtest, TestAllocAndDestroy)
 {
-    EXPECT_EQ(hashtable_length(this->dict), this->keys.size());
+    EXPECT_EQ(htable_get_length(this->dict), this->keys.size());
 }
 
 // Test that we can check that a key exists in the hashtable already
 // Then test that we can safely fetch for a key that does not exist
 TEST_F(HashtableGtest, TestKeyExists)
 {
-    EXPECT_EQ(true, hashtable_key_exists(this->dict, this->keys.at(0).c_str()));
-    EXPECT_EQ(false, hashtable_key_exists(this->dict, "UnknownKey"));
-    EXPECT_EQ(nullptr, hashtable_get(this->dict, "Unknownkey"));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(0).c_str()));
+    EXPECT_EQ(false, htable_key_exists(this->dict, "UnknownKey"));
+    EXPECT_EQ(nullptr, htable_get(this->dict, "Unknownkey"));
 }
 
 // Test that updating a key will yield the value that was stored so that
@@ -68,12 +68,43 @@ TEST_F(HashtableGtest, TestValueFreeOnUpdate)
 {
     std::string first_key = this->keys.at(0);
     char * new_payload = get_payload(first_key.c_str());
-    EXPECT_EQ(true, hashtable_key_exists(this->dict, this->keys.at(0).c_str()));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(0).c_str()));
 
-    void * old_payload = hashtable_set(this->dict, first_key.c_str(), new_payload);
+    void * old_payload = htable_set(this->dict, first_key.c_str(), new_payload);
 
-    EXPECT_EQ(true, hashtable_key_exists(this->dict, this->keys.at(0).c_str()));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(0).c_str()));
     free(old_payload);
+}
+
+//Test the deletion functionality
+TEST_F(HashtableGtest, TestKeyRemoval)
+{
+    EXPECT_EQ(htable_get_length(this->dict), this->keys.size());
+
+    std::string first_key = this->keys.at(0);
+    void * payload = htable_del(this->dict, first_key.c_str());
+
+    EXPECT_EQ(htable_get_length(this->dict), this->keys.size() - 1);
+    EXPECT_EQ(htable_get_slots(this->dict), this->keys.size());
+
+    free(payload);
+}
+
+// Test ability to delete all the keys
+TEST_F(HashtableGtest, TestKeyAllRemoval)
+{
+    EXPECT_EQ(htable_get_length(this->dict), this->keys.size());
+    htable_iter_t * iter = htable_get_iter(this->dict);
+    htable_entry_t * entry = htable_iter_get_entry(iter);
+
+    while (NULL != entry)
+    {
+        free(htable_del(this->dict, entry->key));
+        entry = htable_iter_get_next(iter);
+    }
+
+    EXPECT_EQ(htable_get_length(this->dict), 0);
+    htable_destroy_iter(iter);
 }
 
 
