@@ -36,7 +36,7 @@ class HashtableGtest : public ::testing::Test
         dict = htable_create(free_payload);
         for (auto& key: keys)
         {
-            htable_set(dict, key.c_str(), strlen(key.c_str()), get_payload(key));
+            htable_set(dict, key.c_str(), get_payload(key));
         }
     }
     void TearDown() override
@@ -57,22 +57,12 @@ TEST_F(HashtableGtest, TestAllocAndDestroy)
 // Then test that we can safely fetch for a key that does not exist
 TEST_F(HashtableGtest, TestKeyExists)
 {
-    EXPECT_EQ(true, htable_key_exists(this->dict,
-                                      this->keys.at(0).c_str(),
-                                      strlen(this->keys.at(0).c_str())));
-    EXPECT_EQ(true, htable_key_exists(this->dict,
-                                      this->keys.at(7).c_str(),
-                                      strlen(this->keys.at(7).c_str())));
-    EXPECT_EQ(true, htable_key_exists(this->dict,
-                                      this->keys.at(9).c_str(),
-                                      strlen(this->keys.at(9).c_str())));
-    EXPECT_EQ(true, htable_key_exists(this->dict,
-                                      this->keys.at(11).c_str(),
-                                      strlen(this->keys.at(11).c_str())));
-
-
-    EXPECT_EQ(false, htable_key_exists(this->dict, "UnknownKey", 11));
-    EXPECT_EQ(nullptr, htable_get(this->dict, "Unknownkey", 11));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(0).c_str()));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(7).c_str()));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(9).c_str()));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(11).c_str()));
+    EXPECT_EQ(false, htable_key_exists(this->dict, "UnknownKey"));
+    EXPECT_EQ(nullptr, htable_get(this->dict, "Unknownkey"));
 }
 
 // Test that updating a key will yield the value that was stored so that
@@ -81,18 +71,11 @@ TEST_F(HashtableGtest, TestValueFreeOnUpdate)
 {
     std::string first_key = this->keys.at(0);
     char * new_payload = get_payload(first_key.c_str());
-    EXPECT_EQ(true, htable_key_exists(this->dict,
-                                      this->keys.at(0).c_str(),
-                                      strlen(this->keys.at(0).c_str())));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(0).c_str()));
 
-    void * old_payload = htable_set(this->dict,
-                                    first_key.c_str(),
-                                    strlen(first_key.c_str()),
-                                    new_payload);
+    void * old_payload = htable_set(this->dict, first_key.c_str(), new_payload);
 
-    EXPECT_EQ(true, htable_key_exists(this->dict,
-                                      this->keys.at(0).c_str(),
-                                      strlen(this->keys.at(0).c_str())));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(0).c_str()));
     free(old_payload);
 }
 
@@ -102,7 +85,7 @@ TEST_F(HashtableGtest, TestKeyRemoval)
     EXPECT_EQ(htable_get_length(this->dict), this->keys.size());
 
     std::string first_key = this->keys.at(0);
-    void * payload = htable_del(this->dict, first_key.c_str(), strlen(first_key.c_str()));
+    void * payload = htable_del(this->dict, first_key.c_str());
 
     EXPECT_EQ(htable_get_length(this->dict), this->keys.size() - 1);
     EXPECT_EQ(htable_get_slots(this->dict), this->keys.size());
@@ -119,7 +102,7 @@ TEST_F(HashtableGtest, TestKeyAllRemoval)
     htable_entry_t * entry = htable_iter_get_entry(iter);
     while (NULL != entry)
     {
-        void * payload = htable_del(this->dict, entry->key, entry->key_length);
+        void * payload = htable_del(this->dict, entry->key);
         free(payload);
         entry = htable_iter_get_next(iter);
     }
@@ -134,15 +117,15 @@ TEST(HashtableSoloTest, TestExpansion)
     htable_t * dict = htable_create(free_payload);
 
     // The base capacity is 8 so we can safely add 4 items before expansion
-    htable_set(dict, "Key1", 4, get_payload("Key1"));
-    htable_set(dict, "Key2", 4, get_payload("Key2"));
-    htable_set(dict, "Key3", 4, get_payload("Key3"));
-    htable_set(dict, "Key4", 4, get_payload("Key4"));
+    htable_set(dict, "Key1", get_payload("Key1"));
+    htable_set(dict, "Key2", get_payload("Key2"));
+    htable_set(dict, "Key3", get_payload("Key3"));
+    htable_set(dict, "Key4", get_payload("Key4"));
 
     EXPECT_EQ(4, htable_get_length(dict));
     EXPECT_EQ(4, htable_get_slots(dict));
 
-    free(htable_del(dict, "Key1", 4));
+    free(htable_del(dict, "Key1"));
 
     EXPECT_EQ(3, htable_get_length(dict));
     EXPECT_EQ(4, htable_get_slots(dict));
@@ -150,33 +133,42 @@ TEST(HashtableSoloTest, TestExpansion)
 
     // Our slots should still go up so it shoud not be higher than
     // our used slots by 1
-    htable_set(dict, "Key5", 4, get_payload("Key5"));
+    htable_set(dict, "Key5", get_payload("Key5"));
     EXPECT_EQ(4, htable_get_length(dict));
     EXPECT_EQ(5, htable_get_slots(dict));
 
 
     // This should now trigger the resize the "removed" slots will not be
     // copied over
-    htable_set(dict, "Key6", 4, get_payload("Key6"));
+    htable_set(dict, "Key6", get_payload("Key6"));
     EXPECT_EQ(5, htable_get_length(dict));
     EXPECT_EQ(5, htable_get_slots(dict));
 
     htable_destroy(dict, HT_FREE_VALUES_TRUE);
 }
 
-TEST_F(HashtableGtest, TestAbilityToHashPointer)
-{
-    int * payload = (int *)calloc(5, sizeof(int));
-    payload[2] = 3;
-
-    EXPECT_EQ(htable_get_length(this->dict), this->keys.size());
-    htable_set(this->dict, payload, 8, payload);
-
-
-    EXPECT_EQ(htable_get_length(this->dict), this->keys.size() + 1);
-
-    int * ht_payload = (int *)htable_get(this->dict, payload, sizeof(payload));
-
-    EXPECT_EQ(ht_payload[2], payload[2]);
-}
+//TEST_F(HashtableGtest, TestAbilityToHashPointer)
+//{
+//    void * payload = get_payload("Some Payload");
+//    size_t i;
+//    char adr[sizeof(void *) + 1]; // Note the +1 to make room for NULL terminator
+//    uintptr_t ptrAddress = (uintptr_t)payload;
+//
+//    printf("Pointer address is %p\n", payload);
+//    printf("Converting to 0x");
+//    for(i = sizeof(void *) - 1; i > 0; i++)
+//    {
+//        adr[i] = ptrAddress & 0xff;
+//        printf("%2.2X", (unsigned int)(unsigned char)adr[i]);
+//        ptrAddress >>= 8;
+//    }
+//
+//    adr[sizeof(void *)] = '\0';
+//
+//    printf("\n");
+//
+//    printf("Address is: %s\n", adr);
+//
+//    free(payload);
+//}
 
