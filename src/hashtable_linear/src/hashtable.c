@@ -28,8 +28,7 @@ typedef struct htable_t
     htable_entry_t ** entries;        // hash slots
     size_t capacity;                    // size of entries
     size_t slots_used;                  // number of slots used by keys
-    size_t
-        slots_filled;                // Number of slots filled by keys or dummies
+    size_t slots_filled;                // Number of slots filled by keys or dummies
     void (* free_func)(void * value);   // Optional callback to free the values
 } htable_t;
 
@@ -40,11 +39,14 @@ typedef struct htable_iter_t
 } htable_iter_t;
 
 valid_ptr_t verify_alloc(void * ptr);
-static uint64_t hash_key(const char * key);
+static uint64_t hash_key(const void * key, size_t key_length);
 static bool htable_expand(htable_t * table);
-static htable_entry_t * get_entry(htable_t * table, const char * key);
+static htable_entry_t * get_entry(htable_t * table,
+                                  const void * key,
+                                  size_t key_length);
 static void * htable_set_entry(htable_entry_t ** entries,
-                               const char * key,
+                               const void * key,
+                               size_t key_length,
                                void * value,
                                size_t * slots_used,
                                size_t * slots_filled,
@@ -100,6 +102,7 @@ htable_t * htable_create(void (free_func(void * value)))
     for (size_t i = 0; i < INITIAL_CAPACITY; i++)
     {
         table->entries[i] = (htable_entry_t *)calloc(1, sizeof(htable_entry_t));
+
         if (INVALID_PTR == table->entries[i])
         {
             return NULL;
@@ -143,9 +146,9 @@ void htable_destroy(htable_t * table, htable_flags free_values)
  * @param key Pointer to the key passed in. (Should not be allocated)
  * @return Bool indicating if the key exists in the table
  */
-bool htable_key_exists(htable_t * table, const char * key)
+bool htable_key_exists(htable_t * table, const void * key, size_t key_length)
 {
-    if (NULL == htable_get(table, key))
+    if (NULL == htable_get(table, key, key_length))
     {
         return false;
     }
@@ -159,10 +162,10 @@ bool htable_key_exists(htable_t * table, const char * key)
  * @param key Pointer to the key passed in (Should not be allocated)
  * @return Pointer to the value if found or NULL if not found
  */
-void * htable_get(htable_t * table, const char * key)
+void * htable_get(htable_t * table, const void * key, size_t key_length)
 {
     assert(table);
-    htable_entry_t * entry = get_entry(table, key);
+    htable_entry_t * entry = get_entry(table, key, key_length);
     if (NULL != entry)
     {
         return entry->value;
@@ -179,9 +182,9 @@ void * htable_get(htable_t * table, const char * key)
  * @param key Pointer to the key passed in (Should not be allocated)
  * @return Pointer to the value so that it may be freed or NULL if not found.
  */
-void * htable_del(htable_t * table, const char * key)
+void * htable_del(htable_t * table, const void * key, size_t key_length)
 {
-    htable_entry_t * entry = get_entry(table, key);
+    htable_entry_t * entry = get_entry(table, key, key_length);
     if (NULL == entry)
     {
         return NULL;
@@ -208,7 +211,10 @@ void * htable_del(htable_t * table, const char * key)
  * @return Returns the pointer to the value. This is useful for when replacing
  * values with new ones and needing a way to free the old value replaced.
  */
-void * htable_set(htable_t * table, const char * key, void * value)
+void * htable_set(htable_t * table,
+                  const void * key,
+                  size_t key_length,
+                  void * value)
 {
     assert(value != NULL);
     assert(table);
@@ -224,6 +230,7 @@ void * htable_set(htable_t * table, const char * key, void * value)
 
     return htable_set_entry(table->entries,
                             key,
+                            key_length,
                             value,
                             & table->slots_used,
                             & table->slots_filled,
@@ -310,16 +317,17 @@ htable_entry_t * htable_iter_get_next(htable_iter_t * iter)
  * @param key Pointer to the key passed in for the look up
  * @return Return a 64 bit hash
  */
-static uint64_t hash_key(const char * key)
+static uint64_t hash_key(const void * key, size_t key_length)
 {
     uint64_t hash = FNV_OFFSET;
-    for (const char * byte = key; '\0' != * byte; byte++)
+    unsigned int byte;
+    for (size_t i = 0; i < key_length; i++)
     {
-        // Algorithm XOR's the key with the hash then the data is multiplied
-        // by the FNV prime
-        hash ^= (uint64_t)(unsigned char)(* byte);
+        byte = ((const unsigned char *)key)[i];
+        hash ^= byte;
         hash *= FNV_PRIME;
     }
+
     return hash;
 }
 
@@ -347,6 +355,7 @@ static bool htable_expand(htable_t * table)
     for (size_t i = 0; i < new_capacity; i++)
     {
         new_entries[i] = (htable_entry_t *)calloc(1, sizeof(htable_entry_t));
+
         if (INVALID_PTR == verify_alloc(new_entries[i]))
         {
             return false;
@@ -363,11 +372,13 @@ static bool htable_expand(htable_t * table)
         htable_entry_t * entry = table->entries[i];
         if (entry->key != NULL)
         {
+
             // Do not expand the dummy keys
             if (strcmp(entry->key, DUMMY_KEY) != 0)
             {
                 htable_set_entry(new_entries,
                                  entry->key,
+                                 entry->key_length,
                                  entry->value,
                                  & table->slots_used,
                                  & table->slots_filled,
@@ -386,11 +397,13 @@ static bool htable_expand(htable_t * table)
     return true;
 }
 
-static htable_entry_t * get_entry(htable_t * table, const char * key)
+static htable_entry_t * get_entry(htable_t * table,
+                                  const void * key,
+                                  size_t key_length)
 {
     // AND the hash and capacity so that it fits within the range of slots
     // this is similar to doing a mod
-    uint64_t hash = hash_key(key);
+    uint64_t hash = hash_key(key,key_length);
     size_t slot = (size_t)(hash & (uint64_t)(table->capacity - 1));
     uint64_t perturb = hash;
 
@@ -435,7 +448,8 @@ valid_ptr_t verify_alloc(void * ptr)
  * values with new ones and needing a way to free the old value replaced.
  */
 void * htable_set_entry(htable_entry_t ** entries,
-                        const char * key,
+                        const void * key,
+                        size_t key_length,
                         void * value,
                         size_t * slots_used,
                         size_t * slots_filled,
@@ -448,7 +462,7 @@ void * htable_set_entry(htable_entry_t ** entries,
     }
 
     // AND hash with capacity-1 to ensure it's within entries array.
-    uint64_t hash = hash_key(key);
+    uint64_t hash = hash_key(key, key_length);
     size_t slot = (size_t)(hash & (uint64_t)(capacity - 1));
     uint64_t perturb = hash;
 
@@ -469,8 +483,9 @@ void * htable_set_entry(htable_entry_t ** entries,
         slot = slot % capacity - 1;
     }
 
-    key = strdup(key);
-    if (INVALID_PTR == verify_alloc((void *)key))
+    char * str_key = strndup(key, key_length);
+
+    if (INVALID_PTR == verify_alloc((void *)str_key))
     {
         return NULL;
     }
@@ -479,7 +494,8 @@ void * htable_set_entry(htable_entry_t ** entries,
     (* slots_filled)++;
 
     void * old_value = entries[slot]->value;
-    entries[slot]->key = (char *)key;
+    entries[slot]->key = (char *)str_key;
     entries[slot]->value = value;
+    entries[slot]->key_length = key_length;
     return old_value;
 }

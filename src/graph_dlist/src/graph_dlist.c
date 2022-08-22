@@ -578,46 +578,47 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
         dlist_append(visited, curr_node->self);
 
         dlist_iter_t * neighbors = graph_get_neighbors_list(curr_node->self);
-        gnode_t * neighbor = iter_get_value(neighbors);
-        while (NULL != neighbor)
-        {
-
-            neighbor = dlist_get_iter_next(neighbors);
-        }
-    }
-
-
-    bool found_target = false;
-    while ((!found_target) && !heap_is_empty(heap))
-    {
-
-        // Check if the dij_node pulled is the target, if it is we are done
-        if (DLIST_MATCH == (graph->compare_func(dij_node->self->data, target_node->data)))
-        {
-            found_target = true;
-            continue;
-        }
-
-        // Add the current node to the visited list
-        dlist_append(visited, dij_node->self);
-
-        // If the node has no neighbors, then continue to the next one
-        if (!graph_node_contain_edges(dij_node->self))
-        {
-            continue;
-        }
-
-        dlist_iter_t * neighbors = graph_get_neighbors_list(dij_node->self);
         edge_t * neighbor = iter_get_value(neighbors);
         while (NULL != neighbor)
         {
-            dijkstra_t * neighbor_dij = get_dijkstra_node(neighbor->from_node);
-
-            uint32_t distance = neighbor->weight + dij_node->distance;
+//            if (neighbor->to_node curr_node->distance)
 
             neighbor = dlist_get_iter_next(neighbors);
         }
     }
+
+
+//    bool found_target = false;
+//    while ((!found_target) && !heap_is_empty(heap))
+//    {
+//
+//        // Check if the dij_node pulled is the target, if it is we are done
+//        if (DLIST_MATCH == (graph->compare_func(dij_node->self->data, target_node->data)))
+//        {
+//            found_target = true;
+//            continue;
+//        }
+//
+//        // Add the current node to the visited list
+//        dlist_append(visited, dij_node->self);
+//
+//        // If the node has no neighbors, then continue to the next one
+//        if (!graph_node_contain_edges(dij_node->self))
+//        {
+//            continue;
+//        }
+//
+//        dlist_iter_t * neighbors = graph_get_neighbors_list(dij_node->self);
+//        edge_t * neighbor = iter_get_value(neighbors);
+//        while (NULL != neighbor)
+//        {
+//            dijkstra_t * neighbor_dij = get_dijkstra_node(neighbor->from_node);
+//
+//            uint32_t distance = neighbor->weight + dij_node->distance;
+//
+//            neighbor = dlist_get_iter_next(neighbors);
+//        }
+//    }
 
 
 
