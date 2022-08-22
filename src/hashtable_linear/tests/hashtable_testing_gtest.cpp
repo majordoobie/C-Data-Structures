@@ -58,6 +58,9 @@ TEST_F(HashtableGtest, TestAllocAndDestroy)
 TEST_F(HashtableGtest, TestKeyExists)
 {
     EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(0).c_str()));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(7).c_str()));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(9).c_str()));
+    EXPECT_EQ(true, htable_key_exists(this->dict, this->keys.at(11).c_str()));
     EXPECT_EQ(false, htable_key_exists(this->dict, "UnknownKey"));
     EXPECT_EQ(nullptr, htable_get(this->dict, "Unknownkey"));
 }
@@ -95,16 +98,53 @@ TEST_F(HashtableGtest, TestKeyAllRemoval)
 {
     EXPECT_EQ(htable_get_length(this->dict), this->keys.size());
     htable_iter_t * iter = htable_get_iter(this->dict);
-    htable_entry_t * entry = htable_iter_get_entry(iter);
 
+    htable_entry_t * entry = htable_iter_get_entry(iter);
     while (NULL != entry)
     {
-        free(htable_del(this->dict, entry->key));
+        void * payload = htable_del(this->dict, entry->key);
+        free(payload);
         entry = htable_iter_get_next(iter);
     }
 
     EXPECT_EQ(htable_get_length(this->dict), 0);
     htable_destroy_iter(iter);
+}
+
+// Test that expansion is not coping over the removed keys
+TEST(HashtableSoloTest, TestExpansion)
+{
+    htable_t * dict = htable_create(free_payload);
+
+    // The base capacity is 8 so we can safely add 4 items before expansion
+    htable_set(dict, "Key1", get_payload("Key1"));
+    htable_set(dict, "Key2", get_payload("Key2"));
+    htable_set(dict, "Key3", get_payload("Key3"));
+    htable_set(dict, "Key4", get_payload("Key4"));
+
+    EXPECT_EQ(4, htable_get_length(dict));
+    EXPECT_EQ(4, htable_get_slots(dict));
+
+    free(htable_del(dict, "Key1"));
+
+    EXPECT_EQ(3, htable_get_length(dict));
+    EXPECT_EQ(4, htable_get_slots(dict));
+
+
+    // Our slots should still go up so it shoud not be higher than
+    // our used slots by 1
+    htable_set(dict, "Key5", get_payload("Key5"));
+    EXPECT_EQ(4, htable_get_length(dict));
+    EXPECT_EQ(5, htable_get_slots(dict));
+
+
+    // This should now trigger the resize the "removed" slots will not be
+    // copied over
+    htable_set(dict, "Key6", get_payload("Key6"));
+    EXPECT_EQ(5, htable_get_length(dict));
+    EXPECT_EQ(5, htable_get_slots(dict));
+
+    htable_destroy(dict, HT_FREE_VALUES_TRUE);
 }
 
 

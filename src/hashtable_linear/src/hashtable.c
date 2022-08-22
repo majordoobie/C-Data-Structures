@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define INITIAL_CAPACITY 16
+#define INITIAL_CAPACITY 8
 #define PERTURB_SHIFT 5
 
 // The below values are from the algorithm specifications
@@ -23,13 +23,13 @@ typedef enum
     INVALID_PTR = 0
 } valid_ptr_t;
 
-
 typedef struct htable_t
 {
     htable_entry_t ** entries;        // hash slots
     size_t capacity;                    // size of entries
     size_t slots_used;                  // number of slots used by keys
-    size_t slots_filled;                // Number of slots filled by keys or dummies
+    size_t
+        slots_filled;                // Number of slots filled by keys or dummies
     void (* free_func)(void * value);   // Optional callback to free the values
 } htable_t;
 
@@ -41,7 +41,7 @@ typedef struct htable_iter_t
 
 valid_ptr_t verify_alloc(void * ptr);
 static uint64_t hash_key(const char * key);
-static bool htable_expand(htable_t* table);
+static bool htable_expand(htable_t * table);
 static htable_entry_t * get_entry(htable_t * table, const char * key);
 static void * htable_set_entry(htable_entry_t ** entries,
                                const char * key,
@@ -170,6 +170,15 @@ void * htable_get(htable_t * table, const char * key)
     return NULL;
 }
 
+/*!
+ * @brief Delete a key from the hashtable. Note that this does not remove
+ * the slot which means that the hashtable is not shrinked. The key is set
+ * to a dummy key and when an expansion is called for the removed keys will
+ * then not be copied over.
+ * @param table Pointer to the hashtable object
+ * @param key Pointer to the key passed in (Should not be allocated)
+ * @return Pointer to the value so that it may be freed or NULL if not found.
+ */
 void * htable_del(htable_t * table, const char * key)
 {
     htable_entry_t * entry = get_entry(table, key);
@@ -183,14 +192,12 @@ void * htable_del(htable_t * table, const char * key)
     free((char *)entry->key);
     entry->key = strdup(DUMMY_KEY);
 
-    // Only subtract the slots used not filled since the slot is not going to
-    // be used again
+    // Only subtract the slots used not filled since the
+    // slot is not going to be used again
     table->slots_used--;
 
     return value;
 }
-
-
 
 /*!
  * @brief Set value into the hashtable. The function will allocate the key for
@@ -201,7 +208,7 @@ void * htable_del(htable_t * table, const char * key)
  * @return Returns the pointer to the value. This is useful for when replacing
  * values with new ones and needing a way to free the old value replaced.
  */
-void * htable_set(htable_t* table, const char * key, void * value)
+void * htable_set(htable_t * table, const char * key, void * value)
 {
     assert(value != NULL);
     assert(table);
@@ -260,14 +267,17 @@ htable_entry_t * htable_iter_get_next(htable_iter_t * iter)
     while (iter->index < iter->table->capacity)
     {
         entry = iter->table->entries[iter->index];
+        iter->index++;
         if (NULL != entry)
         {
-            if (strcmp(entry->key, DUMMY_KEY) != 0)
+            if (NULL != entry->key)
             {
-                return entry;
+                if (strcmp(entry->key, DUMMY_KEY) != 0)
+                {
+                    return entry;
+                }
             }
         }
-        iter->index++;
     }
     return NULL;
 
@@ -283,7 +293,7 @@ htable_entry_t * htable_iter_get_next(htable_iter_t * iter)
 static uint64_t hash_key(const char * key)
 {
     uint64_t hash = FNV_OFFSET;
-    for (const char * byte = key; '\0' != *byte; byte++)
+    for (const char * byte = key; '\0' != * byte; byte++)
     {
         // Algorithm XOR's the key with the hash then the data is multiplied
         // by the FNV prime
@@ -292,7 +302,6 @@ static uint64_t hash_key(const char * key)
     }
     return hash;
 }
-
 
 /*!
  * @brief Expand the hashtable array using Pythons strategy of slots_used * 2
@@ -308,7 +317,8 @@ static bool htable_expand(htable_t * table)
     {
         return false;  // overflow (capacity would be too big)
     }
-    htable_entry_t ** new_entries = (htable_entry_t **)calloc(new_capacity, sizeof(htable_entry_t *));
+    htable_entry_t ** new_entries =
+        (htable_entry_t **)calloc(new_capacity, sizeof(htable_entry_t *));
     if (INVALID_PTR == verify_alloc(new_entries))
     {
         return false;
@@ -341,7 +351,7 @@ static bool htable_expand(htable_t * table)
                                  entry->value,
                                  & table->slots_used,
                                  & table->slots_filled,
-                                 table->capacity);
+                                 new_capacity);
             }
 
             free((char *)entry->key);
@@ -417,7 +427,6 @@ void * htable_set_entry(htable_entry_t ** entries,
         return NULL;
     }
 
-
     // AND hash with capacity-1 to ensure it's within entries array.
     uint64_t hash = hash_key(key);
     size_t slot = (size_t)(hash & (uint64_t)(capacity - 1));
@@ -440,18 +449,17 @@ void * htable_set_entry(htable_entry_t ** entries,
         slot = slot % capacity - 1;
     }
 
-
     key = strdup(key);
     if (INVALID_PTR == verify_alloc((void *)key))
     {
         return NULL;
     }
     // Update the number of slots used up by keys
-    (*slots_used)++;
-    (*slots_filled)++;
+    (* slots_used)++;
+    (* slots_filled)++;
 
     void * old_value = entries[slot]->value;
-    entries[slot]->key = (char*)key;
+    entries[slot]->key = (char *)key;
     entries[slot]->value = value;
     return old_value;
 }
