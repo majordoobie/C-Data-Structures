@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <heap.h>
-
+#include <hashtable.h>
 typedef struct graph_t
 {
     dlist_t * nodes;
@@ -34,7 +34,11 @@ static void free_edge_dnode(void * node);
 static void free_edges(dlist_t * edge);
 static heap_compare_t heap_ptr_cmp(void * left, void * right);
 static dijkstra_t * get_dijkstra_node(gnode_t * self_node);
-static void init_min_heap(heap_t * heap, graph_t * graph, gnode_t * source);
+static void init_min_heap(heap_t * heap,
+                          graph_t * graph,
+                          gnode_t * source,
+                          htable_t * table);
+static void free_dijkstra_node(void * node);
 /*!
  * @brief Initialize a adjacency list graph structure that uses a double linked
  * list for both the nodes and edges. When time allows, it will be best to
@@ -565,12 +569,15 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
                              NULL,
                              heap_ptr_cmp);
 
+    // Create the hashtable that will keep track of all the dijkstra nodes
+    htable_t * table = htable_create(free_dijkstra_node);
+
 
     // This will be a list of the visited nodes and gets added as we pop from queue
     dlist_t * visited = dlist_init(graph->compare_func);
 
     // Populate the heap structure
-    init_min_heap(heap, graph, source_node);
+    init_min_heap(heap, graph, source_node, table);
 
     while (!heap_is_empty(heap))
     {
@@ -581,11 +588,13 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
         edge_t * neighbor = iter_get_value(neighbors);
         while (NULL != neighbor)
         {
-//            if (neighbor->to_node curr_node->distance)
+            dijkstra_t * dij_node = (dijkstra_t *)htable_get(table, neighbor->to_node, sizeof(neighbor->to_node));
+            printf("Distance is %d\n", dij_node->distance);
 
             neighbor = dlist_get_iter_next(neighbors);
         }
     }
+    return NULL;
 
 
 //    bool found_target = false;
@@ -632,7 +641,10 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
  * @param graph Graph of all the nodes
  * @param source The source node to start searching from.
  */
-static void init_min_heap(heap_t * heap, graph_t * graph, gnode_t * source)
+static void init_min_heap(heap_t * heap,
+                          graph_t * graph,
+                          gnode_t * source,
+                          htable_t * table)
 {
     dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
     gnode_t * node = iter_get_value(nodes);
@@ -645,6 +657,7 @@ static void init_min_heap(heap_t * heap, graph_t * graph, gnode_t * source)
             dj_node->distance = 0;
         }
         heap_insert(heap, dj_node);
+        htable_set(table, node, sizeof(gnode_t), dj_node);
         node = dlist_get_iter_next(nodes);
     }
 }
@@ -679,6 +692,11 @@ static dijkstra_t * get_dijkstra_node(gnode_t * self_node)
         .prev     = NULL
     };
     return node;
+}
+
+static void free_dijkstra_node(void * node)
+{
+    free(node);
 }
 
 /*!

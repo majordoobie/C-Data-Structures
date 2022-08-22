@@ -251,3 +251,11 @@ TEST_F(GraphDlistFixture, TestNodeRemoval)
     graph_print(this->graph, print_callback);
 }
 
+
+TEST_F(GraphDlistFixture, TestPathFinding)
+{
+    gnode_t * node4 = graph_get_node_by_value(this->graph, &this->graph_data.at(4));
+    gnode_t * node1 = graph_get_node_by_value(this->graph, &this->graph_data.at(1));
+
+    graph_get_path(this->graph, node1, node4);
+}

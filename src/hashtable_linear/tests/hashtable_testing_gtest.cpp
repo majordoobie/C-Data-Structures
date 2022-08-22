@@ -170,7 +170,7 @@ TEST_F(HashtableGtest, TestAbilityToHashPointer)
     payload[2] = 3;
 
     EXPECT_EQ(htable_get_length(this->dict), this->keys.size());
-    htable_set(this->dict, payload, sizeof(payload), payload);
+    htable_set(this->dict, payload, 8, payload);
 
 
     EXPECT_EQ(htable_get_length(this->dict), this->keys.size() + 1);

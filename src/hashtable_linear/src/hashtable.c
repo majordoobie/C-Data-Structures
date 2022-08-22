@@ -484,6 +484,10 @@ void * htable_set_entry(htable_entry_t ** entries,
     }
 
     char * str_key = strndup(key, key_length);
+    if (strlen(str_key) != key_length)
+    {
+        printf("the key no go\n");
+    }
 
     if (INVALID_PTR == verify_alloc((void *)str_key))
     {
