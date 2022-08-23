@@ -444,7 +444,7 @@ static htable_entry_t * get_entry(htable_t * table,
             return table->entries[slot];
         }
 
-        // se Python style probing to get the next slot where the key
+        // use Python style probing to get the next slot where the key
         // could be in
         perturb >>= PERTURB_SHIFT;
         slot = (PERTURB_SHIFT * slot) + 1 + perturb;
