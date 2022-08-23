@@ -569,43 +569,82 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
                              NULL,
                              heap_ptr_cmp);
 
-    // Create the hashtable that will keep track of all the dijkstra nodes
-    htable_t * table = htable_create(free_dijkstra_node);
 
+    // Table to quickly map gnode_t -> dij_node_t
+    htable_t * dij_lookup_table = htable_create(free_dijkstra_node);
 
-    // This will be a list of the visited nodes and gets added as we pop from queue
-    dlist_t * visited = dlist_init(graph->compare_func);
+    // Table for marking the visited items
+    htable_t * visited_table = htable_create(NULL);
 
     // Populate the heap structure
-    init_min_heap(heap, graph, source_node, table);
+    init_min_heap(heap, graph, source_node, dij_lookup_table);
 
     while (!heap_is_empty(heap))
     {
-        dijkstra_t * curr_node = (dijkstra_t *)heap_pop(heap);
-        dlist_append(visited, curr_node->self);
+        // Pop the next min priority distance from the source
+        dijkstra_t * curr_dij_node = (dijkstra_t *)heap_pop(heap);
 
-        dlist_iter_t * neighbors = graph_get_neighbors_list(curr_node->self);
+        // Look up the g_node_t that is associated with the curr_dij_node to grab
+        // its distance
+//        gnode_t * curr_g_node = htable_get(dij_lookup_table, (void *)curr_dij_node->self, HT_KEY_AS_PTR);
+
+        htable_set(visited_table, (void *)curr_dij_node->self, HT_KEY_AS_PTR, curr_dij_node->self);
+
+        // Iterate over all the neighbors of the current node
+        dlist_iter_t * neighbors = graph_get_neighbors_list(curr_dij_node->self);
         edge_t * neighbor = iter_get_value(neighbors);
         while (NULL != neighbor)
         {
-            dijkstra_t * dij_node = (dijkstra_t *)htable_get(table,
+            //neighbor->weight
+
+            // Grab the dij_node that belongs to the current neighbor
+            dijkstra_t * dij_node = (dijkstra_t *)htable_get(dij_lookup_table,
                                                              (void *)neighbor->to_node,
                                                              HT_KEY_AS_PTR);
-            if (NULL == dij_node)
+
+            // Make sure that the current neighbor was not already visited
+            // if it was, we can skip to the next one
+            if (htable_key_exists(visited_table, (void *)dij_node->self, HT_KEY_AS_PTR))
             {
+                printf("this node was already visited, skipping\n");
                 neighbor = dlist_get_iter_next(neighbors);
                 continue;
             }
-            printf("Distance is %d\n", dij_node->distance);
 
+            /*
+             * This one might be a little hard to read. Here we are checking to
+             * see if the current distance from the dij_node (should be MAX
+             * if never seen before) is greater than the current distance
+             * (will be 0 for the source) plus the weight of the two nodes
+             * connection.
+             *
+             * If it is less, than update the distance to the new value. This
+             * should make the MAX distance to a lower value when it connects
+             * to the source
+             */
+            if (dij_node->distance > (curr_dij_node->distance + neighbor->weight))
+            {
+                // Set the previous to be the current dij node we are inspecting
+                dij_node->distance = curr_dij_node->distance + neighbor->weight;
+                dij_node->prev = curr_dij_node;
+            }
+
+
+            if (NULL == dij_node)
+            {
+                printf("There was a problem we got null!!!\n");
+                neighbor = dlist_get_iter_next(neighbors);
+                continue;
+            }
             neighbor = dlist_get_iter_next(neighbors);
         }
         dlist_destroy_iter(neighbors);
     }
 
+
     heap_destroy(heap);
-    htable_destroy(table, HT_FREE_VALUES_TRUE);
-    dlist_destroy(visited);
+    htable_destroy(visited_table, HT_FREE_VALUES_FALSE);
+    htable_destroy(dij_lookup_table, HT_FREE_VALUES_TRUE);
     return NULL;
 
 
@@ -660,7 +699,6 @@ static void init_min_heap(heap_t * heap,
 {
     dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
     gnode_t * node = iter_get_value(nodes);
-    int count = 0;
     while (NULL != node)
     {
         dijkstra_t * dj_node = get_dijkstra_node(node);
@@ -672,7 +710,6 @@ static void init_min_heap(heap_t * heap,
         heap_insert(heap, dj_node);
         htable_set(table, (void *)node, HT_KEY_AS_PTR, dj_node);
         node = dlist_get_iter_next(nodes);
-        count++;
     }
     dlist_destroy_iter(nodes);
 }
