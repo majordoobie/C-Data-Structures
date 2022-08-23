@@ -7,21 +7,13 @@ extern "C" {
 #endif // __cplusplus
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
-// There are situations where a ptr is needed as a key instead of using a str.
-// To handle both situations, the hashtable will convert the ptr address into
-// a string to store it on the hashtable.
-typedef enum htable_key_type
-{
-    HT_KEY_AS_STR,
-    HT_KEY_AS_PTR
-} htable_key_type;
 
 typedef struct htable_entry_t
 {
     const char * key;
     void * value;
-    htable_key_type key_type;
 } htable_entry_t;
 
 typedef enum htable_flags
@@ -34,22 +26,23 @@ typedef enum htable_flags
 typedef struct htable_t htable_t;
 typedef struct htable_iter_t htable_iter_t;
 
-size_t htable_get_length(htable_t * table);
+// Create and destroy the hashtable. Must provide a function that can
+// hash the data, a function to free the key and a function to free the
+// values. The freeing is of course optional
 htable_t * htable_create(void (free_func(void * value)));
 void htable_destroy(htable_t * table, htable_flags free_values);
 
-bool htable_key_exists(htable_t * table,
-                       const char * key,
-                       htable_key_type key_type);
+uint64_t htable_hash_key(void * key, size_t key_length);
 
-void * htable_get(htable_t * table, const char * key, htable_key_type key_type);
+size_t htable_get_length(htable_t * table);
 
-void * htable_set(htable_t * table,
-                  const char * key,
-                  htable_key_type key_type,
-                  void * value);
+bool htable_key_exists(htable_t * table, const char * key);
 
-void * htable_del(htable_t * table, const char * key, htable_key_type key_type);
+void * htable_get(htable_t * table, const char * key);
+
+void * htable_set(htable_t * table, const char * key, void * value);
+
+void * htable_del(htable_t * table, const char * key);
 size_t htable_get_slots(htable_t * table);
 
 htable_iter_t * htable_get_iter(htable_t * table);

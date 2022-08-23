@@ -595,7 +595,9 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
         // its distance
 //        gnode_t * curr_g_node = htable_get(dij_lookup_table, (void *)curr_dij_node->self, HT_KEY_AS_PTR);
 
-        htable_set(visited_table, (void *)curr_dij_node->self, HT_KEY_AS_PTR, curr_dij_node->self);
+        htable_set(visited_table,
+                   (void *)curr_dij_node->self,
+                   curr_dij_node->self);
         count ++;
 
         // Iterate over all the neighbors of the current node
@@ -607,8 +609,8 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
 
             // Grab the dij_node that belongs to the current neighbor
             dijkstra_t * dij_node = (dijkstra_t *)htable_get(dij_lookup_table,
-                                                             (void *)neighbor->to_node,
-                                                             HT_KEY_AS_PTR);
+                                                             (void *)neighbor
+                                                                 ->to_node);
 
             if (NULL == dij_node)
             {
@@ -619,7 +621,7 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
 
             // Make sure that the current neighbor was not already visited
             // if it was, we can skip to the next one
-            if (htable_key_exists(visited_table, (void *)dij_node->self, HT_KEY_AS_PTR))
+            if (htable_key_exists(visited_table, (void *)dij_node->self, 0))
             {
                 printf("this node was already visited, skipping\n");
                 neighbor = dlist_get_iter_next(neighbors);
@@ -717,7 +719,7 @@ static void init_min_heap(heap_t * heap,
             dj_node->distance = 0;
         }
         heap_insert(heap, dj_node);
-        htable_set(table, (void *)node, HT_KEY_AS_PTR, dj_node);
+        htable_set(table, (void *)node, dj_node);
         node = dlist_get_iter_next(nodes);
     }
     dlist_destroy_iter(nodes);
