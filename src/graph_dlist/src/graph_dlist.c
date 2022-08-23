@@ -578,29 +578,44 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
 
     // Populate the heap structure
     init_min_heap(heap, graph, source_node, dij_lookup_table);
+    int count = 0;
 
     while (!heap_is_empty(heap))
     {
         // Pop the next min priority distance from the source
         dijkstra_t * curr_dij_node = (dijkstra_t *)heap_pop(heap);
+        printf("Got the payload of %d\n", *(int *)curr_dij_node->self->data);
+
+        if (curr_dij_node->self == target_node)
+        {
+            printf("FOUND THE TARGET\n");
+        }
 
         // Look up the g_node_t that is associated with the curr_dij_node to grab
         // its distance
 //        gnode_t * curr_g_node = htable_get(dij_lookup_table, (void *)curr_dij_node->self, HT_KEY_AS_PTR);
 
         htable_set(visited_table, (void *)curr_dij_node->self, HT_KEY_AS_PTR, curr_dij_node->self);
+        count ++;
 
         // Iterate over all the neighbors of the current node
         dlist_iter_t * neighbors = graph_get_neighbors_list(curr_dij_node->self);
         edge_t * neighbor = iter_get_value(neighbors);
         while (NULL != neighbor)
         {
-            //neighbor->weight
+            printf("Looking at [%d] %d -> %d\n", *(int*)curr_dij_node->self->data, *(int*)neighbor->from_node->data, *(int*)neighbor->to_node->data);
 
             // Grab the dij_node that belongs to the current neighbor
             dijkstra_t * dij_node = (dijkstra_t *)htable_get(dij_lookup_table,
                                                              (void *)neighbor->to_node,
                                                              HT_KEY_AS_PTR);
+
+            if (NULL == dij_node)
+            {
+                printf("There was a problem we got null!!!\n");
+                neighbor = dlist_get_iter_next(neighbors);
+                continue;
+            }
 
             // Make sure that the current neighbor was not already visited
             // if it was, we can skip to the next one
@@ -630,12 +645,6 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
             }
 
 
-            if (NULL == dij_node)
-            {
-                printf("There was a problem we got null!!!\n");
-                neighbor = dlist_get_iter_next(neighbors);
-                continue;
-            }
             neighbor = dlist_get_iter_next(neighbors);
         }
         dlist_destroy_iter(neighbors);
