@@ -11,7 +11,6 @@
 
 // The below values are from the algorithm specifications
 // https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function#FNV-1_hash
-#define FNV_OFFSET 0xCBF29CE484222325
 #define FNV_PRIME 0x00000100000001B3
 
 static const char * DUMMY_KEY = "001DummyKey";
@@ -40,7 +39,6 @@ typedef struct htable_iter_t
 
 valid_ptr_t verify_alloc(void * ptr);
 static uint64_t hash_key(const char * key);
-static char * ptr_to_str(void * ptr);
 static bool htable_expand(htable_t * table);
 static htable_entry_t * get_entry(htable_t * table, const char * key);
 static void * htable_set_entry(htable_entry_t ** entries,
@@ -49,10 +47,6 @@ static void * htable_set_entry(htable_entry_t ** entries,
                                size_t * slots_used,
                                size_t * slots_filled,
                                size_t capacity);
-
-static void convert_addr(char * key_buffer,
-                         const char * key,
-                         size_t key_length);
 /*!
  * @brief Return the amount of items in the hashtable
  * @param table Pointer to table structure
@@ -64,17 +58,29 @@ size_t htable_get_length(htable_t * table)
     return table->slots_used;
 }
 
-uint64_t htable_hash_key(void * key, size_t key_length)
+void htable_hash_key(uint64_t * hash, void * key, size_t key_length)
 {
-    uint64_t hash = FNV_OFFSET;
-    for (const unsigned char * byte = (const unsigned char *)key; '\0' != * byte; byte++)
+
+    size_t position = 0;
+    const unsigned char * bytes = key;
+
+    while (position < key_length)
     {
-        // Algorithm XOR's the key with the hash then the data is multiplied
-        // by the FNV prime
-        hash ^= (uint64_t)(unsigned char)(* byte);
-        hash *= FNV_PRIME;
+        const unsigned char byte = bytes[position];
+        *hash ^= byte;
+        *hash ^= FNV_PRIME;
+        position++;
     }
-    return hash;
+
+//    uint64_t hash = HASH_INIT_VAL;
+//    for (const unsigned char * byte = (const unsigned char *)key; '\0' != * byte; byte++)
+//    {
+//        // Algorithm XOR's the key with the hash then the data is multiplied
+//        // by the FNV prime
+//        hash ^= (uint64_t)(unsigned char)(* byte);
+//        hash *= FNV_PRIME;
+//    }
+//    return hash;
 }
 
 /*!
@@ -90,10 +96,16 @@ size_t htable_get_slots(htable_t * table)
 }
 /*!
  * @brief Instantiate a hash table object
- * @param free_func Optional pointer used to free the values passed in
+ * @param free_key_callback Optional pointer used to free the values passed in
  * @return Pointer to the hashtable object
  */
-htable_t * htable_create(void (free_func(void * value)))
+htable_t * htable_create(uint64_t (* hash_callback)(void *, size_t),
+                         void (* free_key_callback)(void *),
+                         void (* free_value_callback)(void *),
+                         htable_match_t (* compare_callback)(void *,
+                                                             size_t,
+                                                             void *,
+                                                             size_t))
 {
     htable_t * table = (htable_t *)malloc(sizeof(htable_t));
     if (INVALID_PTR == verify_alloc(table))
@@ -102,7 +114,7 @@ htable_t * htable_create(void (free_func(void * value)))
     }
 
     * table = (htable_t){
-        .free_func    = free_func,
+        .free_func    = free_key_callback,
         .slots_used   = 0,
         .slots_filled = 0,
         .capacity     = INITIAL_CAPACITY
@@ -322,7 +334,7 @@ htable_entry_t * htable_iter_get_next(htable_iter_t * iter)
 
 /*!
  * @brief Run the key through Fowler–Noll–Vo (FNV-1a variant)
- * hash function returning a 64 bit hash. The hash uses a static FNV_OFFSET
+ * hash function returning a 64 bit hash. The hash uses a static HASH_INIT_VAL
  * and FNV_PRIME for the calculations
  * @param key Pointer to the key passed in for the look up
  * @return Return a 64 bit hash
@@ -330,7 +342,7 @@ htable_entry_t * htable_iter_get_next(htable_iter_t * iter)
 static uint64_t hash_key(const char * key)
 {
 
-    uint64_t hash = FNV_OFFSET;
+    uint64_t hash = HASH_INIT_VAL;
     for (const char * byte = key; '\0' != * byte; byte++)
     {
         // Algorithm XOR's the key with the hash then the data is multiplied
@@ -339,19 +351,6 @@ static uint64_t hash_key(const char * key)
         hash *= FNV_PRIME;
     }
     return hash;
-}
-static void convert_addr(char * key_buffer,
-                         const char * key,
-                         size_t key_length)
-{
-
-    uintptr_t ptr_addr = (uintptr_t)key;
-    for(size_t i = 0; i < key_length; ++i)
-    {
-        key_buffer[i] = ptr_addr & 0xff;
-        ptr_addr >>= 8;
-    }
-    key_buffer[sizeof(void *)] = '\0';
 }
 
 /*!
@@ -521,30 +520,4 @@ void * htable_set_entry(htable_entry_t ** entries,
     entries[slot]->value = value;
 
     return old_value;
-}
-
-/*!
- * @brief Function makes it possible to turn a pointer address into a string
- * if the user decides to use that as a key value
- * @param ptr Any pointer address
- * @return Pointer to the newly allocated string containing the address of the
- * pointer
- */
-static char * ptr_to_str(void * ptr)
-{
-    // Calculate the size of a void pointer multiplied by two
-    // to store each letter of a byte plus 1 for the null terminator
-    size_t buffer_size = sizeof(void *) * 2 + 1;
-    int position = 0;
-    char * buffer = (char *)calloc(1, buffer_size);
-
-    // Cast the void ptr to a uintptr_t to get fixed width
-    uintptr_t ptr_addr = (uintptr_t)ptr;
-    for(size_t index = 0; index < sizeof(void *); ++index)
-    {
-        position += snprintf(buffer + position, buffer_size, "%2.2X", (unsigned int)(unsigned char)(ptr_addr & 0xff));
-        ptr_addr >>= 8;
-    }
-
-    return buffer;
 }

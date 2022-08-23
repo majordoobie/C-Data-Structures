@@ -571,10 +571,13 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
 
 
     // Table to quickly map gnode_t -> dij_node_t
-    htable_t * dij_lookup_table = htable_create(free_dijkstra_node);
+    htable_t * dij_lookup_table = htable_create(NULL,
+                                                free_dijkstra_node,
+                                                NULL,
+                                                NULL);
 
     // Table for marking the visited items
-    htable_t * visited_table = htable_create(NULL);
+    htable_t * visited_table = htable_create(NULL, NULL, NULL, NULL);
 
     // Populate the heap structure
     init_min_heap(heap, graph, source_node, dij_lookup_table);
