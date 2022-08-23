@@ -230,7 +230,6 @@ TEST_F(GraphDlistFixture, IterateNeighbors)
 // Test ability to remove a node and all its edges
 TEST_F(GraphDlistFixture, TestNodeRemoval)
 {
-    graph_print(this->graph, print_callback);
     EXPECT_EQ(this->graph_data.size(), graph_node_count(this->graph));
     gnode_t * node4 = graph_get_node_by_value(this->graph, &this->graph_data.at(4));
     gnode_t * node1 = graph_get_node_by_value(this->graph, &this->graph_data.at(1));
@@ -248,7 +247,6 @@ TEST_F(GraphDlistFixture, TestNodeRemoval)
     EXPECT_EQ(2, graph_edge_count(node1));
     EXPECT_EQ(2, graph_edge_count(node5));
     EXPECT_EQ(2, graph_edge_count(node8));
-    graph_print(this->graph, print_callback);
 }
 
 

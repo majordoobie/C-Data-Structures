@@ -591,11 +591,21 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
             dijkstra_t * dij_node = (dijkstra_t *)htable_get(table,
                                                              (void *)neighbor->to_node,
                                                              HT_KEY_AS_PTR);
+            if (NULL == dij_node)
+            {
+                neighbor = dlist_get_iter_next(neighbors);
+                continue;
+            }
             printf("Distance is %d\n", dij_node->distance);
 
             neighbor = dlist_get_iter_next(neighbors);
         }
+        dlist_destroy_iter(neighbors);
     }
+
+    heap_destroy(heap);
+    htable_destroy(table, HT_FREE_VALUES_TRUE);
+    dlist_destroy(visited);
     return NULL;
 
 
@@ -664,6 +674,7 @@ static void init_min_heap(heap_t * heap,
         node = dlist_get_iter_next(nodes);
         count++;
     }
+    dlist_destroy_iter(nodes);
 }
 
 static heap_compare_t heap_ptr_cmp(void * left, void * right)

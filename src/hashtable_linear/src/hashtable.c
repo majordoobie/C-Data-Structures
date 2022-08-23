@@ -448,7 +448,7 @@ static htable_entry_t * get_entry(htable_t * table,
         // could be in
         perturb >>= PERTURB_SHIFT;
         slot = (PERTURB_SHIFT * slot) + 1 + perturb;
-        slot = slot % table->capacity - 1;
+        slot = slot % (uint64_t)(table->capacity - 1);
     }
 
     if (HT_KEY_AS_PTR == key_type)
@@ -507,7 +507,7 @@ void * htable_set_entry(htable_entry_t ** entries,
     uint64_t perturb = hash;
 
     // Loop till we find an empty entry.
-    while (entries[slot]->key != NULL)
+    while (NULL != entries[slot]->key)
     {
         if (strcmp(key, entries[slot]->key) == 0)
         {
@@ -526,7 +526,8 @@ void * htable_set_entry(htable_entry_t ** entries,
         // Perform the python style probing
         perturb >>= PERTURB_SHIFT;
         slot = (PERTURB_SHIFT * slot) + 1 + perturb;
-        slot = slot % capacity - 1;
+        slot = slot % (uint64_t)(capacity - 1);
+
     }
 
     char * str_key = strdup(key);
