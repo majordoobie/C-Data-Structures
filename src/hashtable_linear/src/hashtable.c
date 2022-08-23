@@ -28,7 +28,13 @@ typedef struct htable_t
     size_t capacity;                    // size of entries
     size_t slots_used;                  // number of slots used by keys
     size_t slots_filled;                // Number of slots filled by keys or dummies
-    void (* free_func)(void * value);   // Optional callback to free the values
+    void (* free_value)(void * value);   // Optional callback to free the values
+    void (* free_key)(void * key);   // Optional callback to free the values
+    uint64_t (* hash_callback)(void * key, size_t key_size);
+
+    htable_match_t (* compare_callback)(void * left_key, size_t left_key_size,
+                                        void * right_key, size_t right_key_size);
+
 } htable_t;
 
 typedef struct htable_iter_t
@@ -114,10 +120,13 @@ htable_t * htable_create(uint64_t (* hash_callback)(void *, size_t),
     }
 
     * table = (htable_t){
-        .free_func    = free_key_callback,
-        .slots_used   = 0,
-        .slots_filled = 0,
-        .capacity     = INITIAL_CAPACITY
+        .free_value         = free_value_callback,
+        .free_key           = free_key_callback,
+        .compare_callback   = compare_callback,
+        .hash_callback      = hash_callback,
+        .slots_used         = 0,
+        .slots_filled       = 0,
+        .capacity       = INITIAL_CAPACITY
     };
 
     table->entries = (htable_entry_t **)calloc(table->capacity,
@@ -146,18 +155,25 @@ htable_t * htable_create(uint64_t (* hash_callback)(void *, size_t),
  * @param free_values Flag indicating if the values of the hashtable should also
  * be freed using the function set during instantiation.
  */
-void htable_destroy(htable_t * table, htable_flags free_values)
+void htable_destroy(htable_t * table,
+                    htable_flag_t free_keys,
+                    htable_flag_t free_values)
 {
     assert(table);
     for (size_t index = 0; index < table->capacity; index++)
     {
         htable_entry_t * entry = table->entries[index];
 
-        if ((NULL != table->free_func) && (HT_FREE_VALUES_TRUE == free_values))
+        if ((NULL != table->free_value) && (HT_FREE_PTR_TRUE == free_values))
         {
-            table->free_func(entry->value);
+            table->free_value(entry->value);
         }
-        free((void *)entry->key);
+
+        if ((NULL != table->free_key) && (HT_FREE_PTR_TRUE == free_keys))
+        {
+            table->free_key(entry->key);
+        }
+
         free(entry);
     }
 

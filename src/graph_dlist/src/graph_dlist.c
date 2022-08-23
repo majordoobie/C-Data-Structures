@@ -657,8 +657,8 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
 
 
     heap_destroy(heap);
-    htable_destroy(visited_table, HT_FREE_VALUES_FALSE);
-    htable_destroy(dij_lookup_table, HT_FREE_VALUES_TRUE);
+    htable_destroy(visited_table, HT_FREE_PTR_FALSE, NULL);
+    htable_destroy(dij_lookup_table, HT_FREE_PTR_TRUE, NULL);
     return NULL;
 
 

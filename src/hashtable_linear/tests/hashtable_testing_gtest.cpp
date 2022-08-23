@@ -82,7 +82,7 @@ test_struct_t * get_payload(const char * string, int count)
 
     s->list = (int *)calloc((size_t)count, sizeof(int));
 
-    for (size_t i = 0; i < count; count++)
+    for (int i = 0; i < count; count++)
     {
         s->list[i] = (int)i;
     }
@@ -161,17 +161,17 @@ class HashtableGtest : public ::testing::Test
     }
     void TearDown() override
     {
-        htable_destroy(dict, HT_FREE_VALUES_TRUE);
+        htable_destroy(dict, HT_FREE_PTR_TRUE, HT_FREE_PTR_FALSE);
     }
 
 };
 
 
-// Test that our keys are being populated
-TEST_F(HashtableGtest, TestAllocAndDestroy)
-{
-    EXPECT_EQ(htable_get_length(this->dict), this->keys.size());
-}
+//// Test that our keys are being populated
+//TEST_F(HashtableGtest, TestAllocAndDestroy)
+//{
+//    EXPECT_EQ(htable_get_length(this->dict), this->keys.size());
+//}
 
 //// Test that we can check that a key exists in the hashtable already
 //// Then test that we can safely fetch for a key that does not exist
@@ -273,7 +273,7 @@ TEST_F(HashtableGtest, TestAllocAndDestroy)
 //    EXPECT_EQ(5, htable_get_length(dict));
 //    EXPECT_EQ(5, htable_get_slots(dict));
 //
-//    htable_destroy(dict, HT_FREE_VALUES_TRUE);
+//    htable_destroy(dict, HT_FREE_PTR_TRUE);
 //}
 //
 //TEST_F(HashtableGtest, TestAbilityToHashPointer)

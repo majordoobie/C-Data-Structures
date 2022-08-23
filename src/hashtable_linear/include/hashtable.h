@@ -14,16 +14,16 @@ extern "C" {
 
 typedef struct htable_entry_t
 {
-    const char * key;
+    void * key;
     void * value;
     size_t key_size;
 } htable_entry_t;
 
-typedef enum htable_flags
+typedef enum htable_flags_t
 {
-    HT_FREE_VALUES_TRUE,
-    HT_FREE_VALUES_FALSE
-} htable_flags;
+    HT_FREE_PTR_TRUE,
+    HT_FREE_PTR_FALSE
+} htable_flag_t ;
 
 typedef enum htable_match_t
 {
@@ -54,7 +54,9 @@ htable_t * htable_create(
                                         void * right_key, size_t right_key_size)
                                         );
 
-void htable_destroy(htable_t * table, htable_flags free_values);
+void htable_destroy(htable_t * table,
+                    htable_flag_t free_keys,
+                    htable_flag_t free_values);
 
 
 size_t htable_get_length(htable_t * table);
