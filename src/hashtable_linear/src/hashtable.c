@@ -327,10 +327,7 @@ static uint64_t hash_key(const char * key, htable_key_type key_type)
     if (HT_KEY_AS_PTR == key_type)
     {
         char addr[sizeof(void *) + 1] = {0};
-        printf("Error here?\n");
         convert_addr((char *)&addr, key, sizeof(void *) + 1);
-        printf("Trying to print\n");
-        printf("%s\n", (char *)addr);
     }
 
     uint64_t hash = FNV_OFFSET;
@@ -352,7 +349,6 @@ static void convert_addr(char * key_buffer,
     for(size_t i = 0; i < key_length; ++i)
     {
         key_buffer[i] = ptr_addr & 0xff;
-        printf("%c\n", key_buffer[i]);
         ptr_addr >>= 8;
     }
     key_buffer[sizeof(void *)] = '\0';
@@ -403,7 +399,7 @@ static bool htable_expand(htable_t * table)
             {
                 htable_set_entry(new_entries,
                                  entry->key,
-                                 entry->key_type,
+                                 HT_KEY_AS_STR,
                                  entry->value,
                                  & table->slots_used,
                                  & table->slots_filled,

@@ -174,19 +174,5 @@ TEST_F(HashtableGtest, TestAbilityToHashPointer)
     EXPECT_EQ(fetch_payload->value, some_payload->value);
 
     free(some_payload->value);
-
-//    char * payload = get_payload("Some string");
-//
-//    size_t buffer_size = sizeof(void *) * 2 + 1;
-//    char adr[sizeof(void * ) * 2 + 1] = {0}; // Note the +1 to make room for NULL terminator
-//
-//    int position = 0;
-//    uintptr_t ptrAddress = (uintptr_t)payload;
-//    for(size_t index = 0; index < sizeof(void *); ++index)
-//    {
-//        position += snprintf(adr + position, buffer_size, "%2.2X", (unsigned int)(unsigned char)(ptrAddress & 0xff));
-//        ptrAddress >>= 8;
-//    }
-//    free(payload);
 }
 

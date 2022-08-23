@@ -589,8 +589,8 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
         while (NULL != neighbor)
         {
             dijkstra_t * dij_node = (dijkstra_t *)htable_get(table,
-                                                             neighbor->to_node,
-                                                             HT_KEY_AS_STR);
+                                                             (void *)neighbor->to_node,
+                                                             HT_KEY_AS_PTR);
             printf("Distance is %d\n", dij_node->distance);
 
             neighbor = dlist_get_iter_next(neighbors);
@@ -650,6 +650,7 @@ static void init_min_heap(heap_t * heap,
 {
     dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
     gnode_t * node = iter_get_value(nodes);
+    int count = 0;
     while (NULL != node)
     {
         dijkstra_t * dj_node = get_dijkstra_node(node);
@@ -659,8 +660,9 @@ static void init_min_heap(heap_t * heap,
             dj_node->distance = 0;
         }
         heap_insert(heap, dj_node);
-        htable_set(table, node, HT_KEY_AS_STR, sizeof(gnode_t));
+        htable_set(table, (void *)node, HT_KEY_AS_PTR, dj_node);
         node = dlist_get_iter_next(nodes);
+        count++;
     }
 }
 
