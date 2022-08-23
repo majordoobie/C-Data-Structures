@@ -237,7 +237,7 @@ void * htable_del(htable_t * table, const char * key)
  * @return Returns the pointer to the value. This is useful for when replacing
  * values with new ones and needing a way to free the old value replaced.
  */
-void * htable_set(htable_t * table, const char * key, void * value)
+void * htable_set(htable_t * table, void * key, void * value)
 {
     assert(value != NULL);
     assert(table);

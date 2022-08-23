@@ -5,6 +5,7 @@ typedef struct test_struct_t
 {
     char * payload;
     int val;
+    int * list;
 } test_struct_t;
 
 TEST(HashtableSingleTest, TestHasingFunction)
@@ -71,14 +72,59 @@ TEST(HashtableSingleTest, TestHasingFunction)
 }
 
 
-char * get_payload(std::string string)
+// Test function to create payloads
+test_struct_t * get_payload(const char * string, int count)
 {
-    return strdup(string.c_str());
+    test_struct_t * s = (test_struct_t *)malloc(sizeof(test_struct_t));
+
+    s->payload = strdup(string);
+    s->val = count;
+
+    s->list = (int *)calloc((size_t)count, sizeof(int));
+
+    for (size_t i = 0; i < count; count++)
+    {
+        s->list[i] = (int)i;
+    }
+
+    return s;
 }
 
+// Callback to free the payload
 void free_payload(void * payload)
 {
-    free(payload);
+    test_struct_t * s = (test_struct_t *)payload;
+    free(s->list);
+    free(s->payload);
+    free(s);
+}
+
+
+uint64_t hash_callback(void * key, size_t key_size)
+{
+    test_struct_t * s = (test_struct_t *)key;
+    uint64_t hash = HASH_INIT_VAL;
+
+    htable_hash_key(&hash, s->payload, strlen(s->payload));
+    htable_hash_key(&hash, &s->val, sizeof(int));
+    htable_hash_key(&hash, s->list, (size_t)s->val);
+
+    return hash;
+}
+
+htable_match_t compare_callback(void * left_key, size_t left_key_size, void * right_key, size_t right_key_size)
+{
+    test_struct_t * left = (test_struct_t *)left_key;
+    test_struct_t * right = (test_struct_t *)right_key;
+
+    // This test function only tests the payload strings. But you would compare
+    // all items of the struct
+    if (0 == strcmp(left->payload, right->payload))
+    {
+        return HT_MATCH_TRUE;
+    }
+
+    return HT_MATCH_FALSE;
 }
 
 class HashtableGtest : public ::testing::Test
@@ -103,10 +149,14 @@ class HashtableGtest : public ::testing::Test
  protected:
     void SetUp() override
     {
-        dict = htable_create(NULL, free_payload, NULL, NULL);
+        dict = htable_create(hash_callback, free_payload, NULL, compare_callback);
+
+        int count = 0;
         for (auto& key: keys)
         {
-            htable_set(dict, key.c_str(), get_payload(key));
+            test_struct_t * payload = get_payload(key.c_str(), count);
+            htable_set(dict, payload, payload);
+            count++;
         }
     }
     void TearDown() override
