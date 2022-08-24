@@ -572,8 +572,8 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
 
     // Table to quickly map gnode_t -> dij_node_t
     htable_t * dij_lookup_table = htable_create(NULL,
-                                                free_dijkstra_node,
                                                 NULL,
+                                                free_dijkstra_node,
                                                 NULL);
 
     // Table for marking the visited items
