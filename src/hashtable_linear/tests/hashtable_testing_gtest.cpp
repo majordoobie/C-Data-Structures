@@ -101,28 +101,23 @@ void free_payload(void * payload)
 
 uint64_t hash_callback(void * key)
 {
-    test_struct_t * s = (test_struct_t *)key;
+    char * s = (char *)key;
     uint64_t hash = htable_get_init_hash();
 
-    htable_hash_key(&hash, s->payload, strlen(s->payload));
-//    htable_hash_key(&hash, &s->val, sizeof(int));
-
+    htable_hash_key(&hash, s, strlen(s));
     return hash;
 }
 
 htable_match_t compare_callback(void * left_key, void * right_key)
 {
-    test_struct_t * left = (test_struct_t *)left_key;
-    test_struct_t * right = (test_struct_t *)right_key;
+    char * left = (char *)left_key;
+    char * right = (char *)right_key;
 
     // This test function only tests the payload strings. But you would compare
     // all items of the struct
-    if (0 == strcmp(left->payload, right->payload))
+    if (0 == strcmp(left, right))
     {
-        if (left->val == right->val)
-        {
-            return HT_MATCH_TRUE;
-        }
+        return HT_MATCH_TRUE;
     }
     return HT_MATCH_FALSE;
 }
@@ -151,21 +146,20 @@ class HashtableGtest : public ::testing::Test
     {
         dict = htable_create(hash_callback,
                              compare_callback,
-                             free_payload,
-                             NULL);
+                             NULL,
+                             free_payload);
 
         int count = 0;
         for (auto& key: keys)
         {
             test_struct_t * payload = get_payload(key.c_str(), count);
-            printf("Count is %d\n", count);
-            htable_set(dict, payload, payload);
+            htable_set(dict, payload->payload, payload);
             count++;
         }
     }
     void TearDown() override
     {
-        htable_destroy(dict, HT_FREE_PTR_TRUE, HT_FREE_PTR_FALSE);
+        htable_destroy(dict, HT_FREE_PTR_FALSE, HT_FREE_PTR_TRUE);
     }
 
 };
@@ -177,41 +171,38 @@ TEST_F(HashtableGtest, TestAllocAndDestroy)
     EXPECT_EQ(htable_get_length(this->dict), this->keys.size());
 }
 
-//// Test that we can check that a key exists in the hashtable already
-//// Then test that we can safely fetch for a key that does not exist
-//TEST_F(HashtableGtest, TestKeyExists)
-//{
-//    EXPECT_EQ(true, htable_key_exists(this->dict,
-//                                      (void *)this->keys.at(0).c_str()));
-//
-//    EXPECT_EQ(true, htable_key_exists(this->dict, (void*)this->keys.at(7).c_str()));
-//    EXPECT_EQ(true, htable_key_exists(this->dict, (void*)this->keys.at(9).c_str()));
-//    EXPECT_EQ(true, htable_key_exists(this->dict, (void*)this->keys.at(11).c_str()));
-//
-//    EXPECT_EQ(false, htable_key_exists(this->dict, (void*)"First"));
-//    EXPECT_EQ(false, htable_key_exists(this->dict, (void*)"UnknownKey"));
-//    EXPECT_EQ(nullptr, htable_get(this->dict, (void*)"Unknownkey"));
-//}
+// Test that we can check that a key exists in the hashtable already
+// Then test that we can safely fetch for a key that does not exist
+TEST_F(HashtableGtest, TestKeyExists)
+{
+    EXPECT_EQ(true, htable_key_exists(this->dict,
+                                      (void *)this->keys.at(0).c_str()));
+
+    EXPECT_EQ(true, htable_key_exists(this->dict, (void*)this->keys.at(7).c_str()));
+    EXPECT_EQ(true, htable_key_exists(this->dict, (void*)this->keys.at(9).c_str()));
+    EXPECT_EQ(true, htable_key_exists(this->dict, (void*)this->keys.at(11).c_str()));
+
+    EXPECT_EQ(true, htable_key_exists(this->dict, (void*)"First"));
+    EXPECT_EQ(false, htable_key_exists(this->dict, (void*)"UnknownKey"));
+    EXPECT_EQ(nullptr, htable_get(this->dict, (void*)"Unknownkey"));
+}
 
 // Test that updating a key will yield the value that was stored so that
 // we can free it
-//TEST_F(HashtableGtest, TestValueFreeOnUpdate)
-//{
-//    std::string first_key = this->keys.at(0);
-//    char * new_payload = get_payload(first_key.c_str());
-//    EXPECT_EQ(true, htable_key_exists(this->dict,
-//                                      this->keys.at(0).c_str(), 0));
-//
-//    void * old_payload =
-//        htable_set(this->dict,
-//                   first_key.c_str(),
-//                   new_payload);
-//
-//    EXPECT_EQ(true, htable_key_exists(this->dict,
-//                                      this->keys.at(0).c_str(), 0));
-//    free(old_payload);
-//}
-//
+TEST_F(HashtableGtest, TestValueFreeOnUpdate)
+{
+    std::string first_key = this->keys.at(0);
+    test_struct_t * new_payload = get_payload(first_key.c_str(), 10);
+
+    EXPECT_EQ(true, htable_key_exists(this->dict, (void *)this->keys.at(0).c_str()));
+
+    void * old_payload = htable_set(this->dict, (void *)first_key.c_str(), new_payload);
+
+    EXPECT_EQ(true, htable_key_exists(this->dict, (void *)this->keys.at(0).c_str()));
+
+    free_payload(old_payload);
+}
+
 ////Test the deletion functionality
 //TEST_F(HashtableGtest, TestKeyRemoval)
 //{
