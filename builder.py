@@ -1,5 +1,4 @@
 import argparse
-import pathlib
 import subprocess
 from multiprocessing import cpu_count
 from pathlib import Path
@@ -21,9 +20,11 @@ def main() -> None:
         exit()
 
     if args.run_all:
+        _build(args)
         subprocess.run(f"ctest -j {cpu_count()} --test-dir build", shell=True)
 
     elif args.type:
+        _build(args)
         for binary in test_binaries:
             if binary.name == args.type:
                 subprocess.run(binary.as_posix())
@@ -33,8 +34,12 @@ def main() -> None:
              "--list-test to see all available tests")
 
     else:
-        subprocess.run(f"cmake -DCMAKE_BUILD_TYPE=Debug -S . -B {args.build}", shell=True)
-        subprocess.run(f"cmake --build {args.build} -j {cpu_count()}", shell=True)
+        _build(args)
+
+
+def _build(args: argparse.Namespace) -> None:
+    subprocess.run(f"cmake -DCMAKE_BUILD_TYPE=Debug -S . -B {args.build}", shell=True)
+    subprocess.run(f"cmake --build {args.build} -j {cpu_count()}", shell=True)
 
 
 def _get_test_names(build_path: Path) -> List[Path]:

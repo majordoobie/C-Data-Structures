@@ -102,7 +102,7 @@ TEST_F(DListTestSortFixture, SortAscendingAdv)
 
     while (count < (int)this->test_array2.size() - 1)
     {
-        const int& target = this->test_array2.at(count);
+        const int& target = this->test_array2.at(static_cast<unsigned long>(count));
         EXPECT_EQ(node, target);
         node = *(int*)dlist_get_iter_next(iter);
         count++;
@@ -114,9 +114,8 @@ TEST_F(DListTestSortFixture, SortAscendingAdv)
 // Test ability to quick sort the double linked list
 TEST_F(DListTestSortFixture, SortDescending)
 {
-    // sort the test array
-    std::sort(this->test_array.begin(), this->test_array.end());
-    sort(this->test_array.begin(), this->test_array.end(), std::greater<int>());
+    // sort the test array in reverse
+    std::sort(this->test_array.begin(), this->test_array.end(), std::greater<int>());
 
     dlist_quick_sort(this->dlist, DESCENDING, compare_int_payloads);
     dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
@@ -126,7 +125,8 @@ TEST_F(DListTestSortFixture, SortDescending)
 
     while (count < (int)this->test_array.size() - 1)
     {
-        const int& target = this->test_array.at(count);
+        const int& target = this->test_array.at(static_cast<unsigned long>(count));
+
         EXPECT_EQ(node, target);
         node = *(int*)dlist_get_iter_next(iter);
         count++;
@@ -139,9 +139,7 @@ TEST_F(DListTestSortFixture, SortDescending)
 TEST_F(DListTestSortFixture, SortDescendingAdv)
 {
     // sort the test array
-    std::sort(this->test_array2.begin(), this->test_array2.end());
-    sort(this->test_array2.begin(), this->test_array2.end(), std::greater<int>
-        ());
+    std::sort(this->test_array2.begin(), this->test_array2.end(), std::greater<int>());
 
     dlist_quick_sort(this->dlist2, DESCENDING, compare_int_payloads);
     dlist_iter_t * iter = dlist_get_iterable(dlist2, ITER_HEAD);
@@ -151,7 +149,35 @@ TEST_F(DListTestSortFixture, SortDescendingAdv)
 
     while (count < (int)this->test_array2.size() - 1)
     {
-        const int& target = this->test_array2.at(count);
+        const int& target = this->test_array2.at(static_cast<unsigned long>(count));
+        EXPECT_EQ(node, target);
+        node = *(int*)dlist_get_iter_next(iter);
+        count++;
+    }
+
+    dlist_destroy_iter(iter);
+}
+
+// Test ability to quick sort the double linked list
+TEST_F(DListTestSortFixture, TestReversal)
+{
+    // sort the test array from (greatest to least)
+    std::sort(this->test_array.begin(), this->test_array.end(), std::greater<int>());
+
+    // Quick sort in descending order (greatest to least)
+    dlist_quick_sort(this->dlist, ASCENDING, compare_int_payloads);
+
+    // Reverse the list
+    dlist_reverse(this->dlist);
+
+    dlist_iter_t * iter = dlist_get_iterable(dlist, ITER_HEAD);
+
+    int count = 0;
+    int node = *(int *)iter_get_value(iter);
+
+    while (count < (int)this->test_array.size() - 1)
+    {
+        const int& target = this->test_array.at(static_cast<unsigned long>(count));
         EXPECT_EQ(node, target);
         node = *(int*)dlist_get_iter_next(iter);
         count++;

@@ -37,12 +37,13 @@ typedef enum
     DLIST_FAIL
 } dlist_result_t;
 
+typedef struct dnode_t dnode_t;
 // Structure with the individual satellite data
-typedef struct node
+typedef struct dnode_t
 {
     void * data;
-    struct node * next;
-    struct node * prev;
+    dnode_t * next;
+    dnode_t * prev;
 } dnode_t;
 
 // Enum for determining if malloc calls were valid
@@ -66,13 +67,13 @@ void dlist_append(dlist_t * dlist, void * data);
 void dlist_prepend(dlist_t * dlist, void * data);
 dlist_result_t dlist_insert(dlist_t * dlist, void * data, int32_t index);
 
-
 // manipulation methods
 void * dlist_pop_tail(dlist_t * dlist);
 void * dlist_pop_head(dlist_t * dlist);
 void * dlist_get_by_value(dlist_t * dlist, void * data);
 void * dlist_get_by_index(dlist_t * dlist, int32_t index);
 void * dlist_remove_value(dlist_t * dlist, void * data);
+void dlist_reverse(dlist_t * dlist);
 
 // metadata methods
 bool dlist_is_empty(dlist_t * dlist);

@@ -26,7 +26,7 @@ the test you are looking for
 $ python3 builder.py -l 
 
 circular_list_dlist
-hashtable_dlist
+hashtable_linear
 dlist_adt
 avl_bst_adt
 heap_adt

@@ -5,9 +5,8 @@ add_executable(
 
 target_link_libraries(
         hashtable_testing_gtest
-        heap
-        gtest
-        gtest_main
+        PUBLIC
+        hashtable
 )
 include(BuildUtils)
 GTest_add_target(hashtable_testing_gtest)

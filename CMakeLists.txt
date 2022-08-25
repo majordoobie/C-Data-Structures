@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(data_structures_c C CXX)
 
 # Uncomment this line if you need some serious debugging of the make process
-set(CMAKE_VERBOSE_MAKEFILE ON)
+#set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -27,3 +27,5 @@ add_subdirectory(src/stack_adt/src)
 add_subdirectory(src/heap_adt/src)
 add_subdirectory(src/queue_dlist/src)
 add_subdirectory(src/circular_list_dlist/src)
+add_subdirectory(src/graph_dlist/src)
+add_subdirectory(src/hashtable_linear/src)

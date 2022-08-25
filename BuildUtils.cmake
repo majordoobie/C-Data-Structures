@@ -28,6 +28,7 @@ MACRO(set_compiler_flags)
             "-fsanitize=float-cast-overflow"
             "-fno-sanitize=null"
             "-fno-sanitize=alignment"
+            "-static-libasan"
     )
 
 

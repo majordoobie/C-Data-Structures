@@ -381,6 +381,29 @@ bool heap_is_empty(heap_t * heap)
     return (heap->array_length == 0);
 }
 
+void * heap_peek(heap_t * heap)
+{
+    void * payload = NULL;
+
+    if (HEAP_PTR == heap->data_mode)
+    {
+        // pop the root node and decrement our array_length size
+        payload = heap->heap_array[0];
+    }
+    else
+    {
+        // Extract the current data at index 0
+        uint8_t * temp = (uint8_t *)calloc(1, sizeof(heap->node_size));
+        uint8_t * index_0_ptr = get_slice(heap, 0);
+        memcpy(temp, index_0_ptr, heap->node_size);
+
+        // save the pointer to the variable
+        payload = (void *)temp;
+    }
+
+    return payload;
+}
+
 /*!
  * @brief Pop the root value of the tree. Always returns a
  * pointer that must be freed
@@ -439,6 +462,12 @@ void * heap_pop(heap_t * heap)
     // return pop value
     return payload;
 }
+
+void heap_run_heap(heap_t * heap)
+{
+    bubble_down(heap);
+}
+
 
 /*!
  * @brief Dynamically increase the size of the heap_adt
