@@ -1,3 +1,9 @@
+# TL;DR
+Just run the following and the script will handle everything for you
+```bash
+python3 builder.py --run-all
+```
+
 # How to compile
 You compile the whole project with:
 ```bash
