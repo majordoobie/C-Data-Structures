@@ -37,8 +37,15 @@ typedef struct
     gnode_t * to_node;
 } edge_t;
 
+typedef struct path_t
+{
+    uint64_t path_weight;
+    dlist_t * path;
+} path_t;
+
 graph_t * graph_init(graph_mode_t graph_mode,
-                     dlist_match_t (* compare_func)(void *, void *));
+                     dlist_match_t (* compare_callback)(void *, void *),
+                     uint64_t (* hash_callback)(void *));
 void graph_destroy_node(gnode_t * node, void (*free_func)(void *));
 void graph_destroy(graph_t * graph, void (* free_func)(void * data));
 
@@ -65,6 +72,7 @@ void graph_destroy_neighbors_list(dlist_iter_t * neighbors);
 
 
 void * graph_get_node_value(gnode_t * node);
+
 // Queries
 bool graph_value_in_graph(graph_t * graph, void * data);
 bool graph_node_in_graph(graph_t * graph, gnode_t * node);
@@ -76,7 +84,9 @@ bool graph_edge_in_graph(graph_t * graph, edge_t * edge);
 bool graph_node_a_neighbor(gnode_t * source_node, gnode_t * target_node);
 size_t graph_node_count(graph_t * graph);
 
-dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * target_node);
+// Path functions
+path_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * target_node);
+void graph_free_path(path_t * path);
 
 #ifdef __cplusplus
 }

@@ -8,7 +8,8 @@ typedef struct graph_t
 {
     dlist_t * nodes;
     graph_mode_t graph_mode;
-    dlist_match_t (* compare_func)(void *, void *);
+    dlist_match_t (* compare_callback)(void *, void *);
+    uint64_t (* hash_callback)(void *);
 } graph_t;
 
 typedef struct gnode_t
@@ -46,19 +47,23 @@ static void free_dijkstra_node(void * node);
  * increase lookup times.
  *
  * @param graph_mode GRAPH_DIRECTIONAL_TRUE OR GRAPH_DIRECTIONAL_FALSE
- * @param compare_func Function pointer for making comparisons between nodes
+ * @param compare_callback Function pointer for making comparisons between nodes
  * @return Pointer to graph object or NULL with a stdout message
  */
 graph_t * graph_init(graph_mode_t graph_mode,
-                     dlist_match_t (* compare_func)(void *, void *))
+                     dlist_match_t (* compare_callback)(void *, void *),
+                     uint64_t (* hash_callback)(void *))
 {
+    assert(compare_callback);
+    assert(hash_callback);
+
     graph_t * graph = (graph_t *)malloc(sizeof(graph_t));
     if (INVALID_PTR == verify_alloc(graph))
     {
         return NULL;
     }
 
-    dlist_t * dlist = dlist_init(compare_func);
+    dlist_t * dlist = dlist_init(compare_callback);
     if (NULL == dlist)
     {
         graph_destroy(graph, NULL);
@@ -66,9 +71,10 @@ graph_t * graph_init(graph_mode_t graph_mode,
     }
 
     * graph = (graph_t){
-        .nodes          = dlist,
-        .compare_func   = compare_func,
-        .graph_mode     = graph_mode
+        .nodes              = dlist,
+        .compare_callback   = compare_callback,
+        .hash_callback      = hash_callback,
+        .graph_mode         = graph_mode
     };
 
     return graph;
@@ -81,6 +87,11 @@ static void get_hex_value(void * ptr, char * string, size_t buff_size)
 
 }
 
+/*!
+ * @brief Return the number of nodes in the graph
+ * @param graph Pointer to the graph object
+ * @return Number of nodes in the graph object
+ */
 size_t graph_node_count(graph_t * graph)
 {
     return dlist_get_length(graph->nodes);
@@ -89,7 +100,7 @@ size_t graph_node_count(graph_t * graph)
 
 /*!
  * @brief Printout the adjacency-list representation
- * @param graph
+ * @param graph Print the graph structure
  */
 void graph_print(graph_t * graph, char * (node_data_repr(void *)))
 {
@@ -148,10 +159,19 @@ void graph_print(graph_t * graph, char * (node_data_repr(void *)))
     printf("\n");
 }
 
+/*!
+ * @brief Return a dlist of the neighbors for the provided node
+ * @param node Pointer to the gnode object
+ * @return Iterable containing all the neighbors of the current gnode_t
+ */
 dlist_iter_t * graph_get_neighbors_list(gnode_t * node)
 {
     return dlist_get_iterable(node->edges, ITER_HEAD);
 }
+/*!
+ * @brief Destroy the neighbor iterable object
+ * @param neighbors Neighbor iterable object
+ */
 void graph_destroy_neighbors_list(dlist_iter_t * neighbors)
 {
     dlist_destroy_iter(neighbors);
@@ -201,11 +221,24 @@ graph_opt_t graph_add_node(graph_t * graph, gnode_t * node)
     return GRAPH_SUCCESS;
 }
 
+/*!
+ * @brief Fetch the value stored in the gnode object
+ * @param node gnode object to fetch the data from
+ * @return Pointer containing the data in the gnode pointer
+ */
 void * graph_get_node_value(gnode_t * node)
 {
     return node->data;
 }
 
+/*!
+ * @brief Remove a node from the graph and all its neighbors. This will also
+ * remove the opposite side if the graph is directed
+ * @param graph Pointer to the graph object
+ * @param node Pointer to the node object to remove
+ * @param free_func Optional function to free the nodes data
+ * @return Status action
+ */
 graph_opt_t graph_remove_node(graph_t * graph, gnode_t * node, void(free_func(void *)))
 {
     if (!graph_node_in_graph(graph, node))
@@ -266,6 +299,13 @@ gnode_t * graph_create_node(void * data)
     return node;
 }
 
+/*!
+ * @brief Fetch a node in the graph by its stored value using the comparison
+ * callback passed in
+ * @param graph Pointer to the graph object
+ * @param data Data to search for
+ * @return Pointer to the graph object if found, else NULL
+ */
 gnode_t * graph_get_node_by_value(graph_t * graph, void * data)
 {
     dlist_iter_t * nodes = dlist_get_iterable(graph->nodes, ITER_HEAD);
@@ -274,7 +314,7 @@ gnode_t * graph_get_node_by_value(graph_t * graph, void * data)
 
     while (NULL != node)
     {
-        result = graph->compare_func(node->data, data);
+        result = graph->compare_callback(node->data, data);
         if (DLIST_MATCH == result)
         {
             break;
@@ -285,11 +325,23 @@ gnode_t * graph_get_node_by_value(graph_t * graph, void * data)
     return node;
 }
 
+/*!
+ * @brief Check if the node is found within the passed in graph object
+ * @param graph Pointer to the graph object
+ * @param node Pointer to the node object to search for
+ * @return Bool indicating if the gnode was found in the graph
+ */
 bool graph_node_in_graph(graph_t * graph, gnode_t * node)
 {
     return graph_value_in_graph(graph, node->data);
 }
 
+/*!
+ * @brief Check if the value is found in the graph
+ * @param graph Pointer to the graph object
+ * @param data Data to search for in the graph
+ * @return Bool indicating if the data was found within one of the nodes
+ */
 bool graph_value_in_graph(graph_t * graph, void * data)
 {
     gnode_t * graph_node = graph_get_node_by_value(graph, data);
@@ -300,6 +352,11 @@ bool graph_value_in_graph(graph_t * graph, void * data)
     return true;
 }
 
+/*!
+ * @brief Fetch the number of neighbors that a gnode has
+ * @param node Pointer to the gnode object to query on
+ * @return Number of neighbors that the gnode has
+ */
 size_t graph_edge_count(gnode_t * node)
 {
     return dlist_get_length(node->edges);
@@ -395,6 +452,14 @@ graph_opt_t graph_add_edge(graph_t * graph,
     return GRAPH_SUCCESS;
 }
 
+/*!
+ * @brief Remove an edge from the graph. This will also remove the opposite
+ * side if the graph is a directed graph
+ * @param graph Pointer to the graph object
+ * @param source_node Pointer to the source node
+ * @param target_node Pointer to the target node
+ * @return Operation status
+ */
 graph_opt_t graph_remove_edge(graph_t * graph, gnode_t * source_node,
                               gnode_t * target_node)
 {
@@ -472,6 +537,12 @@ edge_t * graph_get_edge(graph_t * graph, gnode_t * source_node,
     return NULL;
 }
 
+/*!
+ * @brief Query if the current edge is in the graph
+ * @param graph Pointer to the graph object
+ * @param edge Pointer to the edge object
+ * @return bool indicating if there is that edge in the graph structure
+ */
 bool graph_edge_in_graph(graph_t * graph, edge_t * edge)
 {
     if (!graph_node_in_graph(graph, edge->from_node))
@@ -500,6 +571,12 @@ bool graph_edge_in_graph(graph_t * graph, edge_t * edge)
     return edge_in_graph;
 }
 
+/*!
+ * @brief Query if two gnodes are neighbors
+ * @param source_node Pointer to the source gnode object
+ * @param target_node Pointer to the target gnode object
+ * @return Bool indicating if there is an edge between the two gnodes
+ */
 bool graph_node_a_neighbor(gnode_t * source_node, gnode_t * target_node)
 {
     dlist_iter_t * edges = dlist_get_iterable(source_node->edges, ITER_HEAD);
@@ -544,16 +621,23 @@ void graph_destroy(graph_t * graph, void (* free_func)(void *))
         }
     }
     // free the graph structure
-//    dlist_destroy_free(graph->nodes, NULL);
     dlist_destroy(graph->nodes);
 
     free(graph);
 }
 
-/*
- * Djisktra section
+/*!
+ * @brief Perform the dijsktra algorithm on the two given nodes. The return
+ * value is the path structure containing a linked list of the nodes in order
+ * with its accumulated weight.
+ *
+ * The function utilizes a min priority queue and two hashtables.
+ * @param graph Pointer to the graph structure
+ * @param source_node Pointer to the source node object
+ * @param target_node Pointer to the target node object
+ * @return NULL if not path was found or a path structure containing the path
  */
-dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * target_node)
+path_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * target_node)
 {
     // First make sure that both nodes are already in the graph
     if (!(graph_node_in_graph(graph, source_node))
@@ -571,69 +655,59 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
 
 
     // Table to quickly map gnode_t -> dij_node_t
-    htable_t * dij_lookup_table = htable_create(NULL,
-                                                NULL,
-                                                free_dijkstra_node,
-                                                NULL);
+    htable_t * dij_lookup_table = htable_create(
+        graph->hash_callback,
+        (htable_match_t (*)(void *, void *))graph->compare_callback,
+        NULL,
+        free_dijkstra_node);
 
     // Table for marking the visited items
-    htable_t * visited_table = htable_create(NULL, NULL, NULL, NULL);
+    // Table to quickly map gnode_t -> gnode_t
+    htable_t * visited_table = htable_create(
+        graph->hash_callback,
+        (htable_match_t (*)(void *, void *))graph->compare_callback,
+        NULL,
+        free_dijkstra_node);
 
     // Populate the heap structure
     init_min_heap(heap, graph, source_node, dij_lookup_table);
-    int count = 0;
-
+    bool target_found = false;
+    dijkstra_t * curr_dij_node;
     while (!heap_is_empty(heap))
     {
-        // Pop the next min priority distance from the source
-        dijkstra_t * curr_dij_node = (dijkstra_t *)heap_pop(heap);
-        printf("Got the payload of %d\n", *(int *)curr_dij_node->self->data);
+        // Peek the next item from the priority queue
+        curr_dij_node = (dijkstra_t *)heap_peek(heap);
 
         if (curr_dij_node->self == target_node)
         {
-            printf("FOUND THE TARGET\n");
+            target_found = true;
+            break;
         }
 
-        // Look up the g_node_t that is associated with the curr_dij_node to grab
-        // its distance
-//        gnode_t * curr_g_node = htable_get(dij_lookup_table, (void *)curr_dij_node->self, HT_KEY_AS_PTR);
-
+        // Add current dij_node to the visited list
         htable_set(visited_table,
                    (void *)curr_dij_node->self,
                    curr_dij_node->self);
-        count ++;
 
         // Iterate over all the neighbors of the current node
         dlist_iter_t * neighbors = graph_get_neighbors_list(curr_dij_node->self);
         edge_t * neighbor = iter_get_value(neighbors);
         while (NULL != neighbor)
         {
-            printf("Looking at [%d] %d -> %d\n", *(int*)curr_dij_node->self->data, *(int*)neighbor->from_node->data, *(int*)neighbor->to_node->data);
-
-            // Grab the dij_node that belongs to the current neighbor
-            dijkstra_t * dij_node = (dijkstra_t *)htable_get(dij_lookup_table,
-                                                             (void *)neighbor
-                                                                 ->to_node);
-
-            if (NULL == dij_node)
-            {
-                printf("There was a problem we got null!!!\n");
-                neighbor = dlist_get_iter_next(neighbors);
-                continue;
-            }
+            // Grab the neigh_dij_node that belongs to the current neighbor
+            dijkstra_t * neigh_dij_node = (dijkstra_t *)htable_get(dij_lookup_table, (void *)neighbor->to_node);
 
             // Make sure that the current neighbor was not already visited
             // if it was, we can skip to the next one
-            if (htable_key_exists(visited_table, (void *)dij_node->self, 0))
+            if (htable_key_exists(visited_table, (void *)neigh_dij_node->self))
             {
-                printf("this node was already visited, skipping\n");
                 neighbor = dlist_get_iter_next(neighbors);
                 continue;
             }
 
             /*
              * This one might be a little hard to read. Here we are checking to
-             * see if the current distance from the dij_node (should be MAX
+             * see if the current distance from the neigh_dij_node (should be MAX
              * if never seen before) is greater than the current distance
              * (will be 0 for the source) plus the weight of the two nodes
              * connection.
@@ -642,60 +716,61 @@ dlist_t * graph_get_path(graph_t * graph, gnode_t * source_node, gnode_t * targe
              * should make the MAX distance to a lower value when it connects
              * to the source
              */
-            if (dij_node->distance > (curr_dij_node->distance + neighbor->weight))
+            if (neigh_dij_node->distance > (curr_dij_node->distance + neighbor->weight))
             {
                 // Set the previous to be the current dij node we are inspecting
-                dij_node->distance = curr_dij_node->distance + neighbor->weight;
-                dij_node->prev = curr_dij_node;
+                neigh_dij_node->distance = curr_dij_node->distance + neighbor->weight;
+                neigh_dij_node->prev = curr_dij_node;
             }
-
-
             neighbor = dlist_get_iter_next(neighbors);
         }
+
+        // Actually remove the value from the heap after the values were modified
+        heap_pop(heap);
         dlist_destroy_iter(neighbors);
     }
 
+    path_t * path = NULL;
+    if (target_found)
+    {
+        dlist_t * path_list = dlist_init(graph->compare_callback);
+        uint64_t path_weight = curr_dij_node->distance;
+        dlist_append(path_list, curr_dij_node->self);
+        dijkstra_t * prev = curr_dij_node->prev;
+        while (NULL != prev)
+        {
+            dlist_append(path_list, prev->self);
+            prev = prev->prev;
+        }
+
+        dlist_iter_t * iter = dlist_get_iterable(path_list, ITER_HEAD);
+        gnode_t * node = iter_get_value(iter);
+        while (NULL != node)
+        {
+            node = (gnode_t *)dlist_get_iter_next(iter);
+        }
+        dlist_destroy_iter(iter);
+
+        // reverse the order of the list to show the relationship
+        // from source -> target
+        dlist_reverse(path_list);
+
+        // Save the items into the path structure
+        path = (path_t *)malloc(sizeof(path_t));
+        path->path = path_list;
+        path->path_weight = path_weight;
+    }
 
     heap_destroy(heap);
-    htable_destroy(visited_table, HT_FREE_PTR_FALSE, NULL);
-    htable_destroy(dij_lookup_table, HT_FREE_PTR_TRUE, NULL);
-    return NULL;
+    htable_destroy(visited_table, HT_FREE_PTR_FALSE, HT_FREE_PTR_FALSE);
+    htable_destroy(dij_lookup_table, HT_FREE_PTR_FALSE, HT_FREE_PTR_TRUE);
+    return path;
+}
 
-
-//    bool found_target = false;
-//    while ((!found_target) && !heap_is_empty(heap))
-//    {
-//
-//        // Check if the dij_node pulled is the target, if it is we are done
-//        if (DLIST_MATCH == (graph->compare_func(dij_node->self->data, target_node->data)))
-//        {
-//            found_target = true;
-//            continue;
-//        }
-//
-//        // Add the current node to the visited list
-//        dlist_append(visited, dij_node->self);
-//
-//        // If the node has no neighbors, then continue to the next one
-//        if (!graph_node_contain_edges(dij_node->self))
-//        {
-//            continue;
-//        }
-//
-//        dlist_iter_t * neighbors = graph_get_neighbors_list(dij_node->self);
-//        edge_t * neighbor = iter_get_value(neighbors);
-//        while (NULL != neighbor)
-//        {
-//            dijkstra_t * neighbor_dij = get_dijkstra_node(neighbor->from_node);
-//
-//            uint32_t distance = neighbor->weight + dij_node->distance;
-//
-//            neighbor = dlist_get_iter_next(neighbors);
-//        }
-//    }
-
-
-
+void graph_free_path(path_t * path)
+{
+    dlist_destroy(path->path);
+    free(path);
 }
 
 /*!
@@ -808,6 +883,7 @@ static dlist_match_t compare_nodes(void * left, void * right)
     }
     return DLIST_MISS_MATCH;
 }
+
 
 
 

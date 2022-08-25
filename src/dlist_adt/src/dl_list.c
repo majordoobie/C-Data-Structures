@@ -344,6 +344,26 @@ dlist_match_t (* get_func(dlist_t * dlist))(void *, void *)
     return dlist->compare_func;
 }
 
+void dlist_reverse(dlist_t * dlist)
+{
+    dnode_t * left_side = dlist->head;
+    dnode_t * right_side = dlist->tail;
+    void * temp;
+
+    size_t swap = 0;
+    size_t swaps = dlist->length / 2;
+
+    while (swap < swaps)
+    {
+        temp = left_side->data;
+        left_side->data = right_side->data;
+        right_side->data = temp;
+
+        left_side = left_side->next;
+        right_side = right_side->prev;
+        swap++;
+    }
+}
 
 /*!
  * @brief Check if allocation is valid

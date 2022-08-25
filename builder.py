@@ -1,5 +1,4 @@
 import argparse
-import pathlib
 import subprocess
 from multiprocessing import cpu_count
 from pathlib import Path

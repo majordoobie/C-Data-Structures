@@ -108,7 +108,7 @@ void htable_hash_key(uint64_t * hash, void * key, size_t key_length)
  */
 uint64_t htable_get_init_hash(void)
 {
-    return FNV_OFFSET_BASIS;
+    return (uint64_t)FNV_OFFSET_BASIS;
 }
 
 /*!
