@@ -1,5 +1,8 @@
 # Macro is used to set variables for compiler flags.
 # Macros scope populates inside the scope of the caller
+# -D_FORITIFY_SOURCE=2 : Detect runtime buffer overflow
+# -fpie, -Wl,-pie : full ASLR
+# -fpic -shared : Disable text relocations for shared libraries
 MACRO(set_compiler_flags)
     # base flags for detecting errors
     set(base_exceptions
@@ -21,15 +24,14 @@ MACRO(set_compiler_flags)
     # Base flags for static analysis. This should be added to both the
     # compiler and linker options
     set(base_static_analysis
-        ##"-fno-omit-frame-pointer"
-        #    "-fsanitize=address"
-        #    "-fsanitize=undefined"
-        #    "-fno-sanitize-recover=all"
-        #    "-fsanitize=float-divide-by-zero"
-        #    "-fsanitize=float-cast-overflow"
-        #    "-fno-sanitize=null"
-        #    "-fno-sanitize=alignment"
-        #    "-static-libasan"
+            "-fno-omit-frame-pointer"
+            "-fsanitize=address"
+            "-fsanitize=undefined"
+            "-fno-sanitize-recover=all"
+            "-fsanitize=float-divide-by-zero"
+            "-fsanitize=float-cast-overflow"
+            "-fno-sanitize=null"
+            "-fno-sanitize=alignment"
     )
 
 
