@@ -73,17 +73,18 @@ size_t htable_get_slots(htable_t * table)
 
 /*!
  * @brief Run the key through Fowler–Noll–Vo (FNV-1a variant)
- * hash function returning a 64 bit hash. The hash uses a static HASH_INIT_VAL
- * and FNV_PRIME for the calculations. To call this function first call the
- * hash init function and pass the hash provided to this function.
+ * hash function updating the passed in 64 bit hash. The hash uses a static
+ * HASH_INIT_VAL and FNV_PRIME for the calculations. To call this function
+ * first call the hash init function and pass the hash provided to
+ * this function.
  *
  * This pattern allows you to hash multiple objects like the members of a
  * struct. It is not recommended to hash a struct since the padding could
  * lead to access of unallocated memory space. Instead hashing multiple members
  * is recommended.
- * @param key Pointer to the key passed in for the look up
- * @param key_length The length of the key data pointer to iterate over it
- * @return Return a 64 bit hash
+ * @param hash Pointer to the hash value to update
+ * @param key Pointer to the key to hash
+ * @param key_length Length of the key to hash
  */
 void htable_hash_key(uint64_t * hash, void * key, size_t key_length)
 {
@@ -95,7 +96,7 @@ void htable_hash_key(uint64_t * hash, void * key, size_t key_length)
     {
         uint8_t byte = bytes[position];
         *hash ^= byte;
-        *hash ^= FNV_PRIME;
+        *hash *= FNV_PRIME;
         position++;
     }
 }

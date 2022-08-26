@@ -271,7 +271,7 @@ TEST(HashtableSoloTest, TestExpansion)
     EXPECT_EQ(5, htable_get_length(dict));
     EXPECT_EQ(5, htable_get_slots(dict));
 
-    htable_destroy(dict, HT_FREE_PTR_FALSE, HT_FREE_PTR_TRUE);
+//    htable_destroy(dict, HT_FREE_PTR_FALSE, HT_FREE_PTR_TRUE);
 }
 
 
