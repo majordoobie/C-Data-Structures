@@ -458,7 +458,7 @@ static htable_entry_t * get_entry(htable_t * table,
     // AND the hash and capacity so that it fits within the range of slots
     // this is similar to doing a mod
     uint64_t hash = table->hash_callback(key);
-    (*slot) = (size_t)(hash & (uint64_t)(table->capacity - 1));
+    *slot = hash % (table->capacity - 1);
     uint64_t perturb = hash;
 
     htable_entry_t * current_entry = table->entries[(*slot)];
@@ -484,7 +484,7 @@ static htable_entry_t * get_entry(htable_t * table,
         // the key could be in
         perturb >>= PERTURB_SHIFT;
         *slot = (PERTURB_SHIFT * (*slot)) + 1 + perturb;
-        *slot = (*slot) % (uint64_t)(table->capacity - 1);
+        *slot = (*slot) % (table->capacity - 1);
         current_entry = table->entries[(*slot)];
     }
 
