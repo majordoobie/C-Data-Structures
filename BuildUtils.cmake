@@ -15,20 +15,21 @@ MACRO(set_compiler_flags)
             "-fpie"
             "-Wl,-pie"
             "-shared"
+            "-fPIC"
             )
 
     # Base flags for static analysis. This should be added to both the
     # compiler and linker options
     set(base_static_analysis
-            "-fno-omit-frame-pointer"
-            "-fsanitize=address"
-            "-fsanitize=undefined"
-            "-fno-sanitize-recover=all"
-            "-fsanitize=float-divide-by-zero"
-            "-fsanitize=float-cast-overflow"
-            "-fno-sanitize=null"
-            "-fno-sanitize=alignment"
-            "-static-libasan"
+        ##"-fno-omit-frame-pointer"
+        #    "-fsanitize=address"
+        #    "-fsanitize=undefined"
+        #    "-fno-sanitize-recover=all"
+        #    "-fsanitize=float-divide-by-zero"
+        #    "-fsanitize=float-cast-overflow"
+        #    "-fno-sanitize=null"
+        #    "-fno-sanitize=alignment"
+        #    "-static-libasan"
     )
 
 
