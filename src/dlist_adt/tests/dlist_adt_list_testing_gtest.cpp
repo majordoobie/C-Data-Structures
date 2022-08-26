@@ -392,7 +392,7 @@ TEST_F(DListTestFixture, TestUpdatingItersAfterRemoval)
     // create a iter_local object
     dlist_iter_t * iter_local = dlist_get_iterable(dlist, ITER_TAIL);
 
-    // comfirm that the last item is the last payload
+    // confirm that the last item is the last payload
     EXPECT_EQ(dlist_get_active_iters(dlist), 2);
     EXPECT_EQ(strcmp((char*)iter_get_value(iter_local), payload_last), 0);
 
@@ -402,8 +402,10 @@ TEST_F(DListTestFixture, TestUpdatingItersAfterRemoval)
 
     // This is where it should break. What we need it to do is move one index
     // back to the previous value or the "new tail"
-    char * previous_payload = (char *)test_vector.at(test_vector.size() - 1).c_str();
-    EXPECT_EQ(strcmp(previous_payload, (char*)iter_get_value(iter_local)), 1);
+    char * previous_payload = (char *)test_vector.at((size_t)(test_vector.size() - 2)).c_str();
+
+    EXPECT_EQ(strcmp(previous_payload, (char*)iter_get_value(iter_local)), 0);
+
     dlist_destroy_iter(iter_local);
     free(removed_node);
 }
