@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <hashtable.h>
-#include <climits>
 #include <dl_list.h>
 
 typedef struct test_struct_t
