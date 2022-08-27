@@ -329,6 +329,14 @@ TEST(HashtableBenchMark, BenchMark)
         dlist_append(words, word);
     }
 
+    // Close the file
+    int result = fclose(file);
+    if (0 != result)
+    {
+        perror("closing");
+        exit(1);
+    }
+
     htable_t * table = htable_create(hash_callback, compare_callback, NULL, free_payload_dl);
     dlist_iter_t * word_iter = dlist_get_iterable(words, ITER_HEAD);
     char * word = (char *)iter_get_value(word_iter);
@@ -385,13 +393,5 @@ TEST(HashtableBenchMark, BenchMark)
 
     // Destroy table
     htable_destroy(table, HT_FREE_PTR_FALSE, HT_FREE_PTR_TRUE);
-
-    // Close the file
-    int result = fclose(file);
-    if (0 != result)
-    {
-        perror("closing");
-        exit(1);
-    }
 }
 
