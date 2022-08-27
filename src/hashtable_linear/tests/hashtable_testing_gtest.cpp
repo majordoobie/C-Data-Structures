@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include <hashtable.h>
+#include <climits>
+#include <dl_list.h>
 
 typedef struct test_struct_t
 {
@@ -266,12 +268,131 @@ TEST(HashtableSoloTest, TestExpansion)
 
 
     // This should now trigger the resize the "removed" slots will not be
-    // copied over
+    // copied overman
     htable_set(dict, (void *)"Key6", get_payload("Key6", 0));
     EXPECT_EQ(5, htable_get_length(dict));
-    EXPECT_EQ(5, htable_get_slots(dict));
+    EXPECT_EQ(6, htable_get_slots(dict));
 
     htable_destroy(dict, HT_FREE_PTR_FALSE, HT_FREE_PTR_TRUE);
 }
 
+
+// frees the payload inserted into the linked list
+void free_payload_dl(void * data)
+{
+    free(data);
+}
+
+// function for comparing nodes
+dlist_match_t compare_payloads(void * data1, void * data2)
+{
+    if (0 == strcmp((char*)data1, (char*)data2))
+    {
+        return DLIST_MATCH;
+    }
+    return DLIST_MISS_MATCH;
+}
+
+TEST(HashtableBenchMark, BenchMark)
+{
+    // path to the word list file
+    const char * pathname = "../../src/hashtable_linear/tests/words.txt";
+    FILE * file = fopen(pathname, "r");
+    if (NULL == file)
+    {
+        pathname = "src/hashtable_linear/tests/words.txt";
+        fprintf(stderr, "Can’t open %s.\nTrying a different "
+                        "path\n", pathname);
+        file = fopen(pathname, "r");
+        if (NULL == file)
+        {
+            fprintf(stderr, "Unable to open %s as well\n", pathname);
+            exit(1);
+        }
+    }
+
+
+    int buffer_size = 1024;
+    char * buffer = (char *)calloc((size_t)buffer_size, sizeof(char));
+    dlist_t * words = dlist_init(compare_payloads);
+
+    while (NULL != fgets(buffer, buffer_size, file))
+    {
+        // Find the new line and set it to a null terminator
+        buffer[strcspn(buffer, "\n")] = 0;
+        char * word = strdup(buffer);
+        if (NULL == word)
+        {
+            fprintf(stderr, "Ran out of memory\n");
+            exit(1);
+        }
+        dlist_append(words, word);
+    }
+
+    htable_t * table = htable_create(hash_callback, compare_callback, NULL, free_payload_dl);
+    dlist_iter_t * word_iter = dlist_get_iterable(words, ITER_HEAD);
+    char * word = (char *)iter_get_value(word_iter);
+    while (NULL != word)
+    {
+        int * val = (int *)malloc(sizeof(int));
+        *val = 0;
+        htable_set(table, word, val);
+        word = (char *)dlist_get_iter_next(word_iter);
+    }
+
+    // Ensure that the list of 466549 words match the dictionary
+    EXPECT_EQ(dlist_get_length(words), htable_get_length(table));
+
+
+    // Now iterate over the words and ensure that we can pull each of the words
+    int run = 0;
+    int runs = 10;
+    while (run < runs)
+    {
+        // Reset the iter back to head
+        dlist_set_iter_head(word_iter);
+        word = (char *)iter_get_value(word_iter);
+        while (NULL != word)
+        {
+            int * val = (int *)htable_get(table, word);
+            // Ensure that we got an actual value
+            EXPECT_NE(val, nullptr);
+
+            // Ensure that the value stored is the same as the run value
+            // this proves that we are pulling the correct keys each time
+            EXPECT_EQ(*val, run);
+
+            // Increment the value to match the run value for the next run
+            (*val)++;
+
+            // Insert the value back into the dict as an update value
+            htable_set(table, word, val);
+
+            // fetch the next word
+            word = (char *)dlist_get_iter_next(word_iter);
+        }
+        // Increment the run which should match the values stored in the table
+        run++;
+    }
+
+    // Destroy iter
+    dlist_destroy_iter(word_iter);
+
+    // Free the buffer
+    free(buffer);
+
+    // Free words
+    dlist_destroy_free(words, free_payload_dl);
+
+    // Destroy table
+    htable_destroy(table, HT_FREE_PTR_FALSE, HT_FREE_PTR_TRUE);
+
+    // Close the file
+    int result = fclose(file);
+    if (0 != result)
+    {
+        perror("closing");
+        exit(1);
+    }
+}
 

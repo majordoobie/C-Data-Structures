@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define INITIAL_CAPACITY 8
+#define INITIAL_CAPACITY 32
 #define PERTURB_SHIFT 5
 
 // The below values are from the algorithm specifications

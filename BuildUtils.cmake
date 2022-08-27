@@ -24,8 +24,8 @@ MACRO(set_compiler_flags)
     # Base flags for static analysis. This should be added to both the
     # compiler and linker options
     set(base_static_analysis
-            "-fno-omit-frame-pointer"
             "-fsanitize=address"
+            "-fno-omit-frame-pointer"
             "-fsanitize=undefined"
             "-fno-sanitize-recover=all"
             "-fsanitize=float-divide-by-zero"
