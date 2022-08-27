@@ -334,8 +334,7 @@ TEST(HashtableBenchMark, BenchMark)
     char * word = (char *)iter_get_value(word_iter);
     while (NULL != word)
     {
-        int * val = (int *)malloc(sizeof(int));
-        *val = 0;
+        int * val = (int *)calloc(1, sizeof(int));
         htable_set(table, word, val);
         word = (char *)dlist_get_iter_next(word_iter);
     }
