@@ -298,17 +298,34 @@ TEST(HashtableBenchMark, BenchMark)
     // path to the word list file
     const char * pathname = "../../src/hashtable_linear/tests/words.txt";
     FILE * file = fopen(pathname, "r");
-    if (NULL == file)
+    bool good_path = false;
+    if (NULL != file)
     {
+        good_path = true;
+    }
+
+    if (!good_path)
+    {
+
         pathname = "src/hashtable_linear/tests/words.txt";
-        fprintf(stderr, "Can’t open %s.\nTrying a different "
-                        "path\n", pathname);
+        file = fopen(pathname, "r");
+        if (NULL != file)
+        {
+            good_path = true;
+
+        }
+    }
+    if (!good_path)
+    {
+
+        pathname = "../../../../src/hashtable_linear/tests/words.txt";
         file = fopen(pathname, "r");
         if (NULL == file)
         {
-            fprintf(stderr, "Unable to open %s as well\n", pathname);
+            fprintf(stderr, "Could not find the word.txt file\n");
             exit(1);
         }
+
     }
 
 
