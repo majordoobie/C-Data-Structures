@@ -20,6 +20,7 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
 ENDIF()
 
 add_subdirectory(deps)
+add_subdirectory(src/utils)
 add_subdirectory(src/avl_bst_adt/src)
 add_subdirectory(src/treemap_avl_bst/src)
 add_subdirectory(src/dlist_adt/src)

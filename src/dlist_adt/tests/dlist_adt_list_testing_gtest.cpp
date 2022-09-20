@@ -42,7 +42,7 @@ dlist_match_t compare_payloads(void * data1, void * data2)
 // Basic testing to get up and running before fixture
 TEST(dlist_test, InitTest)
 {
-    dlist_t * dlist = dlist_init(nullptr);
+    dlist_t * dlist = dlist_init(compare_payloads);
     ASSERT_NE(dlist, nullptr);
     EXPECT_EQ(dlist_get_length(dlist), 0);
     dlist_destroy(dlist);
@@ -51,7 +51,7 @@ TEST(dlist_test, InitTest)
 // Basic test to see if we can insert something into the dlist
 TEST(dlist_test, InsertTest)
 {
-    dlist_t * dlist = dlist_init(nullptr);
+    dlist_t * dlist = dlist_init(compare_payloads);
     ASSERT_NE(dlist, nullptr);
     dlist_append(dlist, get_payload(1));
     EXPECT_EQ(dlist_get_length(dlist), 1);
@@ -61,7 +61,7 @@ TEST(dlist_test, InsertTest)
 // Basic test to ensure that we can iterate over the dlist
 TEST(dlist_test, IterableTest)
 {
-    dlist_t * dlist = dlist_init(nullptr);
+    dlist_t * dlist = dlist_init(compare_payloads);
     ASSERT_NE(dlist, nullptr);
 
     std::vector<char *> vector = {

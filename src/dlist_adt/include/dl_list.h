@@ -46,13 +46,6 @@ typedef struct dnode_t
     dnode_t * prev;
 } dnode_t;
 
-// Enum for determining if malloc calls were valid
-typedef enum
-{
-    VALID_PTR = 1,
-    INVALID_PTR = 0
-} valid_ptr_t;
-
 
 typedef struct dlist_t dlist_t;
 typedef struct dlist_iter_t dlist_iter_t;
@@ -98,8 +91,6 @@ void dlist_destroy_iter(dlist_iter_t * iter);
 void dlist_quick_sort(dlist_t * dlist,
                       sort_direction_t direction,
                       dlist_compare_t (* compare_func)(void *, void *));
-
-valid_ptr_t verify_alloc(void * ptr);
 
 #ifdef __cplusplus
 }
