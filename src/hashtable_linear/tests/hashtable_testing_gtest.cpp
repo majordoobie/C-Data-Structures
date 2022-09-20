@@ -324,7 +324,15 @@ TEST(HashtableBenchMark, BenchMark)
             fprintf(stderr, "Could not find the word.txt file\n");
             exit(1);
         }
+        if (NULL != file)
+        {
+            good_path = true;
+        }
 
+    }
+    if (!good_path)
+    {
+        return;
     }
 
 
