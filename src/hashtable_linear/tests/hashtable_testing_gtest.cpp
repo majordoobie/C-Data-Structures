@@ -319,11 +319,6 @@ TEST(HashtableBenchMark, BenchMark)
 
         pathname = "../../../../src/hashtable_linear/tests/words.txt";
         file = fopen(pathname, "r");
-        if (NULL == file)
-        {
-            fprintf(stderr, "Could not find the word.txt file\n");
-            exit(1);
-        }
         if (NULL != file)
         {
             good_path = true;
