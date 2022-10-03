@@ -14,8 +14,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 set(TEST_BUILD_PATH ${CMAKE_BINARY_DIR}/test_bin)
 
 option(BUILD_DSA_C_GTESTS "Build GTests for DSA_C" ON)
-
 if (BUILD_DSA_C_GTESTS)
+    message(FATAL_ERROR "WHY ARE YOU HERE")
     # If debug is enabled make sure to include CTest at the root. This will allow
     # the ctest config to be placed at the root of the build directory
     IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
