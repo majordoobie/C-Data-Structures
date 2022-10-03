@@ -1,9 +1,12 @@
-#include <graph_dlist.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
-#include <heap.h>
+#include <stdlib.h>
+
+#include <graph_dlist.h>
 #include <hashtable.h>
+#include <heap.h>
+#include <utils.h>
+
 typedef struct graph_t
 {
     dlist_t * nodes;
@@ -58,7 +61,7 @@ graph_t * graph_init(graph_mode_t graph_mode,
     assert(hash_callback);
 
     graph_t * graph = (graph_t *)malloc(sizeof(graph_t));
-    if (INVALID_PTR == verify_alloc(graph))
+    if (UV_INVALID_ALLOC == verify_alloc(graph))
     {
         return NULL;
     }
@@ -280,7 +283,7 @@ graph_opt_t graph_remove_node(graph_t * graph, gnode_t * node, void(free_func(vo
 gnode_t * graph_create_node(void * data)
 {
     gnode_t * node = (gnode_t *)malloc(sizeof(gnode_t));
-    if (INVALID_PTR == verify_alloc(node))
+    if (UV_INVALID_ALLOC == verify_alloc(node))
     {
         return NULL;
     }
@@ -823,7 +826,7 @@ static heap_compare_t heap_ptr_cmp(void * left, void * right)
 static dijkstra_t * get_dijkstra_node(gnode_t * self_node)
 {
     dijkstra_t * node = (dijkstra_t *)malloc(sizeof(dijkstra_t));
-    if (INVALID_PTR == verify_alloc(node))
+    if (UV_INVALID_ALLOC == verify_alloc(node))
     {
         return NULL;
     }
@@ -852,7 +855,7 @@ static edge_t * create_edge(gnode_t * from_node,
                             uint32_t weight)
 {
     edge_t * edge = (edge_t *)malloc(sizeof(edge_t));
-    if (INVALID_PTR == verify_alloc(edge))
+    if (UV_INVALID_ALLOC == verify_alloc(edge))
     {
         return NULL;
     }

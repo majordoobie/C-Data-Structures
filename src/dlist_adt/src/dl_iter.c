@@ -1,6 +1,8 @@
-#include <dl_iter.h>
 #include <assert.h>
 #include <stdlib.h>
+
+#include <dl_iter.h>
+#include <utils.h>
 
 // If in debug mode, remove static for testing
 #ifdef NDEBUG
@@ -41,7 +43,7 @@ dlist_iter_t * iter_get_iterable(dnode_t * node, dlist_t * dlist, int32_t index)
     // verify that the dlist is a valid pointer
     assert(dlist);
     dlist_iter_t * iter = (dlist_iter_t *)malloc(sizeof(dlist_iter_t));
-    if (INVALID_PTR == verify_alloc(iter))
+    if (UV_INVALID_ALLOC == verify_alloc(iter))
     {
         return NULL;
     }
@@ -188,7 +190,7 @@ iter_search_t * iter_init_search(dlist_iter_t * iter,
                                  iter_search_by search_by)
 {
     iter_search_t * search = (iter_search_t *)malloc(sizeof(iter_search_t));
-    if (INVALID_PTR == verify_alloc(search))
+    if (UV_INVALID_ALLOC == verify_alloc(search))
     {
         return NULL;
     }

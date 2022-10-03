@@ -1,9 +1,11 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
-#include <dl_iter.h>
 
-// Settings are used to reduce code complexity by setting a action flag
+#include <dl_iter.h>
+#include <utils.h>
+
+// Settings are used to reduce code complexity by setting an action flag
 typedef enum
 {
     FREE_NODES,
@@ -26,6 +28,7 @@ typedef struct dlist_t
 } dlist_t;
 
 
+// Structure is used to aid in the execution of quick sort
 typedef struct
 {
     sort_direction_t direction;
@@ -49,7 +52,7 @@ static bool is_iter_list_empty(dlist_t * dlist);
 static bool is_iter_list(dlist_iter_t * iter);
 
 // Node private functions
-static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void(*free_func)(void *));
+static void dlist_destroy_(dlist_t ** dlist, dlist_settings_t free_nodes, void(*free_func)(void *));
 static dnode_t * init_node(void * data);
 static void * remove_node(dlist_t * dlist, dnode_t * node);
 static dlist_result_t add_node(dlist_t * dlist,
@@ -60,31 +63,38 @@ static dlist_result_t add_node(dlist_t * dlist,
 
 
 /*!
- * @brief Initialize the dlist with a function to perform the comparisons. The
- * function parameter is used to perform search functionality and must use the
- * dlist_match_t return types
+ * @brief Initialize a dlist object. The mandatory parameter is a callback
+ * pointer to a comparison function with a return type of dlist_match_t. The
+ * callback function is used to make comparisons between the objects inserted
+ * into the dlist.
  *
- * @param compare_func
- * @return Null if INVALID_PTR is returned from init or dlist_t pointer
+ * @param compare_func Callback function to make comparisons between the
+ * objects inserted into the dlist
+ * @return Return pointer to the dlist object, or NULL if an error occurred with
+ * errno value set
  */
 dlist_t * dlist_init(dlist_match_t (* compare_func)(void *, void *))
 {
-    // Create and verify that the dlist iter is allocated
-    dlist_t * dlist = (dlist_t *)calloc(1, sizeof(dlist_t));
-    valid_ptr_t result = verify_alloc(dlist);
-    if (INVALID_PTR == result)
+    if (NULL == compare_func)
     {
         return NULL;
     }
 
-    // Every allocated dlist has a inner dlist used to keep track of all the
+    // Create and verify that the dlist iter is allocated
+    dlist_t * dlist = (dlist_t *)calloc(1, sizeof(dlist_t));
+    if (UV_INVALID_ALLOC == verify_alloc(dlist))
+    {
+        return NULL;
+    }
+
+    // Every allocated dlist has an inner dlist used to keep track of all the
     // iter objects created. This dlist is tagged with a bool "is_iter_mgr"
     dlist_t * iter_list = (dlist_t *)calloc(1, sizeof(dlist_t));
-    result = verify_alloc(dlist);
-    if (INVALID_PTR == result)
+    if (UV_INVALID_ALLOC == verify_alloc(iter_list))
     {
         dlist_destroy(dlist);
         return NULL;
+
     }
 
     * iter_list = (dlist_t) {
@@ -194,8 +204,11 @@ dlist_result_t dlist_insert(dlist_t * dlist, void * data, int32_t index)
  */
 void dlist_destroy(dlist_t * dlist)
 {
-    assert(dlist);
-    dlist_destroy_(dlist, NO_FREE_NODES, NULL);
+    if (NULL == dlist)
+    {
+        return;
+    }
+    dlist_destroy_(&dlist, NO_FREE_NODES, NULL);
 }
 
 /*!
@@ -212,7 +225,7 @@ void dlist_destroy_free(dlist_t * dlist, void (* free_func)(void *))
         fprintf(stderr, "[!] Invalid free function pointer passed\n");
         return;
     }
-    dlist_destroy_(dlist, FREE_NODES, free_func);
+    dlist_destroy_(&dlist, FREE_NODES, free_func);
 }
 
 /*!
@@ -366,21 +379,6 @@ void dlist_reverse(dlist_t * dlist)
 }
 
 /*!
- * @brief Check if allocation is valid
- * @param ptr Any pointer
- * @return valid_ptr_t : VALID_PTR or INVALID_PTR
- */
-valid_ptr_t verify_alloc(void * ptr)
-{
-    if (NULL == ptr)
-    {
-        fprintf(stderr, "[!] Invalid allocation\n");
-        return INVALID_PTR;
-    }
-    return VALID_PTR;
-}
-
-/*!
  * @brief Perform a quick sort on the double linked list. The quick sort
  * relies on the comparison function passed. The sort does not create any new
  * data structures, the dnode_t data pointers are updated in place. The
@@ -403,7 +401,7 @@ void dlist_quick_sort(dlist_t * dlist,
 
     // Create the struct that will make it easier to manage the settings
     quick_sort_t * sort = (quick_sort_t *)malloc(sizeof(quick_sort_t));
-    if (INVALID_PTR == verify_alloc(sort))
+    if (UV_INVALID_ALLOC == verify_alloc(sort))
     {
         return;
     }
@@ -521,7 +519,7 @@ dlist_iter_t * dlist_get_iterable(dlist_t * dlist, iter_start_t pos)
         (ITER_HEAD == pos || 0 == dlist->length ) ? 0 : (int32_t)dlist->length - 1
         );
 
-    if (INVALID_PTR == verify_alloc(iter))
+    if (UV_INVALID_ALLOC == verify_alloc(iter))
     {
         return NULL;
     }
@@ -655,7 +653,7 @@ static dnode_t * get_by_index(dlist_t * dlist, int32_t index)
 static dnode_t * init_node(void * data)
 {
     dnode_t * node = (dnode_t *)calloc(1, sizeof(dnode_t));
-    if (INVALID_PTR == verify_alloc(node))
+    if (UV_INVALID_ALLOC == verify_alloc(node))
     {
         return NULL;
     }
@@ -894,20 +892,27 @@ static void quick_sort(quick_sort_t * sort, dnode_t * left, dnode_t * right)
 }
 
 /*!
- * Static function that handles the actual deletion. If free of the nodes is
- * requested then a function pointer to how to free the nodes is required.
- * @param dlist
- * @param delete
+ * @brief Function handles the actual deletion of the dlist object and all
+ * the internal parts of it.
+ *
+ * @param dlist Pointer to the dlist object
+ * @param free_nodes
  * @param free_func
  */
-static void dlist_destroy_(dlist_t * dlist, dlist_settings_t delete, void (*free_func)(void *))
+static void dlist_destroy_(dlist_t ** dlist_ref, dlist_settings_t free_nodes, void (*free_func)(void *))
 {
+    if (NULL == dlist_ref)
+    {
+        return;
+    }
+    dlist_t * dlist = *dlist_ref;
+
     dnode_t * node = dlist->head;
     dnode_t * next_node;
     while (NULL != node)
     {
         next_node = node->next;
-        if (FREE_NODES == delete)
+        if (FREE_NODES == free_nodes)
         {
             free_func(node->data);
         }
